@@ -1,16 +1,20 @@
-import './App.css'
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+// import Login from "./pages/User/Login";
+import Signup from "./pages/User/Signup";
+import Dashboard from "./pages/User/Dashboard";
 
 function App() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-100">
-      <div className="rounded-2xl bg-indigo-600 px-8 py-6 shadow-lg">
-        <h1 className="text-4xl font-bold text-white">Hello, Devsta 🚀</h1>
-        <p className="mt-2 text-lg text-indigo-100">
-          Welcome to your new AI-powered developer platform.
-        </p>
+    <Router>
+      <div className="min-h-screen bg-black text-white">
+        <Routes>
+          {/* <Route path="/" element={<Login />} /> */}
+          <Route path="/" element={<Signup />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+        </Routes>
       </div>
-    </div>
-  )
+    </Router>
+  );
 }
 
-export default App
+export default App;
