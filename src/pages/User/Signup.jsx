@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { signupUser } from "../../api/auth";
 import { BACKEND_URL } from "../../../config";
+import { useNavigate } from "react-router-dom";
 
 export default function Signup() {
   const { loginUser } = useAuth();
@@ -10,7 +11,7 @@ export default function Signup() {
   const [successMessage, setSuccessMessage] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState(""); // "success" | "error"
-
+const navigate = useNavigate();
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
@@ -24,6 +25,10 @@ export default function Signup() {
       setModalType("success");
       setSuccessMessage("Account created successfully!");
       setShowModal(true);
+      setTimeout(() => {
+  setShowModal(false);
+  navigate("/dashboard");
+}, 200);
     } catch (err) {
       setError(err.message);
       setModalType("error");
