@@ -1,57 +1,167 @@
-// import { useState } from "react";
-// import { login, googleLogin } from "../../api/auth";
-// import { useAuth } from "../../context/AuthContext";
+import { useState } from "react";
+import { useAuth } from "../../context/AuthContext";
+import { loginUser as loginAPI } from "../../api/auth";
+import { BACKEND_URL } from "../../../config";
+import { useNavigate } from "react-router-dom"; // <-- Add this import
 
-// export default function Login() {
-//   const { loginUser } = useAuth();
-//   const [form, setForm] = useState({ email: "", password: "" });
+export default function Login() {
+  const { loginUser } = useAuth();
+  const [form, setForm] = useState({ email: "", password: "" });
+  const [error, setError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+  const [showModal, setShowModal] = useState(false);
+  const [modalType, setModalType] = useState("");
+    const navigate = useNavigate(); // <-- Add this line
 
-//   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
-//   const handleSubmit = async (e) => {
-//     e.preventDefault();
-//     try {
-//       const { data } = await login(form);
-//       loginUser(data.user);
-//     } catch (err) {
-//       console.error(err.response?.data?.message || "Login failed");
-//     }
-//   };
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+    try {
+      const data = await loginAPI(form);
+      loginUser(data.user);
+      setModalType("success");
+      setSuccessMessage("Logged in successfully!");
+      setShowModal(true);
+        setTimeout(() => {
+        setShowModal(false);
+        navigate("/dashboard"); // <-- Redirect after success
+      }, 300);
+    } catch (err) {
+      setError(err.message);
+      setModalType("error");
+      setShowModal(true);
+    }
+  };
 
-//   return (
-//     <div className="flex min-h-screen items-center justify-center bg-black">
-//       <div className="w-full max-w-md rounded-2xl bg-primary p-6 text-white shadow-lg">
-//         <h2 className="text-2xl font-bold mb-4">Login to Devsta 🚀</h2>
+  const handleGoogleLogin = () => {
+    window.location.href = `${BACKEND_URL}/api/users/auth/google`;
+  };
 
-//         <form onSubmit={handleSubmit} className="space-y-4">
-//           <input
-//             type="email"
-//             name="email"
-//             placeholder="Email"
-//             value={form.email}
-//             onChange={handleChange}
-//             className="w-full p-2 rounded-md text-black"
-//           />
-//           <input
-//             type="password"
-//             name="password"
-//             placeholder="Password"
-//             value={form.password}
-//             onChange={handleChange}
-//             className="w-full p-2 rounded-md text-black"
-//           />
-//           <button type="submit" className="w-full py-2 rounded-md bg-black text-white hover:bg-gray-800">
-//             Login
-//           </button>
-//         </form>
+  return (
+    <div className="flex items-center justify-center min-h-screen bg-black font-fragment tracking-wide p-4 md:p-8">
+      {/* Card Container */}
+      <div className="w-full sm:w-[90%] md:w-[70%] max-w-4xl h-auto bg-gradient-to-br from-primary/90 via-black/90 to-teal-900/90 backdrop-blur-lg rounded-2xl shadow-2xl p-6 md:p-8 flex flex-col gap-4 border-[1px] border-primary/50">
 
-//         <button
-//           onClick={googleLogin}
-//           className="mt-4 w-full py-2 rounded-md bg-white text-black hover:bg-gray-200"
-//         >
-//           Continue with Google
-//         </button>
-//       </div>
-//     </div>
-//   );
-// }
+        {/* Logo */}
+        <div className="flex justify-end">
+          <img src="/devsta-logo.png" alt="Devsta Logo" className="h-12 md:h-12 object-contain" />
+        </div>
+
+        {/* Welcome Message */}
+        <h1 className="text-2xl md:text-3xl font-bold text-white text-center mb-1">
+          Welcome Back!
+        </h1>
+        <p className="text-gray-300 text-center text-sm md:text-base mb-4">
+          Please login to continue to Devsta
+        </p>
+
+        {/* Form + Google Login */}
+        <div className="flex flex-col md:flex-row items-center gap-6 md:gap-8">
+          {/* Login Form */}
+          <form onSubmit={handleSubmit} className="flex-1 w-full space-y-4">
+            <input
+              type="email"
+              name="email"
+              placeholder="Email Address"
+              value={form.email}
+              onChange={handleChange}
+              className="w-full text-sm md:text-base p-2.5 bg-transparent border-b border-gray-400 text-white placeholder-gray-400 focus:outline-none focus:border-primary transition"
+              required
+            />
+            <input
+              type="password"
+              name="password"
+              placeholder="Password"
+              value={form.password}
+              onChange={handleChange}
+              className="w-full text-sm md:text-base p-2.5 bg-transparent border-b border-gray-400 text-white placeholder-gray-400 focus:outline-none focus:border-primary transition"
+              required
+            />
+            <button
+              type="submit"
+              className="w-full bg-teal-600 text-white py-2.5 rounded-lg hover:bg-teal-700 transition font-medium text-sm md:text-base"
+            >
+              Login
+            </button>
+
+            {/* Signup Prompt */}
+            <p className="text-gray-300 text-xs md:text-sm text-center mt-2">
+              Don't have an account?{" "}
+              <a
+                href="/signup"
+                className="text-primary font-medium hover:underline"
+              >
+                Sign Up
+              </a>
+            </p>
+          </form>
+
+          {/* OR Separator */}
+          <div className="flex flex-col md:flex-row items-center justify-center w-full md:w-auto my-4 md:my-0">
+            {/* Mobile: horizontal */}
+            <div className="flex md:hidden items-center w-full">
+              <div className="flex-grow h-px bg-primary/70"></div>
+              <span className="mx-2 text-gray-300 text-xs font-medium">OR</span>
+              <div className="flex-grow h-px bg-primary/70"></div>
+            </div>
+            {/* Desktop: vertical */}
+            <div className="hidden md:flex flex-col items-center h-full px-4">
+              <div className="flex-grow w-px bg-primary/70"></div>
+              <span className="my-2 text-gray-300 text-xs font-medium">OR</span>
+              <div className="flex-grow w-px bg-primary/70"></div>
+            </div>
+          </div>
+
+          {/* Google Login */}
+          <div className="flex-1 flex justify-center w-full">
+            <button
+              onClick={handleGoogleLogin}
+              className="w-full flex items-center justify-center gap-2 border border-gray-400 bg-black/20 py-2.5 rounded-lg hover:bg-black/40 transition font-medium text-sm md:text-base text-white"
+            >
+              <img
+                src="https://www.svgrepo.com/show/355037/google.svg"
+                alt="Google Logo"
+                className="w-4 h-4"
+              />
+              Continue with Google
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Modal */}
+      {showModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
+          <div className="relative bg-gradient-to-br from-primary/90 via-black/90 to-teal-900/90 backdrop-blur-lg p-6 md:p-8 rounded-2xl shadow-2xl w-[90vw] max-w-xs md:max-w-md text-center border border-primary/50">
+            <button
+              onClick={() => setShowModal(false)}
+              className="absolute top-3 right-3 text-gray-400 hover:text-teal-400 transition text-base md:text-lg focus:outline-none p-1 rounded-full bg-black/30"
+              aria-label="Close"
+              type="button"
+            >
+              <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
+                <path d="M6 6L14 14M14 6L6 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+              </svg>
+            </button>
+            <h3
+              className={`text-xl md:text-2xl font-semibold mb-5 ${modalType === "success" ? "text-teal-400" : "text-red-400"}`}
+            >
+              {modalType === "success" ? "Success!" : "Error!"}
+            </h3>
+            <p className="text-white mb-6 text-sm md:text-base">
+              {modalType === "success" ? successMessage : error}
+            </p>
+            <button
+              onClick={() => setShowModal(false)}
+              className="w-full bg-teal-600 hover:bg-teal-700 text-white py-2 rounded-lg font-medium transition text-base"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
