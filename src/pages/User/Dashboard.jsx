@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+// import { useEffect, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 
@@ -11,158 +11,78 @@ export default function Dashboard() {
     const params = new URLSearchParams(window.location.search);
     const token = params.get("token");
     const userData = params.get("user");
-    const code = params.get("code"); // GitHub OAuth code
-    const access_token = params.get("access_token"); // Alternative token parameter
-    const error = params.get("error"); // OAuth error
-    const state = params.get("state"); // OAuth state parameter
+    const error = params.get("error");
 
-    // Handle OAuth errors
     if (error) {
       console.error("OAuth error:", error);
       navigate("/login");
       return;
     }
 
-    // Handle OAuth callback - hide all authentication details
-    if (token || access_token || code) {
+    if (token && userData) {
       setIsProcessingAuth(true);
-      
-      // Immediately clear URL parameters to hide authentication details
-      window.history.replaceState({}, document.title, window.location.pathname);
-      
-      // Store token silently (handle different token parameter names)
-      const authToken = token || access_token;
-      if (authToken) {
-        localStorage.setItem("devsta_token", authToken);
-      }
-      
-      // If user data is provided in URL params, log them in
-      if (userData) {
-        try {
-          const parsedUser = JSON.parse(decodeURIComponent(userData));
-          loginUser(parsedUser);
-        } catch (error) {
-          console.error("Error parsing user data:", error);
-        }
-      }
-      
-      // If we have a code but no user data, try to fetch user data
-      if (code && !userData) {
-        // This might be a GitHub OAuth code that needs to be exchanged
-        console.log("OAuth code received, backend should handle this");
-        // You might want to make an API call here to exchange the code for user data
-        // For now, we'll just show the loading state
-      }
-      
-      // Hide processing state after a brief moment
-      setTimeout(() => {
-        setIsProcessingAuth(false);
-      }, 500);
-    }
 
-    // Debug: Log all URL parameters to understand what's being received
-    if (window.location.search) {
-      console.log("URL parameters received:", window.location.search);
-      console.log("Token:", token);
-      console.log("Code:", code);
-      console.log("User data:", userData);
+      // Hide URL parameters
+      window.history.replaceState({}, document.title, window.location.pathname);
+
+      // Store JWT
+      localStorage.setItem("devsta_token", token);
+
+      // Store user in context
+      try {
+        const parsedUser = JSON.parse(decodeURIComponent(userData));
+        loginUser(parsedUser);
+      } catch (err) {
+        console.error("Error parsing user data:", err);
+      }
+
+      setTimeout(() => setIsProcessingAuth(false), 500);
     }
   }, [loginUser, navigate]);
 
-  // Show loading state while processing authentication
   if (isProcessingAuth) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-black p-4 md:p-8 font-fragment">
-        <div className="w-full sm:w-[90%] md:w-[70%] max-w-4xl bg-gradient-to-br from-primary/90 via-black/80 to-teal-900/90 backdrop-blur-lg rounded-2xl shadow-2xl p-6 md:p-10 flex flex-col items-center gap-6 border border-primary/50">
-          
-          {/* Logo */}
-          <div className="flex justify-center mb-4">
-            <img src="/devsta-logo.png" alt="Devsta Logo" className="h-16 md:h-20 object-contain" />
-          </div>
-          
-          {/* Loading Message */}
-          <div className="flex flex-col items-center gap-4">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-400"></div>
-            <h2 className="text-xl md:text-2xl font-semibold text-white text-center">
-              Setting up your account...
-            </h2>
-            <p className="text-gray-300 text-center text-sm md:text-base">
-              Please wait while we complete your authentication.
-            </p>
-          </div>
-        </div>
-      </div>
-    );
+    return <div>Loading...</div>;
   }
 
+  if (!user) return null;
+
   return (
-    <div className="flex items-center justify-center min-h-screen bg-black p-4 md:p-8 font-fragment">
-      <div className="w-full sm:w-[90%] md:w-[70%] max-w-4xl bg-gradient-to-br from-primary/90 via-black/80 to-teal-900/90 backdrop-blur-lg rounded-2xl shadow-2xl p-6 md:p-10 flex flex-col items-center gap-6 border border-primary/50">
-        
-        {/* Logo */}
-        <div className="flex justify-center mb-4">
-          <img src="/devsta-logo.png" alt="Devsta Logo" className="h-16 md:h-20 object-contain" />
-        </div>
-        
-        {/* Welcome Message */}
-        <h1 className="text-2xl md:text-4xl font-bold text-white text-center">
-          {user ? `Welcome back, ${user.name}!` : "Welcome to Devsta!"}
-        </h1>
-        <p className="text-gray-300 text-center text-sm md:text-base">
-          {user
-            ? "Ready to explore your projects and tasks?"
-            : "Please login or sign up to get started."}
-        </p>
+    <div className="flex flex-col items-center justify-center min-h-screen bg-black text-white p-6 font-fragment">
+      <img
+        src={user.avatar}
+        alt={`${user.name} avatar`}
+        className="w-24 h-24 rounded-full mb-4"
+      />
+      <h1 className="text-3xl font-bold mb-2">Welcome back, {user.name}!</h1>
+      <p className="text-gray-300 mb-4">{user.email}</p>
 
-        {/* Quick Action Buttons */}
-        {user && (
-          <div className="flex flex-col md:flex-row gap-4 mt-4 w-full justify-center">
-            <button className="bg-teal-600 hover:bg-teal-700 text-white py-2.5 px-6 rounded-lg font-medium transition">
-              View Projects
-            </button>
-            <button className="bg-primary/80 hover:bg-primary/90 text-white py-2.5 px-6 rounded-lg font-medium transition">
-              Manage Account
-            </button>
-            <button 
-              onClick={() => {
-                localStorage.removeItem("devsta_token");
-                localStorage.removeItem("devsta_user");
-                window.location.href = "/login";
-              }}
-              className="bg-red-600 hover:bg-red-700 text-white py-2.5 px-6 rounded-lg font-medium transition"
-            >
-              Logout
-            </button>
+      {user.githubStats && (
+        <div className="flex gap-6 mb-4">
+          <div>
+            <h2 className="font-semibold">{user.githubStats.public_repos}</h2>
+            <p className="text-gray-400 text-sm">Public Repos</p>
           </div>
-        )}
-
-        {/* Login/Signup buttons if not logged in */}
-        {!user && (
-          <div className="flex flex-col md:flex-row gap-4 mt-4 w-full justify-center">
-            <button 
-              onClick={() => navigate("/login")}
-              className="bg-teal-600 hover:bg-teal-700 text-white py-2.5 px-6 rounded-lg font-medium transition"
-            >
-              Login
-            </button>
-            <button 
-              onClick={() => navigate("/")}
-              className="bg-primary/80 hover:bg-primary/90 text-white py-2.5 px-6 rounded-lg font-medium transition"
-            >
-              Sign Up
-            </button>
+          <div>
+            <h2 className="font-semibold">{user.githubStats.followers}</h2>
+            <p className="text-gray-400 text-sm">Followers</p>
           </div>
-        )}
-
-        {/* Optional Image or Illustration */}
-        <div className="mt-6">
-          <img
-            src="/dashboard-illustration.svg"
-            alt="Dashboard Illustration"
-            className="w-64 md:w-80 mx-auto"
-          />
+          <div>
+            <h2 className="font-semibold">{user.githubStats.following}</h2>
+            <p className="text-gray-400 text-sm">Following</p>
+          </div>
         </div>
-      </div>
+      )}
+
+      <button
+        onClick={() => {
+          localStorage.removeItem("devsta_token");
+          localStorage.removeItem("devsta_user");
+          navigate("/login");
+        }}
+        className="bg-red-600 hover:bg-red-700 py-2 px-6 rounded-lg"
+      >
+        Logout
+      </button>
     </div>
   );
 }
