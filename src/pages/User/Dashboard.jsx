@@ -16,24 +16,38 @@ export default function Dashboard() {
     const error = params.get("error"); // OAuth error
     const state = params.get("state"); // OAuth state parameter
 
+    // Enhanced debugging for GitHub OAuth
+    console.log("🔍 Dashboard OAuth Debug:");
+    console.log("Current URL:", window.location.href);
+    console.log("URL Search:", window.location.search);
+    console.log("Token:", token);
+    console.log("Code:", code);
+    console.log("User data:", userData);
+    console.log("Access token:", access_token);
+    console.log("Error:", error);
+    console.log("State:", state);
+
     // Handle OAuth errors
     if (error) {
-      console.error("OAuth error:", error);
+      console.error("❌ OAuth error:", error);
       navigate("/login");
       return;
     }
 
     // Handle OAuth callback - hide all authentication details
     if (token || access_token || code) {
+      console.log("✅ OAuth callback detected, processing...");
       setIsProcessingAuth(true);
       
       // Immediately clear URL parameters to hide authentication details
       window.history.replaceState({}, document.title, window.location.pathname);
+      console.log("✅ URL parameters cleared");
       
       // Store token silently (handle different token parameter names)
       const authToken = token || access_token;
       if (authToken) {
         localStorage.setItem("devsta_token", authToken);
+        console.log("✅ Token stored in localStorage");
       }
       
       // If user data is provided in URL params, log them in
@@ -41,31 +55,37 @@ export default function Dashboard() {
         try {
           const parsedUser = JSON.parse(decodeURIComponent(userData));
           loginUser(parsedUser);
+          console.log("✅ User logged in successfully:", parsedUser);
         } catch (error) {
-          console.error("Error parsing user data:", error);
+          console.error("❌ Error parsing user data:", error);
         }
       }
       
-      // If we have a code but no user data, try to fetch user data
+      // If we have a code but no user data, this might be a GitHub OAuth code
       if (code && !userData) {
-        // This might be a GitHub OAuth code that needs to be exchanged
-        console.log("OAuth code received, backend should handle this");
-        // You might want to make an API call here to exchange the code for user data
+        console.log("⚠️ GitHub OAuth code received but no user data");
+        console.log("This suggests the backend needs to process the code");
+        
+        // Try to exchange the code for user data (optional enhancement)
+        // This would require an additional API call to your backend
         // For now, we'll just show the loading state
       }
       
       // Hide processing state after a brief moment
       setTimeout(() => {
         setIsProcessingAuth(false);
+        console.log("✅ Authentication processing complete");
       }, 500);
-    }
-
-    // Debug: Log all URL parameters to understand what's being received
-    if (window.location.search) {
-      console.log("URL parameters received:", window.location.search);
-      console.log("Token:", token);
-      console.log("Code:", code);
-      console.log("User data:", userData);
+    } else {
+      console.log("ℹ️ No OAuth parameters detected");
+      
+      // Check if we're on a GitHub OAuth callback URL pattern
+      const currentPath = window.location.pathname;
+      if (currentPath.includes('github') || currentPath.includes('oauth') || currentPath.includes('callback')) {
+        console.log("⚠️ Detected potential OAuth callback URL pattern");
+        console.log("This might be a GitHub OAuth callback that needs processing");
+        // You might want to redirect to a specific handler or show a message
+      }
     }
   }, [loginUser, navigate]);
 

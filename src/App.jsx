@@ -12,6 +12,8 @@ function App() {
           <Route path="/" element={<Signup />} />
           <Route path="/login" element={<Login />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          {/* Catch-all route for OAuth callbacks */}
+          <Route path="*" element={<Dashboard />} />
         </Routes>
       </div>
     </Router>
