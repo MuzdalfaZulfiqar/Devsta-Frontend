@@ -1,90 +1,63 @@
-// import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
-import { useNavigate } from "react-router-dom";
-import { useState } from "react";
-import { useEffect } from "react";
+import { getCurrentUser } from "../../api/user";
+import GithubConnectModal from "../../components/dashboard/GithubConnectModal";
 
 export default function Dashboard() {
-  const { user, loginUser } = useAuth();
-  const navigate = useNavigate();
-  const [isProcessingAuth, setIsProcessingAuth] = useState(false);
+  const { user, token, loginUser } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [showGithubModal, setShowGithubModal] = useState(false);
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const token = params.get("token");
-    const userData = params.get("user");
-    const error = params.get("error");
-
-    if (error) {
-      console.error("OAuth error:", error);
-      navigate("/login");
-      return;
-    }
-
-    if (token && userData) {
-      setIsProcessingAuth(true);
-
-      // Hide URL parameters
-      window.history.replaceState({}, document.title, window.location.pathname);
-
-      // Store JWT
-      localStorage.setItem("devsta_token", token);
-
-      // Store user in context
+    if (!token) return;
+    const fetchData = async () => {
       try {
-        const parsedUser = JSON.parse(decodeURIComponent(userData));
-        loginUser(parsedUser);
+        const freshUser = await getCurrentUser(token);
+        loginUser(freshUser, token); // ✅ keep updated
+        if (!freshUser.githubConnected) {
+          setShowGithubModal(true);
+        }
       } catch (err) {
-        console.error("Error parsing user data:", err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
       }
+    };
+    fetchData();
+  }, [token, loginUser]);
 
-      setTimeout(() => setIsProcessingAuth(false), 500);
-    }
-  }, [loginUser, navigate]);
-
-  if (isProcessingAuth) {
-    return <div>Loading...</div>;
-  }
-
-  if (!user) return null;
+  if (loading) return <p className="text-white">Loading dashboard...</p>;
+  if (error) return <p className="text-red-500">{error}</p>;
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-black text-white p-6 font-fragment">
-      <img
-        src={user.avatar}
-        alt={`${user.name} avatar`}
-        className="w-24 h-24 rounded-full mb-4"
-      />
-      <h1 className="text-3xl font-bold mb-2">Welcome back, {user.name}!</h1>
-      <p className="text-gray-300 mb-4">{user.email}</p>
+    <div className="min-h-screen bg-black text-white font-fragment">
+      <div className="p-6">
+        <h1 className="text-2xl font-bold">Welcome, {user?.name}</h1>
+        <img
+          src={user?.avatar}
+          alt="avatar"
+          className="w-20 h-20 rounded-full mt-4"
+        />
 
-      {user.githubStats && (
-        <div className="flex gap-6 mb-4">
-          <div>
-            <h2 className="font-semibold">{user.githubStats.public_repos}</h2>
-            <p className="text-gray-400 text-sm">Public Repos</p>
-          </div>
-          <div>
-            <h2 className="font-semibold">{user.githubStats.followers}</h2>
-            <p className="text-gray-400 text-sm">Followers</p>
-          </div>
-          <div>
-            <h2 className="font-semibold">{user.githubStats.following}</h2>
-            <p className="text-gray-400 text-sm">Following</p>
-          </div>
+        <div className="mt-6">
+          <h2 className="text-xl font-semibold">GitHub Stats</h2>
+          {user?.githubConnected ? (
+            <ul className="mt-2 space-y-1">
+              <li>Repos: {user.githubStats.totalRepos}</li>
+              <li>Stars: {user.githubStats.totalStars}</li>
+              <li>Forks: {user.githubStats.totalForks}</li>
+              <li>Followers: {user.githubStats.followers}</li>
+              <li>Following: {user.githubStats.following}</li>
+            </ul>
+          ) : (
+            <p>GitHub not connected</p>
+          )}
         </div>
-      )}
+      </div>
 
-      <button
-        onClick={() => {
-          localStorage.removeItem("devsta_token");
-          localStorage.removeItem("devsta_user");
-          navigate("/login");
-        }}
-        className="bg-red-600 hover:bg-red-700 py-2 px-6 rounded-lg"
-      >
-        Logout
-      </button>
+      {/* 🚨 Show modal if GitHub not connected */}
+      {showGithubModal && <GithubConnectModal />}
     </div>
   );
 }
