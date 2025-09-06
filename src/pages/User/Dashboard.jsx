@@ -1,39 +1,170 @@
 import { useAuth } from "../../context/AuthContext";
 import GithubConnectModal from "../../components/dashboard/GithubConnectModal";
+import DashboardLayout from "../../components/dashboard/DashboardLayout";
+import { Star, GitFork, Users, BookOpen, UserPlus } from "lucide-react";
 
 export default function Dashboard() {
   const { user } = useAuth();
 
-  if (!user) return <p className="text-white">Loading dashboard...</p>;
+  if (!user) {
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+
+      <div className="flex items-center justify-center min-h-screen bg-black text-white font-fragment">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-gray-300 text-lg">Loading your dashboard...</p>
+        </div>
+      </div>
+      </div>
+    );
+  }
+
+  // ✅ Stats with icons
+  const stats = [
+    {
+      label: "Repositories",
+      value: user.githubStats.totalRepos,
+      icon: <BookOpen size={18} className="text-blue-400" />,
+    },
+    {
+      label: "Stars",
+      value: user.githubStats.totalStars,
+      icon: <Star size={18} className="text-yellow-400" />,
+    },
+    {
+      label: "Forks",
+      value: user.githubStats.totalForks,
+      icon: <GitFork size={18} className="text-green-400" />,
+    },
+    {
+      label: "Followers",
+      value: user.githubStats.followers,
+      icon: <Users size={18} className="text-primary" />,
+    },
+    {
+      label: "Following",
+      value: user.githubStats.following,
+      icon: <UserPlus size={18} className="text-purple-400" />,
+    },
+  ];
 
   return (
-    <div className="min-h-screen bg-black text-white font-fragment">
-      <div className="p-6">
-        <h1 className="text-2xl font-bold">Welcome, {user.name}</h1>
-        <img
-          src={user.avatar}
-          alt="avatar"
-          className="w-20 h-20 rounded-full mt-4"
-        />
+    <DashboardLayout user={user}>
+      <div className="space-y-8">
+        {/* Welcome */}
+<div className="flex items-center gap-4 flex-wrap">
+  <img
+    src={user.avatar}
+    alt="avatar"
+    className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border border-gray-700"
+  />
+  <div>
+    <h1 className="text-xl sm:text-2xl font-bold">
+      Welcome, {user.name}
+    </h1>
+    <p className="text-gray-400 text-xs sm:text-sm">
+      Your personalized DevSta dashboard
+    </p>
+  </div>
+</div>
 
-        <div className="mt-6">
-          <h2 className="text-xl font-semibold">GitHub Stats</h2>
+
+        {/* GitHub Stats */}
+        <div>
+          <h2 className="text-xl font-semibold mb-4">GitHub Stats</h2>
           {user.githubConnected ? (
-            <ul className="mt-2 space-y-1">
-              <li>Repos: {user.githubStats.totalRepos}</li>
-              <li>Stars: {user.githubStats.totalStars}</li>
-              <li>Forks: {user.githubStats.totalForks}</li>
-              <li>Followers: {user.githubStats.followers}</li>
-              <li>Following: {user.githubStats.following}</li>
-            </ul>
+            <div className="space-y-8">
+              {/* Stats Grid */}
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                {stats.map((stat) => (
+                  <div
+                    key={stat.label}
+                    className="bg-gray-950 border border-gray-800 p-4 rounded-lg flex flex-col items-start hover:border-primary transition"
+                  >
+                    <div className="flex items-center gap-2">
+                      {stat.icon}
+                      <p className="text-gray-400 text-xs sm:text-sm">{stat.label}</p>
+                    </div>
+                    <p className="text-lg sm:text-2xl font-bold text-white mt-1">
+  {stat.value}
+</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Recent Repositories */}
+              {user.githubRepos && user.githubRepos.length > 0 && (
+                <div>
+                  <h3 className="text-lg font-semibold mb-3">
+                    Recent Repositories
+                  </h3>
+                  <div className="grid gap-3">
+                    {user.githubRepos.slice(0, 3).map((repo) => (
+                      <a
+                        key={repo.id}
+                        href={repo.html_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block bg-gray-950 p-4 rounded-lg border border-gray-800 hover:border-primary transition"
+                      >
+                        <div className="flex justify-between items-center">
+                         <p className="font-medium text-sm sm:text-base text-white">{repo.name}</p>
+<span className="text-[10px] sm:text-xs text-gray-400">{repo.language}</span>
+
+                        </div>
+                        <p className="text-gray-400 text-sm mt-1 flex gap-4">
+                          <span className="flex items-center gap-1">
+                            <Star size={14} className="text-yellow-400" />
+                            {repo.stargazers_count}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <GitFork size={14} className="text-green-400" />
+                            {repo.forks_count}
+                          </span>
+                        </p>
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Organizations */}
+              {user.githubOrgs && user.githubOrgs.length > 0 && (
+                <div>
+                  <h3 className="text-lg font-semibold mb-3">Organizations</h3>
+                  <div className="flex gap-3 flex-wrap">
+                    {user.githubOrgs.map((org) => (
+                      <a
+                        key={org.id}
+                        href={org.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 px-3 py-2 bg-gray-950 rounded-lg border border-gray-800 hover:border-primary transition"
+                      >
+                        {org.avatar_url && (
+                          <img
+                            src={org.avatar_url}
+                            alt={org.login}
+                            className="w-6 h-6 rounded-full"
+                          />
+                        )}
+                        <span className="text-sm text-gray-300">
+                          {org.login}
+                        </span>
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
           ) : (
-            <p>GitHub not connected</p>
+            <p className="text-gray-400">GitHub not connected</p>
           )}
         </div>
       </div>
 
-      {/* ✅ Modal only shows if user has NOT connected GitHub */}
       {!user.githubConnected && <GithubConnectModal />}
-    </div>
+    </DashboardLayout>
   );
 }

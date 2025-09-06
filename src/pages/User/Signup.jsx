@@ -132,7 +132,7 @@ const navigate = useNavigate();
           {/* Social Signup Buttons */}
           <div className="flex-1 flex flex-col justify-center w-full gap-3">
             {/* GitHub Signup */}
-            <button
+            {/* <button
               onClick={handleGitHubSignup}
               className="w-full flex items-center justify-center gap-2 border border-gray-400 bg-black/20 py-2.5 rounded-lg hover:bg-black/40 transition font-medium text-sm md:text-base text-white"
             >
@@ -149,7 +149,7 @@ const navigate = useNavigate();
                 />
               </svg>
               Continue with GitHub
-            </button>
+            </button> */}
             
             {/* Google Signup */}
             <button
