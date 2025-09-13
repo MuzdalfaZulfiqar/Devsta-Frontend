@@ -366,22 +366,23 @@ export default function Dashboard() {
   }, [user]);
 
   // 🔔 Manage GitHub reminder notification
-  useEffect(() => {
-    if (!user) return;
+ useEffect(() => {
+  if (!user) return;
 
-    if (!user.githubConnected) {
-      addNotification({
-        id: "github-connect", // static ID prevents duplicates
-        message: "Connect your GitHub to unlock full features.",
-        action: {
-          label: "Connect",
-          onClick: () => setShowModal(true),
-        },
-      });
-    } else {
-      removeNotification("github-connect");
-    }
-  }, [user, addNotification, removeNotification]);
+  if (!user.githubConnected) {
+    addNotification({
+      id: "github-connect",
+      message: "Connect your GitHub to unlock full features.",
+      action: {
+        label: "Connect",
+        onClick: () => setShowModal(true),
+      },
+    });
+  } else {
+    removeNotification("github-connect");
+  }
+}, [user, addNotification, removeNotification]);
+
 
   if (!user) {
     return (
