@@ -43,13 +43,14 @@ export default function Sidebar({ isOpen, setIsOpen, onLogout }) {
 
       {/* Logo */}
     {/* Logo */}
-<div className="px-6 py-2 border-b border-gray-800 flex items-center justify-left">
+<div className="px-6 h-16 flex items-center border-b border-gray-800">
   <img 
     src="/devsta-logo.png" 
     alt="Devsta Logo" 
-    className="h-16 w-auto" 
+    className="h-10 w-auto" 
   />
 </div>
+
 
 
       {/* Nav */}
