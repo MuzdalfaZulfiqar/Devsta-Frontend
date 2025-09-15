@@ -196,6 +196,7 @@
 import { useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { loginUser as loginAPI } from "../../api/auth";
+import { BACKEND_URL } from "../../../config";
 
 export default function Login() {
   const { loginUser } = useAuth();
@@ -231,7 +232,7 @@ export default function Login() {
   };
 
   const handleGoogleLogin = () => {
-    window.location.href = `${process.env.BACKEND_URL}/api/users/auth/google`;
+    window.location.href = `${BACKEND_URL}/api/users/auth/google`;
   };
 
   return (
