@@ -16,25 +16,29 @@ const navigate = useNavigate();
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
-    try {
-      const data = await signupUser(form);
-      loginUser(data.user, data.token);
-      setModalType("success");
-      setSuccessMessage("Account created successfully!");
-      setShowModal(true);
-      setTimeout(() => {
-  setShowModal(false);
-  navigate("/dashboard");
-}, 200);
-    } catch (err) {
-      setError(err.message);
-      setModalType("error");
-      setShowModal(true);
-    }
-  };
+ const handleSubmit = async (e) => {
+  e.preventDefault();
+  setError("");
+
+  try {
+    const data = await signupUser(form);
+
+    // Only pass token, AuthContext will fetch the user
+    await loginUser(data.token);
+
+    setModalType("success");
+    setSuccessMessage("Account created successfully!");
+    setShowModal(true);
+
+    // Optional: close modal automatically after 1s
+    setTimeout(() => setShowModal(false), 1000);
+  } catch (err) {
+    setError(err.message);
+    setModalType("error");
+    setShowModal(true);
+  }
+};
+
 
   const handleGoogleSignup = () => {
     window.location.href = `${BACKEND_URL}/api/users/auth/google`;
