@@ -1,4 +1,6 @@
+
 // import { createContext, useContext, useEffect, useState } from "react";
+// import { getCurrentUser } from "../api/user"; // ✅ ensure correct path
 
 // const AuthContext = createContext();
 
@@ -6,17 +8,36 @@
 //   const [user, setUser] = useState(null);
 //   const [token, setToken] = useState(null);
 
-//   // Load from localStorage on first render
+//   // Load from localStorage or URL token on first render
 //   useEffect(() => {
-//     const storedUser = localStorage.getItem("devsta_user");
+//     const params = new URLSearchParams(window.location.search);
+//     const tokenFromUrl = params.get("token");
 //     const storedToken = localStorage.getItem("devsta_token");
-//     if (storedUser && storedToken) {
-//       setUser(JSON.parse(storedUser));
-//       setToken(storedToken);
+
+//     const finalToken = tokenFromUrl || storedToken;
+
+//     if (finalToken) {
+//       localStorage.setItem("devsta_token", finalToken);
+//       setToken(finalToken);
+
+//       // Fetch fresh user from backend
+//       getCurrentUser(finalToken)
+//         .then((freshUser) => {
+//           setUser(freshUser);
+//           localStorage.setItem("devsta_user", JSON.stringify(freshUser));
+//         })
+//         .catch((err) => {
+//           console.error("Failed to load user:", err);
+//           logoutUser();
+//         });
+//     }
+
+//     // ✅ Clean URL (remove ?token=...)
+//     if (tokenFromUrl) {
+//       window.history.replaceState({}, document.title, "/dashboard");
 //     }
 //   }, []);
 
-//   // Login and persist to localStorage
 //   const loginUser = (userData, jwtToken) => {
 //     setUser(userData);
 //     setToken(jwtToken);
@@ -24,7 +45,6 @@
 //     localStorage.setItem("devsta_token", jwtToken);
 //   };
 
-//   // Logout and clear localStorage
 //   const logoutUser = () => {
 //     setUser(null);
 //     setToken(null);
@@ -39,22 +59,108 @@
 //   );
 // }
 
-// // Hook for consuming AuthContext
 // export function useAuth() {
 //   return useContext(AuthContext);
 // }
 
 
+// import { createContext, useContext, useEffect, useState } from "react";
+// import { useNavigate } from "react-router-dom";
+// import { getCurrentUser } from "../api/user";
+
+// const AuthContext = createContext();
+
+// export default function AuthProvider({ children }) {
+//   const [user, setUser] = useState(null);
+//   const [token, setToken] = useState(null);
+//   const navigate = useNavigate();
+
+//   useEffect(() => {
+//     const params = new URLSearchParams(window.location.search);
+//     const tokenFromUrl = params.get("token");
+//     const storedToken = localStorage.getItem("devsta_token");
+
+//     const finalToken = tokenFromUrl || storedToken;
+
+//     if (finalToken) {
+//       setToken(finalToken);
+//       localStorage.setItem("devsta_token", finalToken);
+
+//       // fetch user
+//       getCurrentUser(finalToken)
+//         .then((freshUser) => {
+//           setUser(freshUser);
+//           localStorage.setItem("devsta_user", JSON.stringify(freshUser));
+
+//           if (freshUser.onboardingCompleted) navigate("/dashboard");
+//           else navigate("/onboarding");
+//         })
+//         .catch((err) => {
+//           console.error("Failed to load user:", err);
+//           logoutUser();
+//         });
+//     }
+
+//     if (tokenFromUrl) {
+//       window.history.replaceState({}, document.title, "/");
+//     }
+//   }, []);
+
+//   const loginUser = async (jwtToken) => {
+//     setToken(jwtToken);
+//     localStorage.setItem("devsta_token", jwtToken);
+
+//     try {
+//       const freshUser = await getCurrentUser(jwtToken);
+//       setUser(freshUser);
+//       localStorage.setItem("devsta_user", JSON.stringify(freshUser));
+
+//       if (freshUser.onboardingCompleted) navigate("/dashboard");
+//       else navigate("/onboarding");
+//     } catch (err) {
+//       console.error(err);
+//       logoutUser();
+//     }
+//   };
+
+//   const logoutUser = () => {
+//     setUser(null);
+//     setToken(null);
+//     localStorage.removeItem("devsta_user");
+//     localStorage.removeItem("devsta_token");
+//     navigate("/");
+//   };
+
+//   return (
+//     <AuthContext.Provider
+//       value={{
+//         user,
+//         token,
+//         setUser,      // ✅ now exposed to other components
+//         loginUser,
+//         logoutUser,
+//       }}
+//     >
+//       {children}
+//     </AuthContext.Provider>
+//   );
+// }
+
+// export const useAuth = () => useContext(AuthContext);
+
 import { createContext, useContext, useEffect, useState } from "react";
-import { getCurrentUser } from "../api/user"; // ✅ ensure correct path
+import { useNavigate } from "react-router-dom";
+import { getCurrentUser } from "../api/user";
 
 const AuthContext = createContext();
 
-export function AuthProvider({ children }) {
+export default function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
+  const [showWelcome, setShowWelcome] = useState(false); // ✅ show welcome page
+  const navigate = useNavigate();
 
-  // Load from localStorage or URL token on first render
+  // Load token from URL or localStorage
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const tokenFromUrl = params.get("token");
@@ -63,14 +169,20 @@ export function AuthProvider({ children }) {
     const finalToken = tokenFromUrl || storedToken;
 
     if (finalToken) {
-      localStorage.setItem("devsta_token", finalToken);
       setToken(finalToken);
+      localStorage.setItem("devsta_token", finalToken);
 
-      // Fetch fresh user from backend
       getCurrentUser(finalToken)
         .then((freshUser) => {
           setUser(freshUser);
           localStorage.setItem("devsta_user", JSON.stringify(freshUser));
+
+          if (!freshUser.onboardingCompleted) {
+            setShowWelcome(true); // show Welcome page first
+            navigate("/welcome");
+          } else {
+            navigate("/dashboard");
+          }
         })
         .catch((err) => {
           console.error("Failed to load user:", err);
@@ -78,33 +190,55 @@ export function AuthProvider({ children }) {
         });
     }
 
-    // ✅ Clean URL (remove ?token=...)
-    if (tokenFromUrl) {
-      window.history.replaceState({}, document.title, "/dashboard");
-    }
+    // Clean URL token
+    if (tokenFromUrl) window.history.replaceState({}, document.title, "/");
   }, []);
 
-  const loginUser = (userData, jwtToken) => {
-    setUser(userData);
+  const loginUser = async (jwtToken) => {
     setToken(jwtToken);
-    localStorage.setItem("devsta_user", JSON.stringify(userData));
     localStorage.setItem("devsta_token", jwtToken);
+
+    try {
+      const freshUser = await getCurrentUser(jwtToken);
+      setUser(freshUser);
+      localStorage.setItem("devsta_user", JSON.stringify(freshUser));
+
+      if (!freshUser.onboardingCompleted) {
+        setShowWelcome(true);
+        navigate("/welcome");
+      } else {
+        navigate("/dashboard");
+      }
+    } catch (err) {
+      console.error(err);
+      logoutUser();
+    }
   };
 
   const logoutUser = () => {
     setUser(null);
     setToken(null);
+    setShowWelcome(false);
     localStorage.removeItem("devsta_user");
     localStorage.removeItem("devsta_token");
+    navigate("/login");
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, loginUser, logoutUser }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        token,
+        showWelcome,
+        setShowWelcome,
+        setUser,
+        loginUser,
+        logoutUser,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
 }
 
-export function useAuth() {
-  return useContext(AuthContext);
-}
+export const useAuth = () => useContext(AuthContext);
