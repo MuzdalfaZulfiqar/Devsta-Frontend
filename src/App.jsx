@@ -52,6 +52,7 @@ import Dashboard from "./pages/User/Dashboard";
 import Onboarding from "./pages/User/Onboarding";
 import ProtectedRoute from "./components/ProtectedRoute";
 import WelcomePage from "./pages/User/WelcomePage";
+import OAuthHandler from "./pages/User/OAuthHandler";
 
 function App() {
   const { user, showWelcome, setShowWelcome } = useAuth();
@@ -62,7 +63,7 @@ function App() {
   {/* Public routes */}
   <Route path="/" element={<Signup />} />
   <Route path="/login" element={<Login />} />
-
+<Route path="/oauth-handler" element={<OAuthHandler />} />
   {/* Always define welcome route */}
   <Route
     path="/welcome"
