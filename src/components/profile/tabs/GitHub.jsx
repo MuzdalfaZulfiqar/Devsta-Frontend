@@ -120,10 +120,9 @@
 //   );
 // }
 
-
-import { Star, GitFork, Users, UserPlus, BookOpen } from "lucide-react";
-import GithubConnectModal from "../../dashboard/GithubConnectModal"; // optional if you want modal support
 import { useState } from "react";
+import { Star, GitFork, Users, UserPlus, BookOpen } from "lucide-react";
+import GithubConnectModal from "../../dashboard/GithubConnectModal"; // optional modal support
 
 export default function GitHub({ user }) {
   const [showModal, setShowModal] = useState(false);
@@ -144,13 +143,14 @@ export default function GitHub({ user }) {
         <>
           <h2 className="text-lg font-semibold text-white">GitHub Stats</h2>
 
+          {/* Stats */}
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             {stats.map(
               (stat) =>
                 stat.value !== undefined && (
                   <div
                     key={stat.label}
-                    className="bg-black border border-primary/20 p-4 rounded-lg flex flex-col items-start"
+                    className="bg-black border border-primary p-4 rounded-lg flex flex-col items-start"
                   >
                     <div className="flex items-center gap-2">
                       {stat.icon}
@@ -175,7 +175,7 @@ export default function GitHub({ user }) {
                     href={repo.html_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="block bg-black p-4 rounded-lg border border-primary/20"
+                    className="block bg-black p-4 rounded-lg border border-primary"
                   >
                     <div className="flex justify-between items-center">
                       <p className="font-medium text-sm sm:text-base text-white">{repo.name}</p>
@@ -208,7 +208,7 @@ export default function GitHub({ user }) {
                     href={org.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-2 px-3 py-2 bg-black rounded-lg border border-primary/20"
+                    className="flex items-center gap-2 px-3 py-2 bg-black rounded-lg border border-primary"
                   >
                     {org.avatar_url && (
                       <img src={org.avatar_url} alt={org.login} className="w-6 h-6 rounded-full" />
@@ -241,3 +241,4 @@ export default function GitHub({ user }) {
     </div>
   );
 }
+
