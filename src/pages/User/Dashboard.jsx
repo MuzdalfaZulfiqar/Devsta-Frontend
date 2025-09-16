@@ -213,22 +213,23 @@
 //     </DashboardLayout>
 //   );
 // }
-
 import { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
 import DashboardLayout from "../../components/dashboard/DashboardLayout";
 import { useNavigate } from "react-router-dom";
 import { useNotifications } from "../../context/NotificationContext";
+import GithubConnectModal from "../../components/dashboard/GithubConnectModal";
 
 export default function Dashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { addNotification } = useNotifications();
+  const [showGithubModal, setShowGithubModal] = useState(false);
 
   useEffect(() => {
     // Redirect if onboarding incomplete
     if (user && !user.onboardingCompleted) {
-      navigate("/welcome"); // or "/onboarding"
+      navigate("/welcome");
     }
 
     // Show GitHub-not-connected notification if needed
@@ -238,7 +239,7 @@ export default function Dashboard() {
         message: "Your GitHub is not connected. Connect it to unlock full DevSta features.",
         action: {
           label: "Connect",
-          onClick: () => navigate("/dashboard/profile/github"), // navigate to profile GitHub tab
+          onClick: () => setShowGithubModal(true), // show the modal instead of redirect
         },
       });
     }
@@ -271,6 +272,15 @@ export default function Dashboard() {
 
         {/* Future dashboard sections can go here */}
       </div>
+
+      {/* GitHub Connect Modal */}
+      {showGithubModal && !user.githubConnected && (
+        <GithubConnectModal
+          open={showGithubModal}
+          onClose={() => setShowGithubModal(false)}
+        />
+      )}
     </DashboardLayout>
   );
 }
+
