@@ -37,14 +37,6 @@ export default function ReviewStep({ data, onBack, onComplete }) {
           <span className="font-medium text-white">Resume:</span>
           <span className="text-white">{data.resume?.name || "-"}</span>
         </div>
-        <div className="flex justify-between">
-          <span className="font-medium text-white">GitHub Connected:</span>
-          {data.githubConnected ? (
-            <CheckCircle className="text-green-500" size={18} />
-          ) : (
-            <span className="text-white">No</span>
-          )}
-        </div>
       </div>
 
       <div className="flex justify-between pt-6">

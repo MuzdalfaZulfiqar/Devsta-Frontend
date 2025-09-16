@@ -4,13 +4,12 @@ import GeneralInfoStep from "../../components/onboarding/GeneralInfoStep";
 import ExperienceStep from "../../components/onboarding/ExperienceStep";
 import SkillsStep from "../../components/onboarding/SkillsStep";
 import ResumeStep from "../../components/onboarding/ResumeStep";
-import GithubStep from "../../components/onboarding/GithubStep";
 import ReviewStep from "../../components/onboarding/ReviewStep";
 import { getOnboarding, saveOnboarding, deleteResume } from "../../api/onboarding";
 import { useNavigate } from "react-router-dom";
 import SuccessModal from "../../components/SuccessModal";
 import { getCurrentUser } from "../../api/user"; 
-const steps = ["General Info", "Experience", "Skills", "Resume", "GitHub", "Review"];
+const steps = ["General Info", "Experience", "Skills", "Resume", "Review"];
 
 // Maps to match backend enums
 const experienceMap = {
@@ -48,8 +47,6 @@ export default function Onboarding() {
     primaryRole: "",
     topSkills: [],
     resume: null,
-    githubUrl: "",
-    githubConnected: false,
   });
 
   useEffect(() => {
@@ -63,7 +60,6 @@ export default function Onboarding() {
             ...prev,
             ...data,
             topSkills: data.topSkills || [],
-            githubConnected: !!data.githubUrl,
           }));
         }
       } catch (err) {
@@ -203,8 +199,6 @@ const handleFinish = async () => {
       case 3:
         return <ResumeStep formData={formData} setFormData={handleChange} nextStep={handleNext} prevStep={handleBack} onDeleteResume={handleDeleteResume} />;
       case 4:
-        return <GithubStep formData={formData} setFormData={handleChange} onNext={handleNext} onBack={handleBack} />;
-      case 5:
         return <ReviewStep data={formData} onBack={handleBack} onComplete={handleFinish} />;
       default:
         return null;
