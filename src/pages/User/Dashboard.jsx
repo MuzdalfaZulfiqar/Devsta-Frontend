@@ -199,11 +199,20 @@ import { Star, GitFork, Users, BookOpen, UserPlus } from "lucide-react";
 import GithubConnectModal from "../../components/dashboard/GithubConnectModal";
 import DashboardLayout from "../../components/dashboard/DashboardLayout";
 import { useNotifications } from "../../context/NotificationContext";
+import { useNavigate } from "react-router-dom";
 
 export default function Dashboard() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [showModal, setShowModal] = useState(false);
   const { addNotification, removeNotification, notifications } = useNotifications();
+
+ useEffect(() => {
+  if (user && !user.onboardingCompleted) {
+    navigate("/welcome"); // or "/onboarding" directly
+  }
+}, [user, navigate]);
+
 
   // Show GitHub connect modal occasionally (1 in 3 visits)
   // useEffect(() => {

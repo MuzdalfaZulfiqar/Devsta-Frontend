@@ -13,9 +13,11 @@ import {
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function Sidebar({ isOpen, setIsOpen, onLogout, user }) {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const navigate = useNavigate();
 
   const menuItems = [
     { label: "Dashboard", icon: Home, href: "/dashboard" },
@@ -101,7 +103,7 @@ export default function Sidebar({ isOpen, setIsOpen, onLogout, user }) {
     <span>{user?.name || "Account"}</span>
   </button>
 
-  {userMenuOpen && (
+  {/* {userMenuOpen && (
     <div className="absolute bottom-16 left-4 w-40 bg-gray-900 border border-gray-700 rounded-lg shadow-lg">
       <button
         className="w-full text-left px-4 py-2 text-sm hover:bg-gray-800"
@@ -116,7 +118,27 @@ export default function Sidebar({ isOpen, setIsOpen, onLogout, user }) {
         Logout
       </button>
     </div>
+  )} */}
+  {userMenuOpen && (
+    <div className="absolute bottom-16 left-4 w-40 bg-gray-900 border border-gray-700 rounded-lg shadow-lg">
+      <button
+        className="w-full text-left px-4 py-2 text-sm hover:bg-gray-800"
+        onClick={() => {
+          setUserMenuOpen(false);
+          navigate("/dashboard/profile"); // <-- use navigate
+        }}
+      >
+        Profile
+      </button>
+      <button
+        className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-red-500/10"
+        onClick={onLogout}
+      >
+        Logout
+      </button>
+    </div>
   )}
+
 </div>
 
     </div>
