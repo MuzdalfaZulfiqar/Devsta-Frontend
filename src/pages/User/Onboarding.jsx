@@ -34,7 +34,7 @@ const roleMap = {
 };
 
 export default function Onboarding() {
-  const { token, setUser } = useAuth();
+  const { token, setUser, user } = useAuth();
   const [currentStep, setCurrentStep] = useState(0);
   const [loading, setLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -186,6 +186,11 @@ const handleFinish = async () => {
   }
 };
 
+ useEffect(() => {
+  if (user?.onboardingCompleted) {
+    navigate("/dashboard"); // redirect if they already finished
+  }
+}, [user, navigate]);
 
   const renderStep = () => {
     switch (currentStep) {

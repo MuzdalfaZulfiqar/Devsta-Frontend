@@ -53,6 +53,7 @@ import Onboarding from "./pages/User/Onboarding";
 import ProtectedRoute from "./components/ProtectedRoute";
 import WelcomePage from "./pages/User/WelcomePage";
 import OAuthHandler from "./pages/User/OAuthHandler";
+import ProfilePage from "./pages/User/ProfilePage";
 
 function App() {
   const { user, showWelcome, setShowWelcome } = useAuth();
@@ -64,38 +65,53 @@ function App() {
   <Route path="/" element={<Signup />} />
   <Route path="/login" element={<Login />} />
 <Route path="/oauth-handler" element={<OAuthHandler />} />
+<Route
+  path="/dashboard/profile"
+  element={
+    <ProtectedRoute>
+      <ProfilePage />
+    </ProtectedRoute>
+  }
+/>
+
+
   {/* Always define welcome route */}
-  <Route
+  {/* <Route
     path="/welcome"
     element={
       <ProtectedRoute>
         <WelcomePage />
       </ProtectedRoute>
     }
-  />
+  /> */}
 
   {/* Onboarding */}
-  <Route
+  {/* <Route
     path="/onboarding"
     element={
       <ProtectedRoute>
         <Onboarding />
       </ProtectedRoute>
     }
-  />
+  /> */}
 
   {/* Dashboard */}
-  <Route
+  {/* <Route
     path="/dashboard"
     element={
       <ProtectedRoute requireOnboarding={true}>
         <Dashboard />
       </ProtectedRoute>
-    }
-  />
+    } */}
+  {/* /> */}
 
   {/* Fallback */}
   <Route path="*" element={<Signup />} />
+
+  <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+<Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
+<Route path="/welcome" element={<ProtectedRoute><WelcomePage /></ProtectedRoute>} />
+
 </Routes>
 
     </div>
