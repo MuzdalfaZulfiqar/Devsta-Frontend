@@ -167,28 +167,89 @@
 // }
 
 
+// import { useState, useEffect } from "react";
+// import { useAuth } from "../../context/AuthContext";
+// import DashboardLayout from "../../components/dashboard/DashboardLayout";
+// import { useNavigate } from "react-router-dom";
+
+// export default function Dashboard() {
+//   const { user } = useAuth();
+//   const navigate = useNavigate();
+
+//   useEffect(() => {
+//     if (user && !user.onboardingCompleted) {
+//       navigate("/welcome"); // or "/onboarding"
+//     }
+//   }, [user, navigate]);
+
+//   if (!user) {
+//     return (
+//       <div className="flex items-center justify-center min-h-screen bg-black text-white font-fragment">
+//         <div className="flex flex-col items-center gap-4">
+//           {/* Spinner */}
+//           <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+//           {/* Loading text */}
+//           <p className="text-gray-300 text-lg">Loading your dashboard, please wait...</p>
+//         </div>
+//       </div>
+//     );
+//   }
+
+//   return (
+//     <DashboardLayout user={user}>
+//       <div className="flex flex-col gap-8 w-full">
+//         {/* Professional Welcome Section */}
+//         <div>
+//           <h1 className="text-2xl sm:text-3xl font-bold text-white">
+//             Welcome Back, {user.name || "User"}!
+//           </h1>
+//           <p className="text-gray-400 text-sm sm:text-base mt-1">
+//             Here is an overview of your DevSta dashboard. Access your projects, tasks, and resources from here.
+//           </p>
+//         </div>
+
+//         {/* Future dashboard sections can be added here */}
+//       </div>
+//     </DashboardLayout>
+//   );
+// }
+
 import { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
 import DashboardLayout from "../../components/dashboard/DashboardLayout";
 import { useNavigate } from "react-router-dom";
+import { useNotifications } from "../../context/NotificationContext";
 
 export default function Dashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { addNotification } = useNotifications();
 
   useEffect(() => {
+    // Redirect if onboarding incomplete
     if (user && !user.onboardingCompleted) {
       navigate("/welcome"); // or "/onboarding"
     }
-  }, [user, navigate]);
+
+    // Show GitHub-not-connected notification if needed
+    if (user && !user.githubConnected) {
+      addNotification({
+        id: "github-not-connected",
+        message: "Your GitHub is not connected. Connect it to unlock full DevSta features.",
+        action: {
+          label: "Connect",
+          onClick: () => navigate("/dashboard/profile/github"), // navigate to profile GitHub tab
+        },
+      });
+    }
+  }, [user, navigate, addNotification]);
 
   if (!user) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-black text-white font-fragment">
+        {/* Spinner */}
         <div className="flex flex-col items-center gap-4">
-          {/* Spinner */}
           <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-          {/* Loading text */}
           <p className="text-gray-300 text-lg">Loading your dashboard, please wait...</p>
         </div>
       </div>
@@ -208,7 +269,7 @@ export default function Dashboard() {
           </p>
         </div>
 
-        {/* Future dashboard sections can be added here */}
+        {/* Future dashboard sections can go here */}
       </div>
     </DashboardLayout>
   );
