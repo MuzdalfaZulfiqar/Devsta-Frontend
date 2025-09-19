@@ -197,9 +197,11 @@ import { useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { loginUser as loginAPI } from "../../api/auth";
 import { BACKEND_URL } from "../../../config";
+import { useNavigate } from "react-router-dom";
 
 export default function Login() {
   const { loginUser } = useAuth();
+  const navigate = useNavigate();
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
@@ -222,8 +224,11 @@ export default function Login() {
       setSuccessMessage("Logged in successfully!");
       setShowModal(true);
 
-      // optional: close modal automatically after 1s
-      setTimeout(() => setShowModal(false), 1000);
+      // Navigate after successful login
+      setTimeout(() => {
+        setShowModal(false);
+        // Navigation will be handled by AuthContext based on onboarding status
+      }, 1000);
     } catch (err) {
       setError(err.message);
       setModalType("error");
