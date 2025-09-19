@@ -1,6 +1,6 @@
 import { ArrowLeft, CheckCircle } from "lucide-react";
 
-export default function ReviewStep({ data, onBack, onComplete }) {
+export default function ReviewStep({ data, onBack, onComplete, loading = false }) {
   const resumeText =
     data?.resume?.name
       ? data.resume.name
@@ -57,9 +57,10 @@ export default function ReviewStep({ data, onBack, onComplete }) {
         </button>
         <button
           onClick={onComplete}
-          className="flex items-center gap-2 px-6 py-2 bg-primary text-white rounded hover:opacity-90"
+          disabled={loading}
+          className="flex items-center gap-2 px-6 py-2 bg-primary text-white rounded hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Submit
+          {loading ? "Submitting..." : "Submit"}
         </button>
       </div>
     </div>
