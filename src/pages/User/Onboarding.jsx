@@ -42,7 +42,7 @@ export default function Onboarding() {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
-    phone: "",
+    phone: null,
     experienceLevel: "",
     primaryRole: "",
     topSkills: [],
