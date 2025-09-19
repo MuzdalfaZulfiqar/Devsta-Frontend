@@ -31,7 +31,7 @@ const navigate = useNavigate();
     setShowModal(true);
 
     // Optional: close modal automatically after 1s
-    setTimeout(() => setShowModal(false), 1000);
+    setTimeout(() => setShowModal(false), 100);
   } catch (err) {
     setError(err.message);
     setModalType("error");
