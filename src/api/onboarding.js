@@ -11,15 +11,31 @@ export const getOnboarding = async (token) => {
 
 export const saveOnboarding = async (data, token) => {
   const formData = new FormData();
+  
+  // Log the data being sent for debugging
+  console.log("saveOnboarding - Input data:", data);
+  
   Object.keys(data).forEach((key) => {
-    if (key === "resume" && data.resume instanceof File) {
-      formData.append("resume", data.resume);
-    } else if (Array.isArray(data[key])) {
-      data[key].forEach((item) => formData.append(key, item));
-    } else if (data[key] !== undefined && data[key] !== null) {
-      formData.append(key, data[key]);
+    const value = data[key];
+    
+    if (key === "resume" && value instanceof File) {
+      formData.append("resume", value);
+    } else if (Array.isArray(value)) {
+      value.forEach((item) => {
+        if (item !== null && item !== undefined) {
+          formData.append(key, item);
+        }
+      });
+    } else if (value !== undefined && value !== null && value !== "") {
+      formData.append(key, value);
     }
   });
+
+  // Log FormData contents for debugging
+  console.log("saveOnboarding - FormData contents:");
+  for (let [key, value] of formData.entries()) {
+    console.log(`${key}:`, value);
+  }
 
   const res = await fetch(`${BACKEND_URL}/api/users/onboarding`, {
     method: "POST",
@@ -27,8 +43,23 @@ export const saveOnboarding = async (data, token) => {
     headers: { Authorization: `Bearer ${token}` },
   });
 
-  if (!res.ok) throw new Error("Failed to save onboarding data");
-  return res.json();
+  let responseData;
+  try {
+    responseData = await res.json();
+  } catch (e) {
+    console.error("Failed to parse response JSON:", e);
+    throw new Error("Server returned invalid response");
+  }
+
+  console.log("saveOnboarding - Response:", { status: res.status, data: responseData });
+
+  if (!res.ok) {
+    const errorMessage = responseData.msg || responseData.message || `HTTP ${res.status}: Failed to save onboarding data`;
+    console.error("saveOnboarding - Error:", errorMessage);
+    throw new Error(errorMessage);
+  }
+  
+  return responseData;
 };
 
 export const deleteResume = async (token) => {
