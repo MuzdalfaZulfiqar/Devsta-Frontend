@@ -11,7 +11,7 @@ export default function ResumeStep({ formData, setFormData, nextStep, prevStep, 
   return (
     <div className="space-y-6">
       <h2 className="text-xl font-bold text-primary">Resume</h2>
-      <p className="text-sm text-gray-400">Upload your resume (Optional).</p>
+      <p className="text-sm text-gray-400">Upload your resume<span className="text-gray-400 text-xs">(optional)</span></p>
 
       <div>
         {formData.resume ? (
@@ -35,7 +35,7 @@ export default function ResumeStep({ formData, setFormData, nextStep, prevStep, 
         )}
       </div>
 
-      <div className="flex justify-between pt-6">
+      {/* <div className="flex justify-between pt-6">
         <button
           type="button"
           onClick={prevStep}
@@ -64,7 +64,39 @@ export default function ResumeStep({ formData, setFormData, nextStep, prevStep, 
             </button>
           )}
         </div>
-      </div>
+      </div> */}
+
+      <div className="flex justify-between pt-6">
+  <button
+    type="button"
+    onClick={prevStep}
+    className="flex items-center gap-2 px-4 py-2 rounded border border-white text-white hover:opacity-90"
+  >
+    <ArrowLeft size={16} /> Back
+  </button>
+
+  <div className="flex items-center gap-4">
+    {!hasResume && (
+      <button
+        type="button"
+        onClick={handleSkip}
+        className="text-sm text-gray-300 underline hover:text-white"
+      >
+        Skip
+      </button>
+    )}
+    <button
+      type="button"
+      onClick={nextStep}
+      disabled={!canNext}
+      aria-disabled={!canNext}
+      className="flex items-center gap-2 px-6 py-2 bg-primary text-white rounded hover:opacity-90"
+    >
+      Next <ArrowRight size={16} />
+    </button>
+  </div>
+</div>
+
     </div>
   );
 }

@@ -53,34 +53,38 @@ export default function Sidebar({ isOpen, setIsOpen, onLogout, user }) {
 
       {/* Nav */}
       <nav className="flex-1 mt-4">
-        {menuItems.map(({ label, icon: Icon, href }) => (
-          <NavLink
-            key={label}
-            to={href}
-            className={({ isActive }) =>
-              `flex items-center gap-3 px-4 py-2 text-sm font-medium relative ${
-                isActive
-                  ? "bg-primary/10 text-primary"
-                  : "text-gray-400 hover:text-white hover:bg-gray-800"
-              }`
-            }
-            onClick={() => setIsOpen(false)}
-          >
-            {({ isActive }) => (
-              <>
-                {isActive && (
-                  <span className="absolute left-0 top-0 h-full w-1 bg-primary rounded-r-md"></span>
-                )}
-                <Icon
-                  size={18}
-                  className={isActive ? "text-primary" : "text-gray-400"}
-                />
-                <span>{label}</span>
-              </>
-            )}
-          </NavLink>
-        ))}
-      </nav>
+  {menuItems.map(({ label, icon: Icon, href }) => (
+    <NavLink
+      key={label}
+      to={href}
+      className={({ isActive }) =>
+        `flex items-center gap-3 px-4 py-2 text-sm font-medium relative ${
+          isActive
+            ? "bg-primary/10 text-primary"
+            : "text-gray-400 hover:text-white hover:bg-gray-800"
+        }`
+      }
+      onClick={(e) => {
+        e.preventDefault(); // ⛔ block navigation
+        setIsOpen(false);   // ✅ still close sidebar on mobile
+      }}
+    >
+      {({ isActive }) => (
+        <>
+          {isActive && (
+            <span className="absolute left-0 top-0 h-full w-1 bg-primary rounded-r-md"></span>
+          )}
+          <Icon
+            size={18}
+            className={isActive ? "text-primary" : "text-gray-400"}
+          />
+          <span>{label}</span>
+        </>
+      )}
+    </NavLink>
+  ))}
+</nav>
+
 
       {/* User Avatar + Dropdown */}
       {/* User Avatar + Dropdown */}
