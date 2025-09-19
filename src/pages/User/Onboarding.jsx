@@ -65,8 +65,16 @@ export default function Onboarding() {
       } catch (err) {
         console.log("No onboarding data yet.");
       }
+      
+      // ✅ Ensure email is populated from user data
+      if (user?.email && !formData.email) {
+        setFormData(prev => ({
+          ...prev,
+          email: user.email
+        }));
+      }
     })();
-  }, [token]);
+  }, [token, user?.email]);
 
   const handleNext = () => setCurrentStep(prev => Math.min(prev + 1, steps.length - 1));
   const handleBack = () => setCurrentStep(prev => Math.max(prev - 1, 0));
@@ -163,10 +171,24 @@ export default function Onboarding() {
 // };
 
 const handleFinish = async () => {
-  if (!token) return;
+  if (!token) {
+    console.error("No token available");
+    alert("Authentication required. Please log in again.");
+    return;
+  }
+  
   setLoading(true);
   
   try {
+    // ✅ Enhanced validation with detailed logging
+    console.log("Form data validation:", {
+      experienceLevel: formData.experienceLevel,
+      primaryRole: formData.primaryRole,
+      topSkills: formData.topSkills,
+      email: formData.email,
+      name: formData.name
+    });
+
     if (!formData.experienceLevel || !formData.primaryRole) {
       throw new Error("Experience level and primary role are required");
     }
@@ -175,18 +197,35 @@ const handleFinish = async () => {
       throw new Error("At least one skill is required");
     }
 
+    if (!formData.email) {
+      throw new Error("Email is required");
+    }
+
+    if (!formData.name) {
+      throw new Error("Name is required");
+    }
+
     console.log("Submitting onboarding data:", { ...formData, complete: true });
     
-    await saveOnboarding({ ...formData, complete: true }, token);
+    // ✅ Save onboarding data
+    const saveResult = await saveOnboarding({ ...formData, complete: true }, token);
+    console.log("Save result:", saveResult);
 
-    // refresh user
+    // ✅ Refresh user data
+    console.log("Fetching updated user data...");
     const freshUser = await getCurrentUser(token);
+    console.log("Fresh user data:", freshUser);
     setUser(freshUser);
 
     setShowSuccess(true);
     setTimeout(() => navigate("/dashboard"), 1500);
   } catch (err) {
     console.error("Onboarding save error:", err);
+    console.error("Error details:", {
+      message: err.message,
+      stack: err.stack,
+      formData: formData
+    });
     alert(`Error saving onboarding: ${err.message}`);
   } finally {
     setLoading(false);
@@ -210,7 +249,7 @@ const handleFinish = async () => {
       case 3:
         return <ResumeStep formData={formData} setFormData={handleChange} nextStep={handleNext} prevStep={handleBack} onDeleteResume={handleDeleteResume} />;
       case 4:
-        return <ReviewStep data={formData} onBack={handleBack} onComplete={handleFinish} />;
+        return <ReviewStep data={formData} onBack={handleBack} onComplete={handleFinish} loading={loading} />;
       default:
         return null;
     }
