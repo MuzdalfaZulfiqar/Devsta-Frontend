@@ -72,3 +72,33 @@ export const deleteResume = async (token) => {
   if (!res.ok) throw new Error("Failed to delete resume");
   return res.json();
 };
+
+// api/onboarding.js
+export const uploadResume = async (resumeFile, token) => {
+  const formData = new FormData();
+  formData.append("resume", resumeFile);
+
+  const res = await fetch(`${BACKEND_URL}/api/users/resume`, {  // 👈 FIXED
+    method: "POST",
+    body: formData,
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  let responseData;
+  try {
+    responseData = await res.json();
+  } catch (e) {
+    console.error("Failed to parse uploadResume response:", e);
+    throw new Error("Server returned invalid response");
+  }
+
+  if (!res.ok) {
+    const errorMessage =
+      responseData.msg ||
+      responseData.message ||
+      `HTTP ${res.status}: Failed to upload resume`;
+    throw new Error(errorMessage);
+  }
+
+  return responseData;
+};

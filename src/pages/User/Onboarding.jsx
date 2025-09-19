@@ -39,6 +39,7 @@ export default function Onboarding() {
   const [showSuccess, setShowSuccess] = useState(false);
   const navigate = useNavigate(); // <-- add this
   
+  
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -109,67 +110,6 @@ export default function Onboarding() {
       alert("Error deleting resume.");
     }
   };
-
-  // const handleFinish = async () => {
-  //   if (!token) return;
-  //   setLoading(true);
-  //   try {
-  //     // Create FormData if resume exists
-  //     const payload = new FormData();
-  //     Object.keys(formData).forEach(key => {
-  //       if (key === "resume" && formData.resume instanceof File) {
-  //         payload.append("resume", formData.resume);
-  //       } else if (Array.isArray(formData[key])) {
-  //         formData[key].forEach(item => payload.append(key, item));
-  //       } else if (formData[key] !== undefined && formData[key] !== null) {
-  //         payload.append(key, formData[key]);
-  //       }
-  //     });
-  //     payload.append("complete", true);
-
-  //     await saveOnboarding(payload, token);
-  //     alert("Onboarding completed successfully!");
-  //     navigate("/dashboard");
-  //   } catch (err) {
-  //     alert(err.message || "Error saving onboarding.");
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-// const handleFinish = async () => {
-//   if (!token) return;
-//   setLoading(true);
-//   try {
-//     // just send plain object, helper builds FormData for us
-//     await saveOnboarding({ ...formData, complete: true }, token);
-
-//     setShowSuccess(true);
-//   } catch (err) {
-//     alert(err.message || "Error saving onboarding.");
-//   } finally {
-//     setLoading(false);
-//   }
-// };
-// const handleFinish = async () => {
-//   if (!token) return;
-//   setLoading(true);
-//   try {
-//     await saveOnboarding(formData, token);
-
-//     // ✅ refresh global user
-//     const freshUser = await getCurrentUser(token);
-//     setUser(freshUser);
-
-//     setShowSuccess(true);
-//     setTimeout(() => navigate("/dashboard"), 1500);
-//   } catch (err) {
-//     console.error(err);
-//     alert("Error saving onboarding");
-//   } finally {
-//     setLoading(false);
-//   }
-// };
-
 const handleFinish = async () => {
   if (!token) {
     console.error("No token available");
@@ -255,10 +195,15 @@ const handleFinish = async () => {
 
   return (
     <div className="max-w-4xl mx-auto px-6 pt-12">
+      
       <h2 className="text-2xl font-bold mb-6 text-white">
         Step {currentStep + 1}: {steps[currentStep]}
       </h2>
       <div className="mb-8">{renderStep()}</div>
+
+      <p className="text-sm text-gray-500 mb-4">
+  Note : Fields marked with <span className="text-red-500">*</span> are required.
+</p>
 
             <SuccessModal
         open={showSuccess}
