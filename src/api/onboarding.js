@@ -15,6 +15,11 @@ export const saveOnboarding = async (data, token) => {
   Object.keys(data).forEach((key) => {
     const value = data[key];
     
+    // ✅ Skip email field as it cannot be changed
+    if (key === "email") {
+      return;
+    }
+    
     if (key === "resume" && value instanceof File) {
       formData.append("resume", value);
     } else if (Array.isArray(value)) {

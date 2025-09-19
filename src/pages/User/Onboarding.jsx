@@ -185,8 +185,8 @@ const handleFinish = async () => {
       experienceLevel: formData.experienceLevel,
       primaryRole: formData.primaryRole,
       topSkills: formData.topSkills,
-      email: formData.email,
-      name: formData.name
+      name: formData.name,
+      phone: formData.phone
     });
 
     if (!formData.experienceLevel || !formData.primaryRole) {
@@ -197,9 +197,7 @@ const handleFinish = async () => {
       throw new Error("At least one skill is required");
     }
 
-    if (!formData.email) {
-      throw new Error("Email is required");
-    }
+    // ✅ Email validation removed - backend handles user email automatically
 
     if (!formData.name) {
       throw new Error("Name is required");
