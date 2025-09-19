@@ -1,121 +1,3 @@
-// import { ArrowLeft, ArrowRight } from "lucide-react";
-// import Select from "react-select";
-
-// // Reverse maps for displaying current value
-// const experienceMap = {
-//   "Internship": "intern",
-//   "Entry-level": "student",
-//   "Junior": "junior",
-//   "Mid-level": "mid",
-//   "Senior": "senior",
-//   "Lead": "lead",
-//   "Manager": "lead",
-// };
-// const roleMap = {
-//   "Frontend Developer": "frontend",
-//   "Backend Developer": "backend",
-//   "Full-Stack Developer": "fullstack",
-//   "Data Scientist": "data-science",
-//   "ML Engineer": "ml",
-//   "Mobile Developer": "mobile",
-//   "UI/UX Designer": "ui-ux",
-// };
-
-// const reverseExperienceMap = Object.fromEntries(
-//   Object.entries(experienceMap).map(([k, v]) => [v, k])
-// );
-// const reverseRoleMap = Object.fromEntries(
-//   Object.entries(roleMap).map(([k, v]) => [v, k])
-// );
-
-// const selectStyles = {
-//   control: (base) => ({
-//     ...base,
-//     backgroundColor: "transparent",
-//     borderColor: "#fff",
-//     color: "#fff",
-//     boxShadow: "none",
-//     minHeight: "40px",
-//     "&:hover": { borderColor: "#fff" },
-//   }),
-//   menu: (base) => ({
-//     ...base,
-//     backgroundColor: "#086972",
-//     color: "#fff",
-//   }),
-//   option: (base, state) => ({
-//     ...base,
-//     backgroundColor: state.isSelected ? "#ffffff33" : "#086972",
-//     color: "#fff",
-//     ":hover": { backgroundColor: "#ffffff55" },
-//   }),
-//   singleValue: (base) => ({ ...base, color: "#fff" }),
-//   placeholder: (base) => ({ ...base, color: "#aaa" }),
-// };
-
-// export default function ExperienceStep({ formData, setFormData, nextStep, prevStep }) {
-//   const experienceOptions = Object.keys(experienceMap).map(label => ({
-//     value: experienceMap[label],
-//     label,
-//   }));
-//   const roleOptions = Object.keys(roleMap).map(label => ({
-//     value: roleMap[label],
-//     label,
-//   }));
-
-//   return (
-//     <div className="space-y-4">
-//       <h2 className="text-xl font-bold text-primary">Step 2: Experience & Role</h2>
-
-//       <div className="space-y-3">
-//         <div>
-//           <label className="text-sm font-medium mb-1 block">Experience Level</label>
-//           <Select
-//   options={experienceOptions}
-//   value={experienceOptions.find(opt => opt.value === formData.experienceLevel) || null}
-//   onChange={(selected) =>
-//     setFormData(prev => ({ ...prev, experienceLevel: selected?.value || "" }))
-//   }
-//   styles={selectStyles}
-//   placeholder="Select your level"
-// />
-//         </div>
-
-//         <div>
-//           <label className="text-sm font-medium mb-1 block">Primary Role</label>
-//           <Select
-//   options={roleOptions}
-//   value={roleOptions.find(opt => opt.value === formData.primaryRole) || null}
-//   onChange={(selected) =>
-//     setFormData(prev => ({ ...prev, primaryRole: selected?.value || "" }))
-//   }
-//   styles={selectStyles}
-//   placeholder="Select your role"
-// />
-
-//         </div>
-//       </div>
-
-//       <div className="flex justify-between pt-6">
-//         <button
-//           onClick={prevStep}
-//           className="flex items-center gap-2 px-4 py-2 border border-white text-white rounded hover:bg-white hover:text-primary transition"
-//         >
-//           <ArrowLeft size={16} /> Back
-//         </button>
-//         <button
-//           onClick={nextStep}
-//           className="flex items-center gap-2 px-6 py-2 bg-primary text-white rounded hover:bg-teal-700 transition"
-//         >
-//           Next <ArrowRight size={16} />
-//         </button>
-//       </div>
-//     </div>
-//   );
-// }
-
-
-import { useState } from "react";
 import Select from "react-select";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 
@@ -139,7 +21,7 @@ const roleOptions = [
 ];
 
 export default function ExperienceStep({ formData, setFormData, nextStep, prevStep }) {
-
+  const canNext = Boolean(formData.experienceLevel) && Boolean(formData.primaryRole);
   return (
     <div className="space-y-6">
       <h2 className="text-xl font-bold text-primary">Step 2: Experience & Role</h2>
@@ -182,12 +64,16 @@ export default function ExperienceStep({ formData, setFormData, nextStep, prevSt
       {/* Navigation */}
       <div className="flex justify-between pt-6">
         <button
+          type="button"
           onClick={prevStep}
           className="flex items-center gap-2 px-4 py-2 rounded border border-white text-white hover:opacity-90"
         >
           <ArrowLeft size={16} /> Back
         </button>
         <button
+          type="button"
+          disabled={!canNext}
+          aria-disabled={!canNext}
           onClick={nextStep}
           className="flex items-center gap-2 px-6 py-2 bg-primary text-white rounded hover:opacity-90"
         >

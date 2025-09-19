@@ -1,16 +1,25 @@
 import { ArrowLeft, CheckCircle } from "lucide-react";
 
 export default function ReviewStep({ data, onBack, onComplete }) {
+  const resumeText =
+    data?.resume?.name
+      ? data.resume.name
+      : data?.resumeUrl
+        ? "Uploaded"
+        : "Not uploaded";
+  const phoneText = (data?.phone && String(data.phone).trim())
+    ? String(data.phone).trim()
+    : "Not added"
   return (
     <div className="space-y-6 bg-black">
       <h2 className="text-xl font-bold text-primary">Review Your Information</h2>
       <p className="text-sm text-gray-400">
-        Make sure all your information is correct before submitting.
+        Review the details.
       </p>
 
       <div className="space-y-4 border border-white rounded-lg p-6">
         <div className="flex justify-between">
-          <span className="font-medium text-white">Full Name:</span>
+          <span className="font-medium text-white">Name:</span>
           <span className="text-white">{data.name || "-"}</span>
         </div>
         <div className="flex justify-between">
@@ -19,7 +28,7 @@ export default function ReviewStep({ data, onBack, onComplete }) {
         </div>
         <div className="flex justify-between">
           <span className="font-medium text-white">Phone:</span>
-          <span className="text-white">{data.phone || "-"}</span>
+          <span className="text-white">{phoneText}</span>
         </div>
         <div className="flex justify-between">
           <span className="font-medium text-white">Experience Level:</span>
@@ -35,7 +44,7 @@ export default function ReviewStep({ data, onBack, onComplete }) {
         </div>
         <div className="flex justify-between">
           <span className="font-medium text-white">Resume:</span>
-          <span className="text-white">{data.resume?.name || "-"}</span>
+          <span className="text-white">{resumeText}</span>
         </div>
       </div>
 
