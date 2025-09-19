@@ -41,7 +41,6 @@ export default function Onboarding() {
   
   const [formData, setFormData] = useState({
     name: "",
-    email: "",
     phone: null,
     experienceLevel: "",
     primaryRole: "",
@@ -167,11 +166,6 @@ const handleFinish = async () => {
   setLoading(true);
   
   try {
-    // Validate required fields
-    if (!formData.name || !formData.email) {
-      throw new Error("Name and email are required");
-    }
-    
     if (!formData.experienceLevel || !formData.primaryRole) {
       throw new Error("Experience level and primary role are required");
     }
