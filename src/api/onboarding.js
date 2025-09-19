@@ -11,7 +11,13 @@ export const getOnboarding = async (token) => {
 
 export const saveOnboarding = async (data, token) => {
   const formData = new FormData();
-  
+   // DROP email from payload (server owns email)
+   const { email, ...clean } = data || {};
+
+   // (Optional) ensure arrays are arrays
+   if (Array.isArray(clean.topSkills)) {
+     clean.topSkills = clean.topSkills.map(s => String(s).toLowerCase());
+   }
   // Log the data being sent for debugging
   console.log("saveOnboarding - Input data:", data);
   
