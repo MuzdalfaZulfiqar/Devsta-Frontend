@@ -165,7 +165,23 @@ export default function Onboarding() {
 const handleFinish = async () => {
   if (!token) return;
   setLoading(true);
+  
   try {
+    // Validate required fields
+    if (!formData.name || !formData.email) {
+      throw new Error("Name and email are required");
+    }
+    
+    if (!formData.experienceLevel || !formData.primaryRole) {
+      throw new Error("Experience level and primary role are required");
+    }
+    
+    if (!formData.topSkills || formData.topSkills.length === 0) {
+      throw new Error("At least one skill is required");
+    }
+
+    console.log("Submitting onboarding data:", { ...formData, complete: true });
+    
     await saveOnboarding({ ...formData, complete: true }, token);
 
     // refresh user
@@ -175,8 +191,8 @@ const handleFinish = async () => {
     setShowSuccess(true);
     setTimeout(() => navigate("/dashboard"), 1500);
   } catch (err) {
-    console.error(err);
-    alert("Error saving onboarding");
+    console.error("Onboarding save error:", err);
+    alert(`Error saving onboarding: ${err.message}`);
   } finally {
     setLoading(false);
   }
