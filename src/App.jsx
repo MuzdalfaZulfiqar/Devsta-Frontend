@@ -61,58 +61,40 @@ function App() {
   return (
     <div className="min-h-screen bg-black text-white">
       <Routes>
-  {/* Public routes */}
-  <Route path="/" element={<Signup />} />
-  <Route path="/login" element={<Login />} />
-<Route path="/oauth-handler" element={<OAuthHandler />} />
-<Route
-  path="/dashboard/profile"
-  element={
-    <ProtectedRoute>
-      <ProfilePage />
-    </ProtectedRoute>
-  }
-/>
+        {/* Public routes */}
+        <Route path="/" element={<Signup />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
+        <Route path="/oauth-handler" element={<OAuthHandler />} />
+        
+        {/* Protected routes */}
+        <Route path="/welcome" element={
+          <ProtectedRoute>
+            <WelcomePage />
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/onboarding" element={
+          <ProtectedRoute>
+            <Onboarding />
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/dashboard" element={
+          <ProtectedRoute requireOnboarding={true}>
+            <Dashboard />
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/dashboard/profile" element={
+          <ProtectedRoute requireOnboarding={true}>
+            <ProfilePage />
+          </ProtectedRoute>
+        } />
 
-
-  {/* Always define welcome route */}
-  {/* <Route
-    path="/welcome"
-    element={
-      <ProtectedRoute>
-        <WelcomePage />
-      </ProtectedRoute>
-    }
-  /> */}
-
-  {/* Onboarding */}
-  {/* <Route
-    path="/onboarding"
-    element={
-      <ProtectedRoute>
-        <Onboarding />
-      </ProtectedRoute>
-    }
-  /> */}
-
-  {/* Dashboard */}
-  {/* <Route
-    path="/dashboard"
-    element={
-      <ProtectedRoute requireOnboarding={true}>
-        <Dashboard />
-      </ProtectedRoute>
-    } */}
-  {/* /> */}
-
-  {/* Fallback */}
-  <Route path="*" element={<Signup />} />
-
-  <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-<Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
-<Route path="/welcome" element={<ProtectedRoute><WelcomePage /></ProtectedRoute>} />
-
-</Routes>
+        {/* Fallback */}
+        <Route path="*" element={<Signup />} />
+      </Routes>
 
     </div>
   );
