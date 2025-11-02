@@ -20,5 +20,7 @@ input:-webkit-autofill:active {
 }
 
 html{
-  background-color: black;
+  /* background-color: black; */
+
+  background: #f5f5f5;
 }
