@@ -225,13 +225,47 @@ export default function Signup() {
   const [successMessage, setSuccessMessage] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState(""); // "success" | "error"
+
+  const [validationErrors, setValidationErrors] = useState({
+  name: "",
+  email: "",
+  password: ""
+});
+
   const navigate = useNavigate();
+
+  const validateInput = () => {
+  let errors = { name: "", email: "", password: "" };
+  let valid = true;
+
+  if (!form.name.trim()) {
+    errors.name = "Name is required.";
+    valid = false;
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(form.email)) {
+    errors.email = "Invalid email format.";
+    valid = false;
+  }
+
+  if (form.password.length < 8) {
+    errors.password = "Password must be at least 8 characters.";
+    valid = false;
+  }
+
+  setValidationErrors(errors);
+  return valid;
+};
+
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+
+    if (!validateInput()) return; // stop submission if invalid
 
     try {
       const data = await signupUser(form);
@@ -296,7 +330,7 @@ export default function Signup() {
             </p>
 
             <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4 lg:space-y-3 xl:space-y-4 overflow-auto max-h-[70vh] p-[3px]">
-              {["name", "email", "password"].map((field, index) => (
+              {/* {["name", "email", "password"].map((field, index) => (
                 <input
                   key={index}
                   type={field === "password" ? "password" : field}
@@ -313,7 +347,33 @@ export default function Signup() {
                   className="w-full px-3 py-2 sm:py-2.5 lg:py-2.5 xl:py-3 rounded-lg bg-gray-100 dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-primary text-gray-900 dark:text-gray-100 placeholder-gray-500 text-sm sm:text-base lg:text-base xl:text-lg"
                   required
                 />
-              ))}
+              ))} */}
+
+              {["name", "email", "password"].map((field, index) => (
+  <div key={index} className="flex flex-col">
+    <input
+      type={field === "password" ? "password" : "text"}
+      name={field}
+      value={form[field]}
+      onChange={handleChange}
+      placeholder={
+        field === "name"
+          ? "Full Name"
+          : field === "email"
+          ? "Email Address"
+          : "Password"
+      }
+      className="w-full px-3 py-2 sm:py-2.5 lg:py-2.5 xl:py-3 rounded-lg bg-gray-100 dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-primary text-gray-900 dark:text-gray-100 placeholder-gray-500 text-sm sm:text-base lg:text-base xl:text-lg"
+      required
+    />
+    {validationErrors[field] && (
+      <span className="text-red-500 text-xs sm:text-sm mt-1">
+        {validationErrors[field]}
+      </span>
+    )}
+  </div>
+))}
+
 
                <button
                 type="submit"
