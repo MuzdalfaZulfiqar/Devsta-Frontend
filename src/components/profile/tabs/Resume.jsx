@@ -125,6 +125,8 @@ import { uploadResume } from "../../../api/onboarding";
 import { useAuth } from "../../../context/AuthContext";
 import SuccessModal from "../../../components/SuccessModal";
 import ErrorModal from "../../../components/ErrorModal";
+import { BACKEND_URL } from "../../../../config";
+import { Eye, Download } from "lucide-react";
 
 export default function Resume({ user }) {
   const { token, setUser } = useAuth();
@@ -147,39 +149,45 @@ export default function Resume({ user }) {
     }
   };
 
-  const handleViewResume = async () => {
-    try {
-      const response = await fetch(user.resumeUrl, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!response.ok) throw new Error("Failed to fetch resume");
+ const handleViewResume = () => {
+  const previewUrl = `${BACKEND_URL}/api/users/resume/${user._id}`;
+  window.open(previewUrl, "_blank"); // will render inline PDF
+};
 
-      const blob = await response.blob();
-      const fileURL = window.URL.createObjectURL(blob);
-      window.open(fileURL, "_blank");
-    } catch (err) {
-      setModalMessage(err.message || "Could not view resume");
-      setErrorOpen(true);
-    }
-  };
-
-  const handleDownloadResume = async () => {
-    try {
-      const response = await fetch(user.resumeUrl, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!response.ok) throw new Error("Failed to fetch resume");
-
-      const blob = await response.blob();
+const handleDownloadResume = () => {
+  const downloadUrl = `${BACKEND_URL}/api/users/resume/${user._id}`;
+  fetch(downloadUrl)
+    .then(res => res.blob())
+    .then(blob => {
       const link = document.createElement("a");
       link.href = window.URL.createObjectURL(blob);
-      link.download = "resume.pdf"; // or extract file name from response headers
+      link.download = "resume.pdf";
       link.click();
-    } catch (err) {
-      setModalMessage(err.message || "Could not download resume");
-      setErrorOpen(true);
-    }
-  };
+    })
+    .catch(err => {
+      console.error(err);
+    });
+};
+
+
+
+  // const handleDownloadResume = async () => {
+  //   try {
+  //     const response = await fetch(user.resumeUrl, {
+  //       headers: { Authorization: `Bearer ${token}` },
+  //     });
+  //     if (!response.ok) throw new Error("Failed to fetch resume");
+
+  //     const blob = await response.blob();
+  //     const link = document.createElement("a");
+  //     link.href = window.URL.createObjectURL(blob);
+  //     link.download = "resume.pdf"; // or extract file name from response headers
+  //     link.click();
+  //   } catch (err) {
+  //     setModalMessage(err.message || "Could not download resume");
+  //     setErrorOpen(true);
+  //   }
+  // };
 
   return (
     <div className="flex flex-col gap-6 w-full">
@@ -187,29 +195,29 @@ export default function Resume({ user }) {
 
       {user.resumeUrl ? (
         <div className="flex items-center gap-4">
-          <button
-            onClick={handleViewResume}
-            className="text-primary dark:text-primary-light font-medium hover:underline transition text-sm"
-          >
-            View Resume
-          </button>
+    <button
+      onClick={handleViewResume}
+      className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/80 transition text-sm font-medium"
+    >
+      <Eye className="w-4 h-4" /> View Resume
+    </button>
 
-          <button
-            onClick={handleDownloadResume}
-            className="px-3 py-1 bg-primary text-white rounded-md hover:bg-primary/80 transition text-sm"
-          >
-            Download Resume
-          </button>
-        </div>
+    <button
+      onClick={handleDownloadResume}
+      className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/80 transition text-sm font-medium"
+    >
+      <Download className="w-4 h-4" /> Download Resume
+    </button>
+  </div>
       ) : (
         <div className="text-gray-500 dark:text-gray-400 flex flex-col gap-2">
           <p>No resume uploaded</p>
           <button
-            onClick={() => setShowResumeModal(true)}
-            className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/80 transition text-sm"
-          >
-            Upload Resume
-          </button>
+  onClick={() => setShowResumeModal(true)}
+  className="inline-flex w-fit items-center gap-2 px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/80 transition text-sm font-medium"
+>
+  Upload Resume
+</button>
         </div>
       )}
 

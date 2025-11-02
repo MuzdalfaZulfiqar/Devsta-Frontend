@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getCurrentUser } from "../api/user";
+import {BACKEND_URL} from "../../config";
 
 const AuthContext = createContext();
 
@@ -13,6 +14,41 @@ export default function AuthProvider({ children }) {
   const navigate = useNavigate();
 
   // Load token from URL or localStorage
+  // useEffect(() => {
+  //   const params = new URLSearchParams(window.location.search);
+  //   const tokenFromUrl = params.get("token");
+  //   const storedToken = localStorage.getItem("devsta_token");
+
+  //   const finalToken = tokenFromUrl || storedToken;
+
+  //   if (finalToken) {
+  //     setToken(finalToken);
+  //     localStorage.setItem("devsta_token", finalToken);
+
+  //     getCurrentUser(finalToken)
+  //       .then((freshUser) => {
+  //         setUser(freshUser);
+  //         localStorage.setItem("devsta_user", JSON.stringify(freshUser));
+
+  //         if (!freshUser.onboardingCompleted) {
+  //           setShowWelcome(true); // show Welcome page first
+  //           navigate("/welcome");
+  //         } else {
+  //           navigate("/dashboard");
+  //         }
+  //       })
+  //       .catch((err) => {
+  //         console.error("Failed to load user:", err);
+  //         logoutUser();
+  //       });
+  //   }
+
+  //   // Clean URL token
+  //   if (tokenFromUrl) window.history.replaceState({}, document.title, "/");
+  // }, []);
+
+
+  // ...existing code...
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const tokenFromUrl = params.get("token");
@@ -42,9 +78,10 @@ export default function AuthProvider({ children }) {
         });
     }
 
-    // Clean URL token
-    if (tokenFromUrl) window.history.replaceState({}, document.title, "/");
+    // Clean URL token (preserve current path)
+    if (tokenFromUrl) window.history.replaceState({}, document.title, window.location.pathname);
   }, []);
+// ...existing code...
 
   const loginUser = async (jwtToken) => {
     setToken(jwtToken);

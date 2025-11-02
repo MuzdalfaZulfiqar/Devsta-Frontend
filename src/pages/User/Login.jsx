@@ -596,38 +596,50 @@ export default function Login() {
   const { loginUser } = useAuth();
   const navigate = useNavigate();
 
+  const [validationErrors, setValidationErrors] = useState({
+  email: "",
+  password: ""
+});
+
+
   const [form, setForm] = useState({ email: "", password: "" });
-  const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState(""); // "success" | "error"
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
-  const handleCheckbox = (e) => setRememberMe(e.target.checked);
+  
 
   const validateInput = () => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(form.email)) {
-      setError("Invalid email format.");
-      return false;
-    }
-    if (form.password.length < 8) {
-      setError("Password must be at least 8 characters long.");
-      return false;
-    }
-    return true;
-  };
+  let errors = { email: "", password: "" };
+  let valid = true;
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(form.email)) {
+    errors.email = "Invalid email format.";
+    valid = false;
+  }
+
+  if (form.password.length < 8) {
+    errors.password = "Password must be at least 8 characters.";
+    valid = false;
+  }
+
+  setValidationErrors(errors);
+  return valid;
+};
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
 
-    if (!validateInput()) return;
+   if (!validateInput()) return; // stop submission if invalid
 
     try {
       const data = await loginAPI(form);
-      await loginUser(data.token, rememberMe);
+      await loginUser(data.token);
 
       setModalType("success");
       setSuccessMessage("Logged in successfully!");
@@ -689,7 +701,7 @@ export default function Login() {
             </p>
 
             <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4 lg:space-y-3 xl:space-y-4 overflow-auto max-h-[70vh] p-[4px]">
-              <input
+              {/* <input
                 type="email"
                 name="email"
                 value={form.email}
@@ -706,23 +718,51 @@ export default function Login() {
                 placeholder="Password"
                 className="w-full px-3 py-2.5 rounded-lg bg-gray-100 dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-primary text-gray-900 dark:text-gray-100 placeholder-gray-500 text-sm sm:text-base lg:text-base xl:text-lg"
                 required
-              />
+              /> */}
 
-              {/* Remember Me + Forgot Password */}
-              <div className="flex justify-between items-center text-gray-500 dark:text-gray-400 text-sm sm:text-base">
-                <label className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={rememberMe}
-                    onChange={handleCheckbox}
-                    className="w-4 h-4 text-primary border-gray-300 rounded"
-                  />
-                  Remember Me
-                </label>
-                <a href="/forgot-password" className="hover:underline text-primary">
-                  Forgot password?
-                </a>
-              </div>
+
+<div className="flex flex-col">
+  <input
+    type="email"
+    name="email"
+    value={form.email}
+    onChange={handleChange}
+    placeholder="Email Address"
+    className="w-full px-3 py-2.5 rounded-lg bg-gray-100 dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-primary text-gray-900 dark:text-gray-100 placeholder-gray-500 text-sm sm:text-base lg:text-base xl:text-lg"
+    required
+  />
+  {validationErrors.email && (
+    <span className="text-red-500 text-xs sm:text-sm mt-1">
+      {validationErrors.email}
+    </span>
+  )}
+</div>
+
+<div className="flex flex-col">
+  <input
+    type="password"
+    name="password"
+    value={form.password}
+    onChange={handleChange}
+    placeholder="Password"
+    className="w-full px-3 py-2.5 rounded-lg bg-gray-100 dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-primary text-gray-900 dark:text-gray-100 placeholder-gray-500 text-sm sm:text-base lg:text-base xl:text-lg"
+    required
+  />
+  {validationErrors.password && (
+    <span className="text-red-500 text-xs sm:text-sm mt-1">
+      {validationErrors.password}
+    </span>
+  )}
+</div>
+
+             {/* Remember Me + Forgot Password */}
+<div className="flex justify-start items-center text-gray-500 dark:text-gray-400 text-sm sm:text-base">
+  <a href="/forgot-password" className="hover:underline text-primary">
+    Forgot password?
+  </a>
+</div>
+
+
 
               <button
                 type="submit"
