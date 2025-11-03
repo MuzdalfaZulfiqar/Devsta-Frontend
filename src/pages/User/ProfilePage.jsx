@@ -32,7 +32,7 @@ import { useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import DashboardLayout from "../../components/dashboard/DashboardLayout";
 import Overview from "../../components/profile/tabs/Overview";
-// import EditProfile from "../../components/profile/tabs/EditProfile";
+import EditProfile from "../../components/profile/tabs/EditProfile";
 
 export default function ProfilePage() {
   const { user } = useAuth();
@@ -43,7 +43,7 @@ export default function ProfilePage() {
       case "overview":
         return <Overview user={user} />;
       case "edit":
-        // return <EditProfile user={user} />;
+        return <EditProfile user={user} />;
       default:
         return <Overview user={user} />;
     }

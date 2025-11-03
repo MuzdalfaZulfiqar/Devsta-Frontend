@@ -417,7 +417,6 @@ export default function Sidebar({ isOpen, setIsOpen, onLogout, user }) {
     { label: "Knowledge", icon: BookOpen, href: "/dashboard/knowledge" },
     { label: "Jobs", icon: Briefcase, href: "/dashboard/jobs" },
     { label: "Monetization", icon: DollarSign, href: "/dashboard/monetization" },
-    { label: "Hackathons", icon: Trophy, href: "/dashboard/hackathons" },
     { label: "Interview Prep", icon: Code2, href: "/dashboard/interview" },
     { label: "Portfolio", icon: FileText, href: "/dashboard/portfolio" },
     { label: "Profile", icon: User, href: "/dashboard/profile" },
