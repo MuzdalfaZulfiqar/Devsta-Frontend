@@ -9,6 +9,9 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import WelcomePage from "./pages/User/WelcomePage";
 import OAuthHandler from "./pages/User/OAuthHandler";
 import ProfilePage from "./pages/User/ProfilePage";
+import VerifyOtp from "./pages/User/VerifyOtp";
+import ForgotPassword from "./pages/User/ForgotPassword";
+
 
 function App() {
   const { user, showWelcome, setShowWelcome } = useAuth();
@@ -21,34 +24,40 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/oauth-handler" element={<OAuthHandler />} />
-        
+
         {/* Protected routes */}
         <Route path="/welcome" element={
           <ProtectedRoute>
             <WelcomePage />
           </ProtectedRoute>
         } />
-        
+
         <Route path="/onboarding" element={
           <ProtectedRoute>
             <Onboarding />
           </ProtectedRoute>
         } />
-        
+
         <Route path="/dashboard" element={
           <ProtectedRoute requireOnboarding={true}>
             <Dashboard />
           </ProtectedRoute>
         } />
-        
+
         <Route path="/dashboard/profile" element={
           <ProtectedRoute requireOnboarding={true}>
             <ProfilePage />
           </ProtectedRoute>
         } />
 
+        
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/verify-otp" element={<VerifyOtp />} />
+
         {/* Fallback */}
         <Route path="*" element={<Signup />} />
+
+
       </Routes>
 
     </div>

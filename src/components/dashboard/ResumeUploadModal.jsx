@@ -129,7 +129,7 @@ export default function ResumeUploadModal({ open, onClose, onUpload }) {
               </button>
               <button
                 onClick={handleCancel}
-                className="px-5 py-2 border border-gray-300 dark:border-gray-500 text-gray-700 dark:text-gray-300 bg-transparent rounded-lg hover:bg-gray-700 dark:hover:bg-gray-800 transition-all"
+                className="px-5 py-2 border border-gray-300 dark:border-gray-500 text-gray-700 dark:text-gray-300 bg-transparent rounded-lg hover:bg-gray-200 dark:hover:bg-gray-800 transition-all"
               >
                 Cancel
               </button>
