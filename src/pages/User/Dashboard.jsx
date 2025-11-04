@@ -9,6 +9,7 @@ import ResumeUploadModal from "../../components/dashboard/ResumeUploadModal";
 import { uploadResume } from "../../api/onboarding";
 import SuccessModal from "../../components/SuccessModal";
 import ErrorModal from "../../components/ErrorModal";
+import GitHub from "../../components/profile/tabs/GitHub";
 
 export default function Dashboard() {
   const { user, token, setUser } = useAuth();
@@ -106,6 +107,14 @@ export default function Dashboard() {
               onAction={() => setShowResumeModal(true)}
             />
           )}
+
+          {/* GitHub Stats Section */}
+          {user.githubConnected && (
+            <div className="mt-8">
+              <GitHub user={user} />
+            </div>
+          )}
+
         </div>
       </div>
 
