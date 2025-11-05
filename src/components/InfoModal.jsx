@@ -1,7 +1,6 @@
-// src/components/SuccessModal.jsx
-import { CheckCircle, X } from "lucide-react";
+import { Info } from "lucide-react";
 
-export default function SuccessModal({ open, message, onClose }) {
+export default function InfoModal({ open, title, message, onClose }) {
   if (!open) return null;
 
   return (
@@ -12,20 +11,20 @@ export default function SuccessModal({ open, message, onClose }) {
           onClick={onClose}
           className="absolute top-3 right-3 text-gray-500 dark:text-gray-400 hover:text-primary transition"
         >
-          <X size={20} />
+          ✕
         </button>
 
-        <CheckCircle className="mx-auto text-primary w-16 h-16 mb-4" />
-        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-          Success!
-        </h2>
-        <p className="text-gray-600 dark:text-gray-300 mb-6">{message}</p>
+        {/* Primary Info Icon */}
+        <Info className="mx-auto text-primary w-16 h-16 mb-4" />
+
+        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">{title}</h2>
+        <p className="text-gray-600 dark:text-gray-300 mb-6 whitespace-pre-line">{message}</p>
 
         <button
           onClick={onClose}
           className="px-6 py-2 border border-gray-400 dark:border-gray-600 text-gray-900 dark:text-white bg-transparent rounded-lg hover:bg-primary hover:border-primary transition-all"
         >
-          Continue →
+          OK
         </button>
       </div>
     </div>

@@ -11,7 +11,7 @@ import OAuthHandler from "./pages/User/OAuthHandler";
 import ProfilePage from "./pages/User/ProfilePage";
 import VerifyOtp from "./pages/User/VerifyOtp";
 import ForgotPassword from "./pages/User/ForgotPassword";
-
+import SkillTest from "./pages/User/SkillTest";
 
 function App() {
   const { user, showWelcome, setShowWelcome } = useAuth();
@@ -53,6 +53,9 @@ function App() {
         
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/verify-otp" element={<VerifyOtp />} />
+
+        <Route path="/skill-test" element={<SkillTest />} />
+
 
         {/* Fallback */}
         <Route path="*" element={<Signup />} />
