@@ -672,6 +672,7 @@ export default function Dashboard() {
   };
 
   // Count available sources for Validate Skills card
+  // Count available sources for Validate Skills card
   const sourcesAvailable = [
     user?.topSkills?.length > 0,
     user?.githubConnected,
@@ -679,6 +680,39 @@ export default function Dashboard() {
     user.hasAttemptedQuiz,
   ];
   const allSourcesAvailable = sourcesAvailable.every(Boolean);
+
+
+  // Validate Skills card (always show)
+  // const validateSkillsCard = {
+  //   title: user.skillsValidated ? "Update Profile Score" : "Validate Skills",
+  //   description: user.skillsValidated
+  //     ? "Your skills are already validated. You can re-run validation if you've updated your resume, GitHub, or skill test."
+  //     : "Analyze your available data to calculate your DevSta profile score.",
+  //   actionLabel: user.skillsValidated ? "Re-run Validation" : "Validate Skills",
+  //   onAction: validateSkills,
+  //   isValidating,
+  // };
+
+  const scrollToSkillsCard = () => {
+  const element = document.getElementById("validated-skills-section");
+  if (element) {
+    element.scrollIntoView({ behavior: "smooth" });
+    setInfoTitle("View Your Skills");
+    setInfoMessage("Here’s your validated skills. You can re-run validation below if needed.");
+    setInfoOpen(true);
+  }
+};
+
+// Then in your todoCards array
+const validateSkillsCard = {
+  title: user.skillsValidated ? "Update Profile Score" : "Validate Skills",
+  description: user.skillsValidated
+    ? "Your skills are already validated. Click to view or update your profile score."
+    : "Analyze your available data to calculate your DevSta profile score.",
+  actionLabel: "View Results",
+  onAction: scrollToSkillsCard, // scroll instead of direct validation
+};
+
 
   // To-Do / Action cards
   const todoCards = [
@@ -704,14 +738,7 @@ export default function Dashboard() {
       onAction: () => navigate("/skill-test"),
     },
     // Only show Validate Skills card if at least one source is missing
-    allSourcesAvailable && {
-      title: "Validate Skills",
-      description:
-        "Analyze your available data to calculate your DevSta profile score.",
-      actionLabel: "Validate Skills",
-      onAction: validateSkills,
-      isValidating,
-    },
+    validateSkillsCard,
   ].filter(Boolean);
 
   // Completed / Achievements cards
@@ -720,7 +747,7 @@ export default function Dashboard() {
       title: "GitHub Connected",
       description: "Your GitHub account is linked successfully.",
       actionLabel: "View GitHub",
-      onAction: () => navigate("/profile/github"),
+      onAction: () => navigate("/dashboard/profile"),
       completed: true,
     },
     user.resumeUrl && {
@@ -796,14 +823,17 @@ export default function Dashboard() {
 
         {/* Validated Skills Section */}
         {(user.skillsValidated || allSourcesAvailable) && (
-          <div className="mt-8">
-            <ValidatedSkills
-              validatedSkills={user.validatedSkills}
-              profileScore={user.profileScore}
-              user={user} // <-- pass user here
-            />
-          </div>
-        )}
+  <div id="validated-skills-section" className="mt-8">
+    <ValidatedSkills
+      validatedSkills={user.validatedSkills}
+      profileScore={user.profileScore}
+      user={user}
+      onValidate={validateSkills} // actual rerun function
+      isValidating={isValidating} // show spinner
+    />
+  </div>
+)}
+
       </div>
 
       {/* Info Modal */}
