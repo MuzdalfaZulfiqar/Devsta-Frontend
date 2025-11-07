@@ -626,6 +626,22 @@ export default function Dashboard() {
 
   // Skill Validation Handler
   const validateSkills = async () => {
+
+    const sourcesCount =
+    (user.topSkills?.length > 0 ? 1 : 0) +
+    (user.githubConnected ? 1 : 0) +
+    (user.resumeUrl ? 1 : 0) +
+    (user.hasAttemptedQuiz ? 1 : 0);
+
+  if (sourcesCount < 2) {
+    setInfoTitle("Add More Sources");
+   setInfoMessage(
+  "Please connect at least one more data source (e.g., Resume, GitHub, or Skill Test) before running skill validation. This helps ensure your DevSta profile score is accurate."
+);
+
+    setInfoOpen(true);
+    return; // ⛔ stop here
+  }
     try {
       setIsValidating(true);
       const response = await fetch(
@@ -693,25 +709,55 @@ export default function Dashboard() {
   //   isValidating,
   // };
 
+    // Scroll helper for "View Results"
   const scrollToSkillsCard = () => {
-  const element = document.getElementById("validated-skills-section");
-  if (element) {
-    element.scrollIntoView({ behavior: "smooth" });
-    setInfoTitle("View Your Skills");
-    setInfoMessage("Here’s your validated skills. You can re-run validation below if needed.");
-    setInfoOpen(true);
-  }
-};
+    const element = document.getElementById("validated-skills-section");
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth" });
+      setInfoTitle("View Your Skills");
+      setInfoMessage("Here’s your validated skills and confidence scores.");
+      setInfoOpen(true);
+    }
+  };
 
-// Then in your todoCards array
-const validateSkillsCard = {
-  title: user.skillsValidated ? "Update Profile Score" : "Validate Skills",
-  description: user.skillsValidated
-    ? "Your skills are already validated. Click to view or update your profile score."
-    : "Analyze your available data to calculate your DevSta profile score.",
-  actionLabel: "View Results",
-  onAction: scrollToSkillsCard, // scroll instead of direct validation
-};
+  // Dynamic Validate Skills card
+  const validateSkillsCard = user.skillsValidated
+    ? {
+        title: "View Your Validated Skills",
+        description:
+          "Your skills have been validated. Click below to view your confidence scores and profile ranking.",
+        actionLabel: "View Results",
+        onAction: scrollToSkillsCard,
+      }
+    : {
+        title: "Validate Skills",
+        description:
+          "Analyze your data (Resume, GitHub, or Skill Test) to generate your DevSta profile score.",
+        actionLabel: isValidating ? "Validating..." : "Validate Skills",
+        onAction: validateSkills,
+        isValidating,
+      };
+
+
+//   const scrollToSkillsCard = () => {
+//   const element = document.getElementById("validated-skills-section");
+//   if (element) {
+//     element.scrollIntoView({ behavior: "smooth" });
+//     setInfoTitle("View Your Skills");
+//     setInfoMessage("Here’s your validated skills. You can re-run validation below if needed.");
+//     setInfoOpen(true);
+//   }
+// };
+
+// // Then in your todoCards array
+// const validateSkillsCard = {
+//   title: user.skillsValidated ? "Update Profile Score" : "Validate Skills",
+//   description: user.skillsValidated
+//     ? "Your skills are already validated. Click to view or update your profile score."
+//     : "Analyze your available data to calculate your DevSta profile score.",
+//   actionLabel: "View Results",
+//   onAction: scrollToSkillsCard, // scroll instead of direct validation
+// };
 
 
   // To-Do / Action cards
