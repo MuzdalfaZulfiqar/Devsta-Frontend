@@ -12,7 +12,11 @@ import ProfilePage from "./pages/User/ProfilePage";
 import VerifyOtp from "./pages/User/VerifyOtp";
 import ForgotPassword from "./pages/User/ForgotPassword";
 import SkillTest from "./pages/User/SkillTest";
-
+import CommunityPage from "./pages/User/CommunityPage";
+import PublicProfilePage from "./pages/User/PublicProfilePage";
+import AllUsersWithProfile from "./components/networking/AllUsersWithProfile";
+import CommunityNotifications from "./pages/User/CommunityNotifications";
+import CommunityExplore from "./pages/User/CommunityFeed";
 function App() {
   const { user, showWelcome, setShowWelcome } = useAuth();
 
@@ -49,8 +53,52 @@ function App() {
             <ProfilePage />
           </ProtectedRoute>
         } />
+        {/* <Route path="/dashboard/community" element={
+          <ProtectedRoute requireOnboarding={true}>
+            <CommunityPage />
+          </ProtectedRoute>
+        } /> */}
 
-        
+        {/* <Route
+          path="/dashboard/community"
+          element={
+            <ProtectedRoute requireOnboarding={true}>
+              <CommunityPage />
+            </ProtectedRoute>
+          }
+        >
+       
+          <Route index element={<AllUsersWithProfile />} />
+
+          <Route
+            path=":userId"
+            element={
+              <AllUsersWithProfile />
+            }
+          >
+            <Route index element={<PublicProfilePage />} />
+          </Route>
+        </Route> */}
+
+
+        <Route
+  path="/dashboard/community"
+  element={
+    <ProtectedRoute requireOnboarding={true}>
+      <CommunityPage />
+    </ProtectedRoute>
+  }
+>
+  <Route index element={<AllUsersWithProfile />} />
+  <Route path="notifications" element={<CommunityNotifications />} />
+  <Route path="explore" element={<CommunityExplore />} />
+
+  <Route path=":userId" element={<AllUsersWithProfile />}>
+    <Route index element={<PublicProfilePage />} />
+  </Route>
+</Route>
+
+
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/verify-otp" element={<VerifyOtp />} />
 

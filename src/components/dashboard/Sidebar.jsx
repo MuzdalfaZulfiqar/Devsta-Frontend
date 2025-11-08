@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useState } from "react";
+import DevstaAvatar from "./DevstaAvatar";
 
 export default function Sidebar({ isOpen, setIsOpen, onLogout, user }) {
   const navigate = useNavigate();
@@ -83,7 +84,7 @@ export default function Sidebar({ isOpen, setIsOpen, onLogout, user }) {
         className="border-t border-primary/20 px-4 py-4 flex items-center gap-3 cursor-pointer hover:bg-primary/5 transition-all mt-auto"
         onClick={() => navigate("/dashboard/profile")}
       >
-        {user?.avatar_url ? (
+        {/* {user?.avatar_url ? (
           <img
             src={user.avatar_url}
             alt="avatar"
@@ -93,7 +94,11 @@ export default function Sidebar({ isOpen, setIsOpen, onLogout, user }) {
           <div className="w-9 h-9 flex items-center justify-center rounded-full border border-gray-400 bg-primary/10">
             <User size={18} className="text-primary" />
           </div>
-        )}
+        )} */}
+
+
+        <DevstaAvatar user={user} size={36} />
+
         <div className="flex flex-col leading-tight">
           <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">
             {user?.name || "User"}
