@@ -325,7 +325,7 @@
 import React, { useEffect, useState } from "react";
 import DevstaAvatar from "../dashboard/DevstaAvatar";
 import { UserPlus, Check } from "lucide-react";
-import { fetchRoles } from "../../api/roles";
+import { useRoleMap } from "../../hooks/useRoleMap";
 
 function getSkillColor(skill) {
   const colors = ["#e6f4f1"];
@@ -337,21 +337,10 @@ function getSkillColor(skill) {
 }
 
 export default function UserCard({ user, onClick, onConnect, compact = false }) {
-  const [roleMap, setRoleMap] = useState({});
 
-  useEffect(() => {
-    fetchRoles().then((roles) => {
-      const map = {};
-      roles.forEach((r) => (map[r.key.toLowerCase()] = r.label));
-      setRoleMap(map);
-    });
-  }, []);
 
-  const formatRole = (role) => {
-    if (!role) return "Developer";
-    if (roleMap[role.toLowerCase()]) return roleMap[role.toLowerCase()];
-    return role.replace(/-/g, " ").replace(/^custom:/i, "");
-  };
+
+  const { formatRole } = useRoleMap();
 
   const handleConnect = (e) => {
     e.stopPropagation();
@@ -382,17 +371,15 @@ export default function UserCard({ user, onClick, onConnect, compact = false }) 
 
         <div className="flex flex-col min-w-0">
           <h3
-            className={`font-semibold text-gray-900 dark:text-gray-100 truncate ${
-              compact ? "text-sm" : "text-[0.94rem]"
-            }`}
+            className={`font-semibold text-gray-900 dark:text-gray-100 truncate ${compact ? "text-sm" : "text-[0.94rem]"
+              }`}
           >
             {user?.name || "Unknown User"}
           </h3>
 
           <p
-            className={`text-gray-500 dark:text-gray-400 truncate ${
-              compact ? "text-xs" : "text-[0.86rem]"
-            }`}
+            className={`text-gray-400 text-[14px] font-semibold dark:text-gray-400 truncate ${compact ? "text-xs" : "text-[0.86rem]"
+              }`}
           >
             {formatRole(user?.primaryRole)}
           </p>

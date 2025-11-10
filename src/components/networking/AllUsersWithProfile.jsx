@@ -239,45 +239,45 @@ export default function AllUsersWithProfile() {
   const clearFilters = () =>
     setFilters({ name: "", role: "", skill: "", experience: "", sort: "recent" });
 
-//   const onUserClick = (user) => navigate(`${user._id}`, { relative: "path" });
+  //   const onUserClick = (user) => navigate(`${user._id}`, { relative: "path" });
 
-const onUserClick = (user) => {
-  // Always navigate to absolute path to avoid duplicating IDs
-  navigate(`/dashboard/community/${user._id}`);
-};
+  const onUserClick = (user) => {
+    // Always navigate to absolute path to avoid duplicating IDs
+    navigate(`/dashboard/community/${user._id}`);
+  };
 
   const goBack = () => navigate("/dashboard/community");
 
   return (
     <div className="flex gap-6 w-full h-full">
       {/* LEFT: FILTERS + (optional) compact list */}
-    {/* LEFT: FILTERS + (optional) compact list */}
-<aside className="flex flex-col gap-4 w-80 flex-shrink-0">
-  {/* Filters – always sticky */}
-  <div className={`
+      {/* LEFT: FILTERS + (optional) compact list */}
+      <aside className="flex flex-col gap-4 w-80 flex-shrink-0">
+        {/* Filters – always sticky */}
+        <div className={`
     sticky top-4
     ${userId ? "mb-6" : ""}   /* ← ADD MARGIN-BOTTOM when list is below */
   `}>
-    <DeveloperFilters
-      filters={filters}
-      setFilters={setFilters}
-      clearFilters={clearFilters}
-      compact={!!userId}
-    />
-  </div>
+          <DeveloperFilters
+            filters={filters}
+            setFilters={setFilters}
+            clearFilters={clearFilters}
+            compact={!!userId}
+          />
+        </div>
 
-  {/* Compact list – only when profile is open */}
-  {userId && (
-    <div className="flex-1 overflow-y-auto pr-2">
-      <DevelopersList
-        loading={loading}
-        users={users}
-        onUserClick={onUserClick}
-        compact={true}
-      />
-    </div>
-  )}
-</aside>
+        {/* Compact list – only when profile is open */}
+        {userId && (
+          <div className="flex-1 overflow-y-auto pr-2">
+            <DevelopersList
+              loading={loading}
+              users={users}
+              onUserClick={onUserClick}
+              compact={true}
+            />
+          </div>
+        )}
+      </aside>
       {/* RIGHT: Full list OR profile */}
       <main className="flex-1 overflow-hidden">
         {!userId ? (
@@ -290,11 +290,11 @@ const onUserClick = (user) => {
         ) : (
           <div className="bg-white dark:bg-[#0a0a0a] rounded-xl shadow-lg p-4 h-full overflow-y-auto">
             <button
-  onClick={goBack}
-  className="mb-4 flex items-center gap-1 text-primary font-medium hover:underline"
->
-  <ArrowLeft size={16} /> Back
-</button>
+              onClick={goBack}
+              className="mb-4 flex items-center gap-1 text-primary font-medium hover:underline"
+            >
+              <ArrowLeft size={16} /> Back
+            </button>
             <Outlet />
           </div>
         )}

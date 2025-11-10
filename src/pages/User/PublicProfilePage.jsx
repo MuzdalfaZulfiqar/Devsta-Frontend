@@ -778,20 +778,224 @@
 // }
 
 
-import { useParams, useNavigate } from "react-router-dom";
+// import { useParams, useNavigate } from "react-router-dom";
+// import { useEffect, useState } from "react";
+// import DevstaAvatar from "../../components/dashboard/DevstaAvatar";
+// import { fetchUserById } from "../../api/connections";
+// import { UserPlus, Github, BookOpen, Briefcase, User, Zap, Star } from "lucide-react";
+// import { ArrowLeft } from "lucide-react";
+
+// export default function PublicProfilePage() {
+//   const { userId } = useParams();
+//   const [user, setUser] = useState(null);
+//   const [loading, setLoading] = useState(true);
+//   const navigate = useNavigate();
+
+//   const accentColor = "#e6f4f1"; // soft accent for skills/interests
+
+//   useEffect(() => {
+//     const load = async () => {
+//       try {
+//         const data = await fetchUserById(userId);
+//         setUser({
+//           topSkills: [],
+//           interests: [],
+//           education: [],
+//           experience: [],
+//           socialLinks: {},
+//           githubProfile: {},
+//           ...data,
+//         });
+//       } catch (e) {
+//         console.error(e);
+//       } finally {
+//         setLoading(false);
+//       }
+//     };
+//     load();
+//   }, [userId]);
+
+//   if (loading) return <p className="text-center py-10">Loading…</p>;
+//   if (!user) return <p className="text-center text-red-500 py-10">User not found.</p>;
+
+//   return (
+//     <div className="max-w-3xl mx-auto space-y-6">
+
+//       {/* HEADER */}
+//       <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6 justify-between">
+//         <div className="flex items-center gap-4">
+//           <DevstaAvatar user={user.githubProfile?.avatar_url ? { ...user, avatar: user.githubProfile.avatar_url } : user} size={120} />
+//           <div className="flex flex-col gap-1">
+//             <h1 className="text-3xl font-bold truncate">{user.name || user.githubProfile?.name}</h1>
+//             <p className="text-gray-500 text-lg">{user.primaryRole || "Developer"}</p>
+//           </div>
+//         </div>
+
+//         {/* GitHub + Connect */}
+//         <div className="flex gap-2 flex-wrap">
+//           {user.githubProfile?.html_url && (
+//             <a
+//               href={user.githubProfile.html_url}
+//               target="_blank"
+//               rel="noopener noreferrer"
+//               className="flex items-center gap-2 px-4 py-2 rounded-xl border border-gray-300 text-gray-800 hover:bg-gray-100 shadow-sm"
+//             >
+//               <Github size={18} /> GitHub
+//             </a>
+//           )}
+
+//           {!user.isSelf && (
+//             <button className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-white hover:bg-primary/90 shadow-sm">
+//               <UserPlus size={18} /> Connect
+//             </button>
+//           )}
+//         </div>
+//       </div>
+
+//       {/* ABOUT */}
+//       {user.bio && (
+//         <section className="p-4 rounded-xl shadow-sm flex items-start gap-2 border border-gray-200">
+//           <User size={20} className="text-primary mt-1" />
+//           <div>
+//             <h3 className="font-semibold mb-1 text-lg text-primary">About</h3>
+//             <p className="text-gray-700">{user.bio}</p>
+//           </div>
+//         </section>
+//       )}
+
+//       {/* SKILLS */}
+//       {user.topSkills?.length > 0 && (
+//         <section className="p-4 rounded-xl shadow-sm border border-gray-200">
+//           <div className="flex items-center gap-2 mb-2">
+//             <Zap size={20} className="text-primary" />
+//             <h3 className="font-semibold text-lg text-primary">Skills</h3>
+//           </div>
+//           <div className="flex flex-wrap gap-2">
+//             {user.topSkills.map((skill, i) => (
+//               <span
+//                 key={i}
+//                 className="px-3 py-1 rounded-full text-gray-800 text-sm font-medium"
+//                 style={{ backgroundColor: accentColor }}
+//               >
+//                 {skill.replace("custom:", "")}
+//               </span>
+//             ))}
+//           </div>
+//         </section>
+//       )}
+
+//       {/* INTERESTS */}
+//       {user.interests?.length > 0 && (
+//         <section className="p-4 rounded-xl shadow-sm border border-gray-200">
+//           <div className="flex items-center gap-2 mb-2">
+//             <Star size={20} className="text-primary" />
+//             <h3 className="font-semibold text-lg text-primary">Interests</h3>
+//           </div>
+//           <div className="flex flex-wrap gap-2">
+//             {user.interests.map((interest, i) => (
+//               <span
+//                 key={i}
+//                 className="px-3 py-1 rounded-full text-gray-800 text-sm font-medium"
+//                 style={{ backgroundColor: accentColor }}
+//               >
+//                 {interest}
+//               </span>
+//             ))}
+//           </div>
+//         </section>
+//       )}
+
+//       {/* EDUCATION */}
+//       {user.education?.length > 0 && (
+//         <section className="p-4 rounded-xl shadow-sm border border-gray-200">
+//           <div className="flex items-center gap-2 mb-2">
+//             <BookOpen size={20} className="text-primary" />
+//             <h3 className="font-semibold text-lg text-primary">Education</h3>
+//           </div>
+//           <div className="space-y-3">
+//             {user.education.map((edu) => (
+//               <div key={edu._id} className="p-3 rounded-xl border border-gray-300" style={{ backgroundColor: "#f9fdfd" }}>
+//                 <div className="flex justify-between items-center mb-1">
+//                   <h4 className="font-semibold">{edu.degreeTitle} in {edu.fieldOfStudy}</h4>
+//                   <span className="text-gray-500 text-sm">{edu.startYear} – {edu.endYear || "Present"}</span>
+//                 </div>
+//                 <p className="text-gray-700">{edu.institution}</p>
+//                 {edu.marksPercent && <p className="text-gray-500 text-sm mt-1">Marks: {edu.marksPercent}%</p>}
+//               </div>
+//             ))}
+//           </div>
+//         </section>
+//       )}
+
+//       {/* EXPERIENCE */}
+//       {user.experience?.length > 0 && (
+//         <section className="p-4 rounded-xl shadow-sm border border-gray-200">
+//           <div className="flex items-center gap-2 mb-2">
+//             <Briefcase size={20} className="text-primary" />
+//             <h3 className="font-semibold text-lg text-primary">Experience</h3>
+//           </div>
+//           <div className="space-y-3">
+//             {user.experience.map((exp) => (
+//               <div key={exp._id} className="p-3 rounded-xl border border-gray-300" style={{ backgroundColor: "#f9fdfd" }}>
+//                 <div className="flex justify-between items-center mb-1">
+//                   <h4 className="font-semibold">{exp.position} @ {exp.company}</h4>
+//                   <span className="text-gray-500 text-sm">{new Date(exp.startDate).getFullYear()} – {exp.endDate ? new Date(exp.endDate).getFullYear() : "Present"}</span>
+//                 </div>
+//                 {exp.description && <p className="text-gray-700">{exp.description}</p>}
+//               </div>
+//             ))}
+//           </div>
+//         </section>
+//       )}
+
+//       {/* SOCIAL LINKS */}
+//       {user.socialLinks && Object.keys(user.socialLinks).length > 0 && (
+//         <section className="p-4 rounded-xl shadow-sm border border-gray-200">
+//           <div className="flex items-center gap-2 mb-2">
+//             <UserPlus size={20} className="text-primary" />
+//             <h3 className="font-semibold text-lg text-primary">Connect</h3>
+//           </div>
+//           <div className="flex gap-3 flex-wrap">
+//             {Object.entries(user.socialLinks).map(([k, url]) => (
+//               <a
+//                 key={k}
+//                 href={url}
+//                 target="_blank"
+//                 rel="noopener noreferrer"
+//                 className="px-3 py-1 rounded-full text-gray-800 text-sm font-medium flex items-center gap-1"
+//                 style={{ backgroundColor: accentColor }}
+//               >
+//                 {k}
+//               </a>
+//             ))}
+//           </div>
+//         </section>
+//       )}
+//     </div>
+//   );
+// }
+
+
+import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import DevstaAvatar from "../../components/dashboard/DevstaAvatar";
 import { fetchUserById } from "../../api/connections";
-import { UserPlus, Github, BookOpen, Briefcase, User, Zap, Star } from "lucide-react";
-import { ArrowLeft } from "lucide-react";
+import { getPostsByUser } from "../../api/post";
+import PostCard from "../../components/networking/PostCard";
+import { UserPlus, Github, BookOpen, Briefcase, User, Zap, Star, ArrowLeft } from "lucide-react";
+import { useRoleMap } from "../../hooks/useRoleMap";
 
 export default function PublicProfilePage() {
+
+  const { formatRole } = useRoleMap(); 
   const { userId } = useParams();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState("details"); // "details" | "posts"
+  const [posts, setPosts] = useState([]);
+  const [postsLoading, setPostsLoading] = useState(false);
 
-  const accentColor = "#e6f4f1"; // soft accent for skills/interests
+  const accentColor = "#e6f4f1";
 
   useEffect(() => {
     const load = async () => {
@@ -815,6 +1019,24 @@ export default function PublicProfilePage() {
     load();
   }, [userId]);
 
+  // Load posts only when "Posts" tab is active
+  useEffect(() => {
+    if (activeTab !== "posts") return;
+
+    const loadPosts = async () => {
+      setPostsLoading(true);
+      try {
+        const res = await getPostsByUser(userId);
+        setPosts(res.items || []);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setPostsLoading(false);
+      }
+    };
+    loadPosts();
+  }, [activeTab, userId]);
+
   if (loading) return <p className="text-center py-10">Loading…</p>;
   if (!user) return <p className="text-center text-red-500 py-10">User not found.</p>;
 
@@ -827,7 +1049,7 @@ export default function PublicProfilePage() {
           <DevstaAvatar user={user.githubProfile?.avatar_url ? { ...user, avatar: user.githubProfile.avatar_url } : user} size={120} />
           <div className="flex flex-col gap-1">
             <h1 className="text-3xl font-bold truncate">{user.name || user.githubProfile?.name}</h1>
-            <p className="text-gray-500 text-lg">{user.primaryRole || "Developer"}</p>
+            <p className="text-gray-500 text-lg">{formatRole(user.primaryRole) || "Developer"}</p>
           </div>
         </div>
 
@@ -852,124 +1074,158 @@ export default function PublicProfilePage() {
         </div>
       </div>
 
-      {/* ABOUT */}
-      {user.bio && (
-        <section className="p-4 rounded-xl shadow-sm flex items-start gap-2 border border-gray-200">
-          <User size={20} className="text-primary mt-1" />
-          <div>
-            <h3 className="font-semibold mb-1 text-lg text-primary">About</h3>
-            <p className="text-gray-700">{user.bio}</p>
-          </div>
-        </section>
-      )}
+      {/* TABS */}
+      <div className="flex border-b border-gray-200">
+        <button
+          className={`px-4 py-2 font-semibold ${activeTab === "details" ? "border-b-2 border-primary text-primary" : "text-gray-600"}`}
+          onClick={() => setActiveTab("details")}
+        >
+          Personal Details
+        </button>
+        <button
+          className={`px-4 py-2 font-semibold ${activeTab === "posts" ? "border-b-2 border-primary text-primary" : "text-gray-600"}`}
+          onClick={() => setActiveTab("posts")}
+        >
+          Posts
+        </button>
+      </div>
 
-      {/* SKILLS */}
-      {user.topSkills?.length > 0 && (
-        <section className="p-4 rounded-xl shadow-sm border border-gray-200">
-          <div className="flex items-center gap-2 mb-2">
-            <Zap size={20} className="text-primary" />
-            <h3 className="font-semibold text-lg text-primary">Skills</h3>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {user.topSkills.map((skill, i) => (
-              <span
-                key={i}
-                className="px-3 py-1 rounded-full text-gray-800 text-sm font-medium"
-                style={{ backgroundColor: accentColor }}
-              >
-                {skill.replace("custom:", "")}
-              </span>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* INTERESTS */}
-      {user.interests?.length > 0 && (
-        <section className="p-4 rounded-xl shadow-sm border border-gray-200">
-          <div className="flex items-center gap-2 mb-2">
-            <Star size={20} className="text-primary" />
-            <h3 className="font-semibold text-lg text-primary">Interests</h3>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {user.interests.map((interest, i) => (
-              <span
-                key={i}
-                className="px-3 py-1 rounded-full text-gray-800 text-sm font-medium"
-                style={{ backgroundColor: accentColor }}
-              >
-                {interest}
-              </span>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* EDUCATION */}
-      {user.education?.length > 0 && (
-        <section className="p-4 rounded-xl shadow-sm border border-gray-200">
-          <div className="flex items-center gap-2 mb-2">
-            <BookOpen size={20} className="text-primary" />
-            <h3 className="font-semibold text-lg text-primary">Education</h3>
-          </div>
-          <div className="space-y-3">
-            {user.education.map((edu) => (
-              <div key={edu._id} className="p-3 rounded-xl border border-gray-300" style={{ backgroundColor: "#f9fdfd" }}>
-                <div className="flex justify-between items-center mb-1">
-                  <h4 className="font-semibold">{edu.degreeTitle} in {edu.fieldOfStudy}</h4>
-                  <span className="text-gray-500 text-sm">{edu.startYear} – {edu.endYear || "Present"}</span>
-                </div>
-                <p className="text-gray-700">{edu.institution}</p>
-                {edu.marksPercent && <p className="text-gray-500 text-sm mt-1">Marks: {edu.marksPercent}%</p>}
+      {/* TAB CONTENT */}
+      {activeTab === "details" && (
+        <div className="space-y-4">
+          {/* ABOUT */}
+          {user.bio && (
+            <section className="p-4 rounded-xl shadow-sm flex items-start gap-2 border border-gray-200">
+              <User size={20} className="text-primary mt-1" />
+              <div>
+                <h3 className="font-semibold mb-1 text-lg text-primary">About</h3>
+                <p className="text-gray-700">{user.bio}</p>
               </div>
-            ))}
-          </div>
-        </section>
-      )}
+            </section>
+          )}
 
-      {/* EXPERIENCE */}
-      {user.experience?.length > 0 && (
-        <section className="p-4 rounded-xl shadow-sm border border-gray-200">
-          <div className="flex items-center gap-2 mb-2">
-            <Briefcase size={20} className="text-primary" />
-            <h3 className="font-semibold text-lg text-primary">Experience</h3>
-          </div>
-          <div className="space-y-3">
-            {user.experience.map((exp) => (
-              <div key={exp._id} className="p-3 rounded-xl border border-gray-300" style={{ backgroundColor: "#f9fdfd" }}>
-                <div className="flex justify-between items-center mb-1">
-                  <h4 className="font-semibold">{exp.position} @ {exp.company}</h4>
-                  <span className="text-gray-500 text-sm">{new Date(exp.startDate).getFullYear()} – {exp.endDate ? new Date(exp.endDate).getFullYear() : "Present"}</span>
-                </div>
-                {exp.description && <p className="text-gray-700">{exp.description}</p>}
+          {/* SKILLS */}
+          {user.topSkills?.length > 0 && (
+            <section className="p-4 rounded-xl shadow-sm border border-gray-200">
+              <div className="flex items-center gap-2 mb-2">
+                <Zap size={20} className="text-primary" />
+                <h3 className="font-semibold text-lg text-primary">Skills</h3>
               </div>
-            ))}
-          </div>
-        </section>
+              <div className="flex flex-wrap gap-2">
+                {user.topSkills.map((skill, i) => (
+                  <span
+                    key={i}
+                    className="px-3 py-1 rounded-full text-gray-800 text-sm font-medium"
+                    style={{ backgroundColor: accentColor }}
+                  >
+                    {skill.replace("custom:", "")}
+                  </span>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* INTERESTS */}
+          {user.interests?.length > 0 && (
+            <section className="p-4 rounded-xl shadow-sm border border-gray-200">
+              <div className="flex items-center gap-2 mb-2">
+                <Star size={20} className="text-primary" />
+                <h3 className="font-semibold text-lg text-primary">Interests</h3>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {user.interests.map((interest, i) => (
+                  <span
+                    key={i}
+                    className="px-3 py-1 rounded-full text-gray-800 text-sm font-medium"
+                    style={{ backgroundColor: accentColor }}
+                  >
+                    {interest}
+                  </span>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* EDUCATION */}
+          {user.education?.length > 0 && (
+            <section className="p-4 rounded-xl shadow-sm border border-gray-200">
+              <div className="flex items-center gap-2 mb-2">
+                <BookOpen size={20} className="text-primary" />
+                <h3 className="font-semibold text-lg text-primary">Education</h3>
+              </div>
+              <div className="space-y-3">
+                {user.education.map((edu) => (
+                  <div key={edu._id} className="p-3 rounded-xl border border-gray-300" style={{ backgroundColor: "#f9fdfd" }}>
+                    <div className="flex justify-between items-center mb-1">
+                      <h4 className="font-semibold">{edu.degreeTitle} in {edu.fieldOfStudy}</h4>
+                      <span className="text-gray-500 text-sm">{edu.startYear} – {edu.endYear || "Present"}</span>
+                    </div>
+                    <p className="text-gray-700">{edu.institution}</p>
+                    {edu.marksPercent && <p className="text-gray-500 text-sm mt-1">Marks: {edu.marksPercent}%</p>}
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* EXPERIENCE */}
+          {user.experience?.length > 0 && (
+            <section className="p-4 rounded-xl shadow-sm border border-gray-200">
+              <div className="flex items-center gap-2 mb-2">
+                <Briefcase size={20} className="text-primary" />
+                <h3 className="font-semibold text-lg text-primary">Experience</h3>
+              </div>
+              <div className="space-y-3">
+                {user.experience.map((exp) => (
+                  <div key={exp._id} className="p-3 rounded-xl border border-gray-300" style={{ backgroundColor: "#f9fdfd" }}>
+                    <div className="flex justify-between items-center mb-1">
+                      <h4 className="font-semibold">{exp.position} @ {exp.company}</h4>
+                      <span className="text-gray-500 text-sm">{new Date(exp.startDate).getFullYear()} – {exp.endDate ? new Date(exp.endDate).getFullYear() : "Present"}</span>
+                    </div>
+                    {exp.description && <p className="text-gray-700">{exp.description}</p>}
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* SOCIAL LINKS */}
+          {user.socialLinks && Object.keys(user.socialLinks).length > 0 && (
+            <section className="p-4 rounded-xl shadow-sm border border-gray-200">
+              <div className="flex items-center gap-2 mb-2">
+                <UserPlus size={20} className="text-primary" />
+                <h3 className="font-semibold text-lg text-primary">Connect</h3>
+              </div>
+              <div className="flex gap-3 flex-wrap">
+                {Object.entries(user.socialLinks).map(([k, url]) => (
+                  <a
+                    key={k}
+                    href={url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-3 py-1 rounded-full text-gray-800 text-sm font-medium flex items-center gap-1"
+                    style={{ backgroundColor: accentColor }}
+                  >
+                    {k}
+                  </a>
+                ))}
+              </div>
+            </section>
+          )}
+        </div>
       )}
 
-      {/* SOCIAL LINKS */}
-      {user.socialLinks && Object.keys(user.socialLinks).length > 0 && (
-        <section className="p-4 rounded-xl shadow-sm border border-gray-200">
-          <div className="flex items-center gap-2 mb-2">
-            <UserPlus size={20} className="text-primary" />
-            <h3 className="font-semibold text-lg text-primary">Connect</h3>
-          </div>
-          <div className="flex gap-3 flex-wrap">
-            {Object.entries(user.socialLinks).map(([k, url]) => (
-              <a
-                key={k}
-                href={url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-3 py-1 rounded-full text-gray-800 text-sm font-medium flex items-center gap-1"
-                style={{ backgroundColor: accentColor }}
-              >
-                {k}
-              </a>
-            ))}
-          </div>
-        </section>
+      {/* POSTS TAB */}
+      {activeTab === "posts" && (
+        <div className="space-y-4">
+          {postsLoading ? (
+            <p className="text-gray-500 text-center py-6">Loading posts…</p>
+          ) : posts.length === 0 ? (
+            <p className="text-gray-500 text-center py-6">No posts yet.</p>
+          ) : (
+            posts.map((post) => <PostCard key={post._id} post={post} />)
+          )}
+        </div>
       )}
     </div>
   );

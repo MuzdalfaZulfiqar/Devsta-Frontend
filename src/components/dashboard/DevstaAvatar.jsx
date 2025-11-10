@@ -25,6 +25,7 @@ export default function DevstaAvatar({
     showBorder && "ring-2 ring-gray-300 shadow-sm", // darker ring for visibility
     hoverEffect && "hover:scale-105 hover:shadow-md",
     className,
+    
   ]
     .filter(Boolean)
     .join(" ");
