@@ -16,7 +16,7 @@ import CommunityPage from "./pages/User/CommunityPage";
 import PublicProfilePage from "./pages/User/PublicProfilePage";
 import AllUsersWithProfile from "./components/networking/AllUsersWithProfile";
 import CommunityNotifications from "./pages/User/CommunityNotifications";
-import CommunityExplore from "./pages/User/CommunityFeed";
+import CommunityFeed from "./pages/User/CommunityFeed";
 function App() {
   const { user, showWelcome, setShowWelcome } = useAuth();
 
@@ -91,7 +91,7 @@ function App() {
 >
   <Route index element={<AllUsersWithProfile />} />
   <Route path="notifications" element={<CommunityNotifications />} />
-  <Route path="explore" element={<CommunityExplore />} />
+  <Route path="feed" element={<CommunityFeed />} />
 
   <Route path=":userId" element={<AllUsersWithProfile />}>
     <Route index element={<PublicProfilePage />} />
