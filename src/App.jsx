@@ -17,6 +17,9 @@ import PublicProfilePage from "./pages/User/PublicProfilePage";
 import AllUsersWithProfile from "./components/networking/AllUsersWithProfile";
 import CommunityNotifications from "./pages/User/CommunityNotifications";
 import CommunityFeed from "./pages/User/CommunityFeed";
+import CommunityConnections from "./pages/User/CommunityConnections";
+import CommunityMessaging from "./pages/User/CommunityMessaging";
+
 function App() {
   const { user, showWelcome, setShowWelcome } = useAuth();
 
@@ -53,13 +56,8 @@ function App() {
             <ProfilePage />
           </ProtectedRoute>
         } />
-        {/* <Route path="/dashboard/community" element={
-          <ProtectedRoute requireOnboarding={true}>
-            <CommunityPage />
-          </ProtectedRoute>
-        } /> */}
 
-        {/* <Route
+        <Route
           path="/dashboard/community"
           element={
             <ProtectedRoute requireOnboarding={true}>
@@ -67,36 +65,16 @@ function App() {
             </ProtectedRoute>
           }
         >
-       
           <Route index element={<AllUsersWithProfile />} />
+          <Route path="notifications" element={<CommunityNotifications />} />
+          <Route path="feed" element={<CommunityFeed />} />
+          <Route path="connections" element={<CommunityConnections />} />
+          <Route path="messaging" element={<CommunityMessaging />} />
 
-          <Route
-            path=":userId"
-            element={
-              <AllUsersWithProfile />
-            }
-          >
+          <Route path=":userId" element={<AllUsersWithProfile />}>
             <Route index element={<PublicProfilePage />} />
           </Route>
-        </Route> */}
-
-
-        <Route
-  path="/dashboard/community"
-  element={
-    <ProtectedRoute requireOnboarding={true}>
-      <CommunityPage />
-    </ProtectedRoute>
-  }
->
-  <Route index element={<AllUsersWithProfile />} />
-  <Route path="notifications" element={<CommunityNotifications />} />
-  <Route path="feed" element={<CommunityFeed />} />
-
-  <Route path=":userId" element={<AllUsersWithProfile />}>
-    <Route index element={<PublicProfilePage />} />
-  </Route>
-</Route>
+        </Route>
 
 
         <Route path="/forgot-password" element={<ForgotPassword />} />
