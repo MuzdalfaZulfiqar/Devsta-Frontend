@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import DevstaAvatar from "../dashboard/DevstaAvatar";
 import { createPost } from "../../api/post";
 import { useAuth } from "../../context/AuthContext";
-import { FiImage, FiVideo } from "react-icons/fi";
+import { FiImage } from "react-icons/fi";
 import { IoClose } from "react-icons/io5";
 import { showToast } from "../../utils/toast";
 
@@ -16,7 +16,6 @@ export default function CreatePostBox({ onPostCreated }) {
 
     const textareaRef = useRef(null);
     const photoInputRef = useRef(null);
-    const videoInputRef = useRef(null);
 
     // Auto resize textarea
     useEffect(() => {
@@ -26,28 +25,12 @@ export default function CreatePostBox({ onPostCreated }) {
         }
     }, [text]);
 
-    // Handle submit
-    //   const handleSubmit = async () => {
-    //     if (!text.trim() && mediaFiles.length === 0) return;
-
-    //     setLoading(true);
-    //     try {
-    //       const res = await createPost({ text, mediaFiles, visibility: "public" });
-
-    //       setText("");
-    //       setMediaFiles([]);
-    //       onPostCreated?.(res.post);
-    //     } catch (err) {
-    //       console.error("Post failed", err);
-    //     }
-    //     setLoading(false);
-    //   };
 
 
     const handleSubmit = async () => {
         if (!text.trim() && mediaFiles.length === 0) return;
 
-        showToast("Uploading your post… please wait."); 
+        showToast("Uploading your post… please wait.");
 
         setLoading(true);
         try {
@@ -67,24 +50,18 @@ export default function CreatePostBox({ onPostCreated }) {
         setLoading(false);
     };
 
-
-    // const handleFileSelect = (e) => {
-    //     const files = Array.from(e.target.files);
-    //     setMediaFiles((prev) => [...prev, ...files]);
-    // };
-
     const handleFileSelect = (e) => {
-    const files = Array.from(e.target.files);
+        const files = Array.from(e.target.files);
 
-    // NEW: detect multi-files or heavy upload
-    const totalSize = files.reduce((sum, f) => sum + f.size, 0);
+        // NEW: detect multi-files or heavy upload
+        const totalSize = files.reduce((sum, f) => sum + f.size, 0);
 
-    if (files.length >= 2 || totalSize > 15 * 1024 * 1024) {
-        showToast("You are Uploading multiple/large files, Posting will take a moment.");
-    }
+        if (files.length >= 2 || totalSize > 15 * 1024 * 1024) {
+            showToast("You are Uploading multiple/large files, Posting will take a moment.");
+        }
 
-    setMediaFiles((prev) => [...prev, ...files]);
-};
+        setMediaFiles((prev) => [...prev, ...files]);
+    };
 
     const removeMedia = (index) => {
         setMediaFiles((prev) => prev.filter((_, i) => i !== index));
@@ -106,19 +83,14 @@ export default function CreatePostBox({ onPostCreated }) {
                         </button>
 
                         {/* Media preview - auto scaled */}
-                        {previewMedia.type.startsWith("image") ? (
+                        {previewMedia.type.startsWith("image") && (
                             <img
                                 src={URL.createObjectURL(previewMedia)}
                                 className="max-h-[80vh] w-auto rounded-xl object-contain"
                                 alt=""
                             />
-                        ) : (
-                            <video
-                                src={URL.createObjectURL(previewMedia)}
-                                controls
-                                className="max-h-[80vh] w-auto rounded-xl object-contain"
-                            />
                         )}
+
                     </div>
                 </div>
             )}
@@ -154,16 +126,10 @@ export default function CreatePostBox({ onPostCreated }) {
                                 </button>
 
                                 {/* Clickable preview */}
-                                {file.type.startsWith("image") ? (
+                                {file.type.startsWith("image") && (
                                     <img
                                         src={URL.createObjectURL(file)}
                                         alt=""
-                                        onClick={() => setPreviewMedia(file)}
-                                        className="rounded-xl object-cover w-full h-full cursor-pointer hover:opacity-80"
-                                    />
-                                ) : (
-                                    <video
-                                        src={URL.createObjectURL(file)}
                                         onClick={() => setPreviewMedia(file)}
                                         className="rounded-xl object-cover w-full h-full cursor-pointer hover:opacity-80"
                                     />
@@ -185,14 +151,7 @@ export default function CreatePostBox({ onPostCreated }) {
                             multiple
                             onChange={handleFileSelect}
                         />
-                        <input
-                            type="file"
-                            accept="video/*"
-                            ref={videoInputRef}
-                            className="hidden"
-                            multiple
-                            onChange={handleFileSelect}
-                        />
+
 
                         {/* Add Photo button */}
                         <button
@@ -204,15 +163,6 @@ export default function CreatePostBox({ onPostCreated }) {
                             <span>Add Photo</span>
                         </button>
 
-                        {/* Add Video button */}
-                        <button
-                            type="button"
-                            onClick={() => videoInputRef.current.click()}
-                            className="flex items-center gap-2 px-3 py-1.5 rounded-full cursor-pointer hover:bg-primary/10"
-                        >
-                            <FiVideo />
-                            <span>Add Video</span>
-                        </button>
                     </div>
 
                     <button

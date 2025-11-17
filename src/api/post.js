@@ -75,31 +75,6 @@ export async function getPostsByUser(userId, page = 1, limit = 20) {
   return await res.json();
 }
 
-/* ============================================
-   UPDATE POST
-   PUT /api/posts/:postId
-===============================================*/
-// export async function updatePost(postId, { text, visibility, removePublicIds = [], newMediaFiles = [] }) {
-//   const form = new FormData();
-
-//   if (text !== undefined) form.append("text", text);
-//   if (visibility) form.append("visibility", visibility);
-//   if (removePublicIds.length)
-//     form.append("removePublicIds", JSON.stringify(removePublicIds));
-
-//   newMediaFiles.forEach((file) => form.append("media", file));
-
-//   const res = await fetch(`${BACKEND_URL}/api/posts/${postId}`, {
-//     method: "PUT",
-//     headers: { Authorization: getAuthHeader() },
-//     body: form,
-//   });
-
-//   const data = await res.json();
-//   if (!res.ok) throw new Error(data.msg || "Failed to update post");
-//   return data;
-// }
-
 export async function updatePost(postId, formData) {
   const res = await fetch(`${BACKEND_URL}/api/posts/${postId}`, {
     method: "PUT",
