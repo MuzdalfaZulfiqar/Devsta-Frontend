@@ -268,7 +268,6 @@
 //     </div>
 //   );
 // }
-
 import React, { useEffect, useState, useRef } from "react";
 import { io } from "socket.io-client";
 import MessageBubble from "../../components/messaging/MessageBubble";
@@ -343,13 +342,16 @@ export default function CommunityMessaging() {
   const getOtherUser = () => {
     if (!selectedConversation) return null;
 
-    const otherUserId = selectedConversation.participants.find(
-      (id) => id !== currentUserId && id?._id !== currentUserId
-    );
+    const otherId = selectedConversation.participants.find((p) => {
+      const pid = typeof p === "string" ? p : p?._id?.toString();
+      return pid !== currentUserId;
+    });
+
+    const otherIdStr =
+      typeof otherId === "string" ? otherId : otherId?._id?.toString();
 
     return (
-      connectedUsers.find((u) => u._id === otherUserId || u._id === otherUserId?._id) ||
-      null
+      connectedUsers.find((u) => u._id?.toString() === otherIdStr) || null
     );
   };
 
@@ -368,16 +370,6 @@ export default function CommunityMessaging() {
 
       setMessages((prev) => {
         if (prev.some((m) => m._id === msg._id)) return prev;
-
-        const tempIndex = prev.findIndex(
-          (m) => m._id?.toString().startsWith("temp-") && m.text === msg.text
-        );
-        if (tempIndex !== -1) {
-          const newMessages = [...prev];
-          newMessages[tempIndex] = msg;
-          return newMessages;
-        }
-
         return [...prev, msg];
       });
     });
@@ -409,7 +401,7 @@ export default function CommunityMessaging() {
     }
   };
 
-  // Helper: upload media to backend (Cloudinary)
+  // Upload media to backend (Cloudinary)
   const uploadMessageMedia = async (file) => {
     const token = localStorage.getItem("devsta_token");
     const formData = new FormData();
@@ -430,38 +422,26 @@ export default function CommunityMessaging() {
     return res.json(); // { url, type, mimeType, originalName, size, cloudinaryPublicId }
   };
 
-  // UPDATED: handle text + optional file
+  // handle text + optional file
   const handleSend = async ({ text, file }) => {
     if (!selectedConversation) return;
-    if (!text?.trim() && !file) return;
+    const trimmed = text?.trim() || "";
 
-    let media = null;
+    if (!trimmed && !file) return;
 
     try {
+      let media = null;
       if (file) {
         media = await uploadMessageMedia(file);
       }
-
-      const tempId = `temp-${Date.now()}`;
-      const optimisticMsg = {
-        _id: tempId,
-        text: text?.trim() || "",
-        media,
-        sender: { _id: currentUserId },
-        createdAt: new Date().toISOString(),
-        conversation: selectedConversation._id,
-      };
-
-      setMessages((prev) => [...prev, optimisticMsg]);
-
       socketRef.current?.emit("sendMessage", {
         conversationId: selectedConversation._id,
-        text: text?.trim() || "",
+        text: trimmed,
         media,
       });
     } catch (err) {
       console.error("Error sending message:", err);
-      // TODO: show toast / error state
+      // TODO: show toast
     }
   };
 
