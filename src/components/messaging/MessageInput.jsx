@@ -30,6 +30,7 @@
 //   );
 // }
 
+
 import { useState, useRef } from "react";
 import {
   Send,
@@ -38,6 +39,50 @@ import {
   Video,
   FileText,
 } from "lucide-react";
+
+// helper: doc kind from File object
+function getDocKindFromFile(file) {
+  if (!file) return "other";
+  const mimeType = (file.type || "").toLowerCase();
+  const name = (file.name || "").toLowerCase();
+
+  // PDF
+  if (mimeType.includes("pdf") || name.endsWith(".pdf")) return "pdf";
+
+  // Word
+  if (
+    mimeType.includes("word") ||
+    mimeType.includes("officedocument.wordprocessingml") ||
+    name.endsWith(".doc") ||
+    name.endsWith(".docx")
+  ) {
+    return "word";
+  }
+
+  // Excel
+  if (
+    mimeType.includes("excel") ||
+    mimeType.includes("spreadsheet") ||
+    mimeType.includes("officedocument.spreadsheetml") ||
+    name.endsWith(".xls") ||
+    name.endsWith(".xlsx")
+  ) {
+    return "excel";
+  }
+
+  // PowerPoint
+  if (
+    mimeType.includes("powerpoint") ||
+    mimeType.includes("presentation") ||
+    mimeType.includes("officedocument.presentationml") ||
+    name.endsWith(".ppt") ||
+    name.endsWith(".pptx")
+  ) {
+    return "ppt";
+  }
+
+  return "other";
+}
 
 export default function MessageInput({ onSend }) {
   const [text, setText] = useState("");
@@ -87,6 +132,8 @@ export default function MessageInput({ onSend }) {
     }
   };
 
+  const docKind = getDocKindFromFile(file);
+
   return (
     <div className="flex flex-col gap-2 bg-white dark:bg-[#0a0a0a] rounded-b-2xl">
       {/* Hidden file input */}
@@ -102,9 +149,34 @@ export default function MessageInput({ onSend }) {
       {file && (
         <div className="px-3 pt-2">
           <div className="flex items-center justify-between bg-gray-100 dark:bg-gray-800 rounded-xl px-3 py-2">
-            <div className="flex items-center gap-2 min-w-0">
+            <div className="flex items-center gap-3 min-w-0">
+              {/* Badge for docs */}
+              <div
+                className={`w-8 h-8 flex items-center justify-center rounded-md text-[10px] font-bold text-white ${
+                  docKind === "pdf"
+                    ? "bg-red-500"
+                    : docKind === "word"
+                    ? "bg-blue-500"
+                    : docKind === "excel"
+                    ? "bg-green-500"
+                    : docKind === "ppt"
+                    ? "bg-orange-500"
+                    : "bg-gray-500"
+                }`}
+              >
+                {docKind === "pdf"
+                  ? "PDF"
+                  : docKind === "word"
+                  ? "DOC"
+                  : docKind === "excel"
+                  ? "XLS"
+                  : docKind === "ppt"
+                  ? "PPT"
+                  : "FILE"}
+              </div>
+
               <span className="text-xs text-gray-500 truncate max-w-[220px]">
-                Attached: {file.name}
+                {file.name}
               </span>
             </div>
             <button
