@@ -28,8 +28,56 @@
 //         </div>
 //     );
 // }
+
+
+
 import { useState } from "react";
 import DevstaAvatar from "../dashboard/DevstaAvatar";
+
+// helper: what kind of doc is this?
+function getDocKind(mimeType, name = "") {
+  const lowerName = (name || "").toLowerCase();
+  const mt = (mimeType || "").toLowerCase();
+
+  // PDF
+  if (mt.includes("pdf") || lowerName.endsWith(".pdf")) {
+    return "pdf";
+  }
+
+  // Word
+  if (
+    mt.includes("word") ||
+    mt.includes("officedocument.wordprocessingml") ||
+    lowerName.endsWith(".doc") ||
+    lowerName.endsWith(".docx")
+  ) {
+    return "word";
+  }
+
+  // Excel
+  if (
+    mt.includes("excel") ||
+    mt.includes("spreadsheet") ||
+    mt.includes("officedocument.spreadsheetml") ||
+    lowerName.endsWith(".xls") ||
+    lowerName.endsWith(".xlsx")
+  ) {
+    return "excel";
+  }
+
+  // PowerPoint
+  if (
+    mt.includes("powerpoint") ||
+    mt.includes("presentation") ||
+    mt.includes("officedocument.presentationml") ||
+    lowerName.endsWith(".ppt") ||
+    lowerName.endsWith(".pptx")
+  ) {
+    return "ppt";
+  }
+
+  return "other";
+}
 
 export default function MessageBubble({ msg, currentUserId }) {
   const isSender = msg?.sender?._id === currentUserId;
@@ -53,6 +101,11 @@ export default function MessageBubble({ msg, currentUserId }) {
       setShowPreview(true);
     }
   };
+
+  const docKind =
+    mediaType === "file"
+      ? getDocKind(media?.mimeType, media?.originalName)
+      : null;
 
   return (
     <>
@@ -84,6 +137,7 @@ export default function MessageBubble({ msg, currentUserId }) {
             {/* Media thumbnail / link */}
             {media && media.url && (
               <div className={`${msg.text ? "mt-2" : ""}`}>
+                {/* Images */}
                 {mediaType === "image" && (
                   <img
                     src={media.url}
@@ -93,6 +147,7 @@ export default function MessageBubble({ msg, currentUserId }) {
                   />
                 )}
 
+                {/* Videos */}
                 {mediaType === "video" && (
                   <video
                     src={media.url}
@@ -102,15 +157,47 @@ export default function MessageBubble({ msg, currentUserId }) {
                   />
                 )}
 
-                {mediaType !== "image" && mediaType !== "video" && (
+                {/* Documents / other files */}
+                {mediaType === "file" && (
                   <a
                     href={media.url}
-                    target="_blank"
-                    rel="noreferrer"
                     download={media.originalName || true}
-                    className="flex items-center gap-2 text-xs underline break-all"
+                    className="flex items-center gap-3 text-xs break-all bg-white/10 rounded-lg px-3 py-2 mt-1"
                   >
-                    📎 {media.originalName || "Download file"}
+                    {/* Icon badge */}
+                    <div
+                      className={`w-8 h-8 flex items-center justify-center rounded-md text-[10px] font-bold text-white ${
+                        docKind === "pdf"
+                          ? "bg-red-500"
+                          : docKind === "word"
+                          ? "bg-blue-500"
+                          : docKind === "excel"
+                          ? "bg-green-500"
+                          : docKind === "ppt"
+                          ? "bg-orange-500"
+                          : "bg-gray-500"
+                      }`}
+                    >
+                      {docKind === "pdf"
+                        ? "PDF"
+                        : docKind === "word"
+                        ? "DOC"
+                        : docKind === "excel"
+                        ? "XLS"
+                        : docKind === "ppt"
+                        ? "PPT"
+                        : "FILE"}
+                    </div>
+
+                    {/* File name + hint */}
+                    <div className="flex flex-col min-w-0">
+                      <span className="truncate max-w-[160px]">
+                        {media.originalName || "Download file"}
+                      </span>
+                      <span className="text-[10px] opacity-70">
+                        Click to download
+                      </span>
+                    </div>
                   </a>
                 )}
               </div>
