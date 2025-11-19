@@ -1,3 +1,4 @@
+// src/components/messaging/ChatHeader.jsx
 import DevstaAvatar from "../dashboard/DevstaAvatar";
 import { useRoleMap } from "../../hooks/useRoleMap";
 import { useNavigate } from "react-router-dom";

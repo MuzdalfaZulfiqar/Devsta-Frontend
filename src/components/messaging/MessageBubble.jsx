@@ -30,9 +30,10 @@
 // }
 
 
-
+// src/components/messaging/MessageBubble.jsx
 import { useState } from "react";
 import DevstaAvatar from "../dashboard/DevstaAvatar";
+import { BACKEND_URL } from "../../../config";
 
 // helper: what kind of doc is this?
 function getDocKind(mimeType, name = "") {
@@ -83,16 +84,17 @@ export default function MessageBubble({ msg, currentUserId }) {
   const isSender = msg?.sender?._id === currentUserId;
   const avatarUser = !isSender ? msg.sender : null;
   const media = msg.media;
+  const attachment = msg.attachment;
 
   const mediaType =
     media?.type ||
     (media?.mimeType?.startsWith("image/")
       ? "image"
       : media?.mimeType?.startsWith("video/")
-      ? "video"
-      : media?.mimeType
-      ? "file"
-      : null);
+        ? "video"
+        : media?.mimeType
+          ? "file"
+          : null);
 
   const [showPreview, setShowPreview] = useState(false);
 
@@ -102,39 +104,46 @@ export default function MessageBubble({ msg, currentUserId }) {
     }
   };
 
-  const docKind =
+  const mediaDocKind =
     mediaType === "file"
       ? getDocKind(media?.mimeType, media?.originalName)
       : null;
 
+  // doc kind for attachment-based files (local uploads)
+  const attachmentDocKind = attachment
+    ? getDocKind(attachment.mimeType, attachment.originalName)
+    : null;
+
+  // backend download URL for attachment
+  const attachmentDownloadUrl = attachment
+    ? `${BACKEND_URL}/api/files/download/${msg._id}`
+    : null;
+
   return (
     <>
       <div
-        className={`flex items-end mb-3 ${
-          isSender ? "justify-end" : "justify-start"
-        }`}
+        className={`flex items-end mb-3 ${isSender ? "justify-end" : "justify-start"
+          }`}
       >
         {!isSender && avatarUser && (
           <DevstaAvatar user={avatarUser} size={36} className="mr-2" />
         )}
 
         <div
-          className={`flex flex-col max-w-[70%] ${
-            isSender ? "items-end" : "items-start"
-          }`}
+          className={`flex flex-col max-w-[70%] ${isSender ? "items-end" : "items-start"
+            }`}
         >
           <div
-            className={`px-4 py-2 rounded-2xl break-words ${
-              isSender
+            className={`px-4 py-2 rounded-2xl break-words ${isSender
                 ? "bg-primary text-white rounded-br-none"
                 : "bg-gray-200 text-gray-900 dark:bg-gray-800 rounded-bl-none"
-            }`}
+              }`}
             style={{ fontSize: "0.94rem" }}
           >
             {/* Text (optional) */}
             {msg.text && <div>{msg.text}</div>}
 
-            {/* Media thumbnail / link */}
+            {/* Cloudinary media (images/videos/files) */}
             {media && media.url && (
               <div className={`${msg.text ? "mt-2" : ""}`}>
                 {/* Images */}
@@ -157,7 +166,7 @@ export default function MessageBubble({ msg, currentUserId }) {
                   />
                 )}
 
-                {/* Documents / other files */}
+                {/* Documents / other files via Cloudinary */}
                 {mediaType === "file" && (
                   <a
                     href={media.url}
@@ -166,27 +175,26 @@ export default function MessageBubble({ msg, currentUserId }) {
                   >
                     {/* Icon badge */}
                     <div
-                      className={`w-8 h-8 flex items-center justify-center rounded-md text-[10px] font-bold text-white ${
-                        docKind === "pdf"
+                      className={`w-8 h-8 flex items-center justify-center rounded-md text-[10px] font-bold text-white ${mediaDocKind === "pdf"
                           ? "bg-red-500"
-                          : docKind === "word"
-                          ? "bg-blue-500"
-                          : docKind === "excel"
-                          ? "bg-green-500"
-                          : docKind === "ppt"
-                          ? "bg-orange-500"
-                          : "bg-gray-500"
-                      }`}
+                          : mediaDocKind === "word"
+                            ? "bg-blue-500"
+                            : mediaDocKind === "excel"
+                              ? "bg-green-500"
+                              : mediaDocKind === "ppt"
+                                ? "bg-orange-500"
+                                : "bg-gray-500"
+                        }`}
                     >
-                      {docKind === "pdf"
+                      {mediaDocKind === "pdf"
                         ? "PDF"
-                        : docKind === "word"
-                        ? "DOC"
-                        : docKind === "excel"
-                        ? "XLS"
-                        : docKind === "ppt"
-                        ? "PPT"
-                        : "FILE"}
+                        : mediaDocKind === "word"
+                          ? "DOC"
+                          : mediaDocKind === "excel"
+                            ? "XLS"
+                            : mediaDocKind === "ppt"
+                              ? "PPT"
+                              : "FILE"}
                     </div>
 
                     {/* File name + hint */}
@@ -200,6 +208,48 @@ export default function MessageBubble({ msg, currentUserId }) {
                     </div>
                   </a>
                 )}
+              </div>
+            )}
+
+            {/* Local attachment documents (PDF/Word/Excel/PPT stored on server) */}
+            {attachment && (
+              <div className={`${msg.text || media ? "mt-2" : ""}`}>
+                <a
+                  href={attachmentDownloadUrl}
+                  className="flex items-center gap-3 text-xs break-all bg-white/10 rounded-lg px-3 py-2 mt-1"
+                >
+                  <div
+                    className={`w-8 h-8 flex items-center justify-center rounded-md text-[10px] font-bold text-white ${attachmentDocKind === "pdf"
+                        ? "bg-red-500"
+                        : attachmentDocKind === "word"
+                          ? "bg-blue-500"
+                          : attachmentDocKind === "excel"
+                            ? "bg-green-500"
+                            : attachmentDocKind === "ppt"
+                              ? "bg-orange-500"
+                              : "bg-gray-500"
+                      }`}
+                  >
+                    {attachmentDocKind === "pdf"
+                      ? "PDF"
+                      : attachmentDocKind === "word"
+                        ? "DOC"
+                        : attachmentDocKind === "excel"
+                          ? "XLS"
+                          : attachmentDocKind === "ppt"
+                            ? "PPT"
+                            : "FILE"}
+                  </div>
+
+                  <div className="flex flex-col min-w-0">
+                    <span className="truncate max-w-[160px]">
+                      {attachment.originalName || "Download file"}
+                    </span>
+                    <span className="text-[10px] opacity-70">
+                      Click to download
+                    </span>
+                  </div>
+                </a>
               </div>
             )}
           </div>
