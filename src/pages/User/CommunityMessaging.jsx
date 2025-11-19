@@ -731,7 +731,6 @@ export default function CommunityMessaging() {
 
       // Determine file type
       const mime = (file.type || "").toLowerCase();
-      const name = (file.name || "").toLowerCase();
       const isImage = mime.startsWith("image/");
       const isVideo = mime.startsWith("video/");
 
