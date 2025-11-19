@@ -31,6 +31,8 @@
 // }
 
 
+// src/components/messaging/MessageInput.jsx
+
 import { useState, useRef } from "react";
 import {
   Send,
