@@ -1730,7 +1730,7 @@ const toOption = (item) => {
   return { value: "", label: "" };
 };
 
-/* ---------- static options for profile sections ---------- */
+/* ---------- static options ---------- */
 const EDUCATION_LEVEL_OPTIONS = [
   { value: "o-level", label: "O Level / Matriculation" },
   { value: "a-level", label: "A Level / Intermediate" },
@@ -1770,7 +1770,7 @@ const emptyExpForm = {
 export default function EditProfile({ user }) {
   const { token, setUser } = useAuth();
 
-  /* ---------- core user fields (existing) ---------- */
+  /* ---------- core user fields (User model) ---------- */
   const [form, setForm] = useState({
     name: user?.name || "",
     phone: user?.phone || "",
@@ -1785,9 +1785,9 @@ export default function EditProfile({ user }) {
       : [],
   });
 
-  const [expOptions, setExpOptions] = useState([]); // fetched experience levels
-  const [roleOptions, setRoleOptions] = useState([]); // fetched roles (+ maybe Other)
-  const [allSkills, setAllSkills] = useState([]); // fetched skills
+  const [expOptions, setExpOptions] = useState([]); // experience levels
+  const [roleOptions, setRoleOptions] = useState([]); // roles (+ Other)
+  const [allSkills, setAllSkills] = useState([]); // skills
 
   const [editField, setEditField] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -1795,19 +1795,19 @@ export default function EditProfile({ user }) {
   const [errorOpen, setErrorOpen] = useState(false);
   const [message, setMessage] = useState("");
 
-  // role “Other” input
+  // role “Other”
   const [customRoleLabel, setCustomRoleLabel] = useState("");
 
-  // skills “Other” input
+  // skills “Other”
   const [showCustomSkillInput, setShowCustomSkillInput] = useState(false);
   const [customSkillLabel, setCustomSkillLabel] = useState("");
   const [skillError, setSkillError] = useState("");
 
-  /* ---------- profile model state (bio, interests, edu, exp) ---------- */
+  /* ---------- profile (Profile model: bio, interests, edu, exp) ---------- */
   const [profile, setProfile] = useState(null);
   const [profileLoading, setProfileLoading] = useState(true);
 
-  // About section
+  // About
   const [aboutBio, setAboutBio] = useState("");
   const [aboutInterests, setAboutInterests] = useState([]);
   const [interestInput, setInterestInput] = useState("");
@@ -1825,7 +1825,7 @@ export default function EditProfile({ user }) {
   const boxContainer =
     "bg-white dark:bg-gray-900 border border-primary/30 p-4 rounded-lg";
 
-  /* ---------- load meta lists (same endpoints as onboarding) ---------- */
+  /* ---------- load meta lists (experience levels, roles, skills) ---------- */
   useEffect(() => {
     let cancelled = false;
 
@@ -1851,7 +1851,6 @@ export default function EditProfile({ user }) {
 
         if (cancelled) return;
 
-        // Normalize to {value,label}
         const expOpts = (Array.isArray(expData) ? expData : [])
           .map(toOption)
           .filter((o) => o.value);
@@ -1865,7 +1864,6 @@ export default function EditProfile({ user }) {
           ? baseRoleOpts
           : [...baseRoleOpts, { value: "other", label: "Other" }];
 
-        // skills kept as raw keys/strings (buttons), but normalize shape if objects
         const skills = (Array.isArray(skillsData) ? skillsData : [])
           .map((s) =>
             typeof s === "string" ? s : s?.key ?? s?.value ?? s?.name ?? ""
@@ -1907,9 +1905,7 @@ export default function EditProfile({ user }) {
         if (cancelled) return;
         setProfile(data);
         setAboutBio(data.bio || "");
-        setAboutInterests(
-          Array.isArray(data.interests) ? data.interests : []
-        );
+        setAboutInterests(Array.isArray(data.interests) ? data.interests : []);
       } catch (err) {
         console.error("Profile fetch failed:", err);
       } finally {
@@ -1923,7 +1919,7 @@ export default function EditProfile({ user }) {
     };
   }, [token]);
 
-  /* ---------- know the exact backend "Other" value ---------- */
+  /* ---------- know the exact backend "Other" role value ---------- */
   const otherRoleValue = useMemo(() => {
     const found = roleOptions.find(isOther);
     return found?.value || "other";
@@ -1939,9 +1935,10 @@ export default function EditProfile({ user }) {
   }, [user?.primaryRole, otherRoleValue]);
 
   /* ---------- Select values ---------- */
-  const experienceSelectValue = useMemo(() => {
-    return expOptions.find((o) => o.value === form.experienceLevel) || null;
-  }, [expOptions, form.experienceLevel]);
+  const experienceSelectValue = useMemo(
+    () => expOptions.find((o) => o.value === form.experienceLevel) || null,
+    [expOptions, form.experienceLevel]
+  );
 
   const roleSelectValue = useMemo(() => {
     if (!form.primaryRole) return null;
@@ -2008,7 +2005,6 @@ export default function EditProfile({ user }) {
       setLoading(true);
       const payload = { ...form };
 
-      // If “Other” is selected, send the custom role label to backend.
       if (form.primaryRole === otherRoleValue) {
         payload.customRoleLabel = customRoleLabel.trim();
       } else {
@@ -2128,7 +2124,6 @@ export default function EditProfile({ user }) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.msg || "Failed to save education");
 
-      // controller returns { msg, education: profile.education }
       setProfile((prev) =>
         prev ? { ...prev, education: data.education } : prev
       );
@@ -2182,7 +2177,7 @@ export default function EditProfile({ user }) {
     }
   };
 
-  /* ---------- handlers: Experience (work history) ---------- */
+  /* ---------- handlers: Experience ---------- */
   const startAddExperience = () => {
     setEditingExpId(null);
     setExpForm(emptyExpForm);
@@ -2326,7 +2321,7 @@ export default function EditProfile({ user }) {
         </div>
       </div>
 
-      {/* ABOUT / BASICS (bio + interests) */}
+      {/* ABOUT (bio + interests) */}
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
@@ -2473,7 +2468,7 @@ export default function EditProfile({ user }) {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Experience */}
+          {/* Experience Level */}
           <div className={boxContainer}>
             <p className="text-gray-500 dark:text-gray-400 text-sm font-medium">
               Experience Level
@@ -2542,9 +2537,8 @@ export default function EditProfile({ user }) {
         </div>
       </div>
 
-      {/* ⚡ SKILLS SECTION */}
+      {/* SKILLS SECTION */}
       <div className="flex flex-col gap-6">
-        {/* Header */}
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
             Top Skills
@@ -2559,19 +2553,16 @@ export default function EditProfile({ user }) {
           </button>
         </div>
 
-        {/* Edit Mode */}
         {editField === "skills" ? (
           <>
             <p className="text-gray-500 dark:text-gray-400 text-sm">
-              Click a skill to select or remove. Add a new one using{" "}
-              <b>Other</b> at the end.
+              Click a skill to select or remove. Add a new one using <b>Other</b>{" "}
+              at the end.
             </p>
 
-            {/* Skills Grid */}
             <div className="flex flex-wrap gap-2">
               {allSkills.length > 0 ? (
                 <>
-                  {/* Regular Skills Sorted: selected first, then unselected */}
                   {[...allSkills]
                     .filter((s) => slugify(s) !== "other")
                     .sort((a, b) => {
@@ -2598,7 +2589,6 @@ export default function EditProfile({ user }) {
                       );
                     })}
 
-                  {/* Custom-added Skills (same style as selected) */}
                   {form.topSkills
                     .filter((s) => s.startsWith("custom:"))
                     .map((s) => {
@@ -2616,7 +2606,6 @@ export default function EditProfile({ user }) {
                       );
                     })}
 
-                  {/* Other button (always at the end) */}
                   <button
                     type="button"
                     onClick={() => {
@@ -2645,9 +2634,8 @@ export default function EditProfile({ user }) {
               )}
             </div>
 
-            {/* Custom Skill Input */}
             {showCustomSkillInput && (
-              <div className="flex items-center gap-2 mt-3 animate-fadeIn">
+              <div className="flex items-center gap-2 mt-3">
                 <input
                   type="text"
                   value={customSkillLabel}
@@ -2671,14 +2659,12 @@ export default function EditProfile({ user }) {
               <p className="text-red-500 text-xs mt-1">{skillError}</p>
             )}
 
-            {/* Skill Count */}
             <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
               {form.topSkills.length} skill
               {form.topSkills.length !== 1 && "s"} selected
             </p>
           </>
         ) : form.topSkills.length > 0 ? (
-          /* Read-only view */
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
             {form.topSkills.map((skill) => {
               const label = skill.startsWith("custom:")
@@ -2960,7 +2946,7 @@ export default function EditProfile({ user }) {
         )}
       </div>
 
-      {/* EXPERIENCE (WORK HISTORY) SECTION */}
+      {/* EXPERIENCE SECTION */}
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
