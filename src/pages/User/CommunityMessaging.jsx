@@ -18,6 +18,8 @@ export default function CommunityMessaging() {
   const [connectedUsers, setConnectedUsers] = useState([]);
   const [selectedConversation, setSelectedConversation] = useState(null);
   const [messages, setMessages] = useState([]);
+  const [isSending, setIsSending] = useState(false);
+
   const socketRef = useRef(null);
   const messagesContainerRef = useRef(null);
   const selectedConversationRef = useRef(null);
@@ -153,16 +155,19 @@ export default function CommunityMessaging() {
     return res.json(); // { url, type, mimeType, originalName, size, cloudinaryPublicId }
   };
 
-  // handle text + optional file
-  const handleSend = async ({ text, file }) => {
+  // handle text + optional multiple files
+  const handleSend = async ({ text, files }) => {
     if (!selectedConversation) return;
     const trimmed = text?.trim() || "";
+    const hasFiles = Array.isArray(files) && files.length > 0;
 
-    if (!trimmed && !file) return;
+    if (!trimmed && !hasFiles) return;
 
     try {
-      // CASE 1: Only text (no file) -> socket
-      if (!file) {
+      setIsSending(true);
+
+      // CASE 1: Only text (no files) -> socket
+      if (!hasFiles) {
         socketRef.current?.emit("sendMessage", {
           conversationId: selectedConversation._id,
           text: trimmed,
@@ -170,25 +175,38 @@ export default function CommunityMessaging() {
         return;
       }
 
-      // Determine file type
-      const mime = (file.type || "").toLowerCase();
-      const isImage = mime.startsWith("image/");
-      const isVideo = mime.startsWith("video/");
+      // CASE 2: One or more images/videos
+      await Promise.all(
+        files.map(async (file, index) => {
+          const mime = (file.type || "").toLowerCase();
+          const isImage = mime.startsWith("image/");
+          const isVideo = mime.startsWith("video/");
 
-      if (isImage || isVideo) {
-        // CASE 2: Image/Video -> Cloudinary + socket
-        const media = await uploadMessageMedia(file);
-        socketRef.current?.emit("sendMessage", {
-          conversationId: selectedConversation._id,
-          text: trimmed,
-          media,
-        });
-      } else {
-        console.warn("Unsupported file type. Only images and videos are allowed.");
-      }
+          if (!isImage && !isVideo) {
+            console.warn("Unsupported file type. Only images/videos are allowed.", file.type);
+            return;
+          }
+
+          const mediaFromServer = await uploadMessageMedia(file);
+
+          const forcedType = isImage ? "image" : "video";
+
+          socketRef.current?.emit("sendMessage", {
+            conversationId: selectedConversation._id,
+            // Attach text only with the first media to avoid repetition
+            text: index === 0 ? trimmed : "",
+            media: {
+              ...mediaFromServer,
+              type: forcedType, // force correct media type for client rendering
+            },
+          });
+        })
+      );
     } catch (err) {
       console.error("Error sending message:", err);
       // TODO: show toast
+    } finally {
+      setIsSending(false);
     }
   };
 
@@ -291,7 +309,7 @@ export default function CommunityMessaging() {
 
             {/* Input stays at bottom */}
             <div className="p-3 border-t">
-              <MessageInput onSend={handleSend} />
+              <MessageInput onSend={handleSend} isSending={isSending} />
             </div>
           </>
         )}
