@@ -36,3 +36,11 @@ export const getOrCreateDirectConversation = (userId) => {
 export const sendMessage = (conversationId, text) => {
   return request(`/api/conversations/${conversationId}/messages`, "POST", { text });
 };
+
+export const createGroupConversation = (name, memberIds) => {
+  return request("/api/conversations/group", "POST", { name, memberIds });
+};
+
+export const updateGroupConversation = (conversationId, updates) => {
+  return request(`/api/conversations/group/${conversationId}`, "PATCH", updates);
+};
