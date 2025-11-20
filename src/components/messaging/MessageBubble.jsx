@@ -12,8 +12,8 @@ export default function MessageBubble({ msg, currentUserId }) {
     (media?.mimeType?.startsWith("image/")
       ? "image"
       : media?.mimeType?.startsWith("video/")
-        ? "video"
-        : null);
+      ? "video"
+      : null);
 
   const [showPreview, setShowPreview] = useState(false);
 
@@ -23,32 +23,34 @@ export default function MessageBubble({ msg, currentUserId }) {
     }
   };
 
-
   return (
     <>
       <div
-        className={`flex items-end mb-3 ${isSender ? "justify-end" : "justify-start"
-          }`}
+        className={`flex items-end mb-3 ${
+          isSender ? "justify-end" : "justify-start"
+        }`}
       >
         {!isSender && avatarUser && (
           <DevstaAvatar user={avatarUser} size={36} className="mr-2" />
         )}
 
         <div
-          className={`flex flex-col max-w-[70%] ${isSender ? "items-end" : "items-start"
-            }`}
+          className={`flex flex-col max-w-[70%] ${
+            isSender ? "items-end" : "items-start"
+          }`}
         >
           <div
-            className={`px-4 py-2 rounded-2xl break-words ${isSender
-              ? "bg-primary text-white rounded-br-none"
-              : "bg-gray-200 text-gray-900 dark:bg-gray-800 rounded-bl-none"
-              }`}
+            className={`px-4 py-2 rounded-2xl break-words ${
+              isSender
+                ? "bg-primary text-white rounded-br-none"
+                : "bg-gray-200 text-gray-900 dark:bg-gray-800 rounded-bl-none"
+            }`}
             style={{ fontSize: "0.94rem" }}
           >
             {/* Text (optional) */}
             {msg.text && <div>{msg.text}</div>}
 
-            {/* Cloudinary media (images/videos/files) */}
+            {/* Cloudinary media (images/videos) */}
             {media && media.url && (
               <div className={`${msg.text ? "mt-2" : ""}`}>
                 {/* Images */}

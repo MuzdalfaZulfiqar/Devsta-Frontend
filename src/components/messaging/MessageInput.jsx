@@ -5,11 +5,12 @@ import {
   Paperclip,
   Image as ImageIcon,
   Video,
+  Loader2,
 } from "lucide-react";
 
-export default function MessageInput({ onSend }) {
+export default function MessageInput({ onSend, isSending }) {
   const [text, setText] = useState("");
-  const [file, setFile] = useState(null);
+  const [files, setFiles] = useState([]);
   const [fileAccept, setFileAccept] = useState(""); // dynamic accept based on chosen type
   const [showMenu, setShowMenu] = useState(false);
   const fileInputRef = useRef(null);
@@ -24,25 +25,27 @@ export default function MessageInput({ onSend }) {
   };
 
   const handleFileChange = (e) => {
-    const selected = e.target.files?.[0];
-    if (selected) {
-      setFile(selected);
+    const selected = Array.from(e.target.files || []);
+    if (selected.length > 0) {
+      setFiles(selected);
     } else {
-      setFile(null);
+      setFiles([]);
     }
   };
 
   const handleSend = () => {
     const trimmed = text.trim();
-    if (!trimmed && !file) return;
+    const hasFiles = files.length > 0;
+
+    if (!trimmed && !hasFiles) return;
 
     onSend({
       text: trimmed,
-      file,
+      files,
     });
 
     setText("");
-    setFile(null);
+    setFiles([]);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
@@ -51,15 +54,9 @@ export default function MessageInput({ onSend }) {
   const onKeyDown = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      handleSend();
+      if (!isSending) handleSend();
     }
   };
-
-  const isImage = file && file.type.startsWith("image/");
-  const isVideo = file && file.type.startsWith("video/");
-  const badgeLabel = isImage ? "IMG" : isVideo ? "VID" : "FILE";
-  const badgeBg =
-    isImage ? "bg-blue-500" : isVideo ? "bg-purple-500" : "bg-gray-500";
 
   return (
     <div className="flex flex-col gap-2 bg-white dark:bg-[#0a0a0a] rounded-b-2xl">
@@ -70,34 +67,59 @@ export default function MessageInput({ onSend }) {
         onChange={handleFileChange}
         className="hidden"
         accept={fileAccept}
+        multiple // allow multiple images/videos
       />
 
       {/* Attachment preview ABOVE input (WhatsApp style) */}
-      {file && (
+      {files.length > 0 && (
         <div className="px-3 pt-2">
-          <div className="flex items-center justify-between bg-gray-100 dark:bg-gray-800 rounded-xl px-3 py-2">
-            <div className="flex items-center gap-3 min-w-0">
-              {/* Badge for image/video */}
-              <div
-                className={`w-8 h-8 flex items-center justify-center rounded-md text-[10px] font-bold text-white ${badgeBg}`}
-              >
-                {badgeLabel}
-              </div>
+          <div className="flex flex-col gap-2 bg-gray-100 dark:bg-gray-800 rounded-xl px-3 py-2">
+            {files.map((file, index) => {
+              const isImage = file.type.startsWith("image/");
+              const isVideo = file.type.startsWith("video/");
+              const badgeLabel = isImage ? "IMG" : isVideo ? "VID" : "FILE";
+              const badgeBg = isImage
+                ? "bg-blue-500"
+                : isVideo
+                ? "bg-purple-500"
+                : "bg-gray-500";
 
-              <span className="text-xs text-gray-500 truncate max-w-[220px]">
-                {file.name}
-              </span>
-            </div>
-            <button
-              type="button"
-              className="text-xs text-red-500"
-              onClick={() => {
-                setFile(null);
-                if (fileInputRef.current) fileInputRef.current.value = "";
-              }}
-            >
-              Remove
-            </button>
+              return (
+                <div
+                  key={index}
+                  className="flex items-center justify-between min-w-0"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div
+                      className={`w-8 h-8 flex items-center justify-center rounded-md text-[10px] font-bold text-white ${badgeBg}`}
+                    >
+                      {badgeLabel}
+                    </div>
+                    <span className="text-xs text-gray-500 truncate max-w-[220px]">
+                      {file.name}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    className="text-xs text-red-500"
+                    onClick={() => {
+                      setFiles((prev) =>
+                        prev.filter((_, fileIdx) => fileIdx !== index)
+                      );
+                    }}
+                  >
+                    Remove
+                  </button>
+                </div>
+              );
+            })}
+
+            {isSending && (
+              <div className="flex items-center gap-2 text-[11px] text-gray-500 mt-1">
+                <Loader2 size={14} className="animate-spin" />
+                <span>Sending media…</span>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -108,8 +130,9 @@ export default function MessageInput({ onSend }) {
         <div className="relative">
           <button
             type="button"
-            className="p-2 rounded-full border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 transition"
+            className="p-2 rounded-full border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 transition disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={() => setShowMenu((prev) => !prev)}
+            disabled={isSending}
           >
             <Paperclip size={18} />
           </button>
@@ -122,7 +145,7 @@ export default function MessageInput({ onSend }) {
                 className="flex items-center gap-2 w-full px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-800"
               >
                 <ImageIcon size={16} />
-                <span>Image</span>
+                <span>Images</span>
               </button>
               <button
                 type="button"
@@ -130,9 +153,8 @@ export default function MessageInput({ onSend }) {
                 className="flex items-center gap-2 w-full px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-800"
               >
                 <Video size={16} />
-                <span>Video</span>
+                <span>Videos</span>
               </button>
-              {/* Document option removed */}
             </div>
           )}
         </div>
@@ -144,14 +166,20 @@ export default function MessageInput({ onSend }) {
           value={text}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={onKeyDown}
+          disabled={isSending}
         />
 
         {/* Send */}
         <button
-          className="ml-1 p-3 bg-primary text-white rounded-full hover:bg-primary/90 transition"
+          className="ml-1 p-3 bg-primary text-white rounded-full hover:bg-primary/90 transition disabled:opacity-50 disabled:cursor-not-allowed"
           onClick={handleSend}
+          disabled={isSending}
         >
-          <Send size={18} />
+          {isSending ? (
+            <Loader2 size={18} className="animate-spin" />
+          ) : (
+            <Send size={18} />
+          )}
         </button>
       </div>
     </div>
