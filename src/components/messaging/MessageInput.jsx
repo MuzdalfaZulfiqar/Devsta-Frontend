@@ -1,90 +1,11 @@
-// import { useState } from "react";
-// import { Send } from "lucide-react";
-
-// export default function MessageInput({ onSend }) {
-//   const [text, setText] = useState("");
-
-//   const handleSend = () => {
-//     if (!text.trim()) return;
-//     onSend(text);
-//     setText("");
-//   };
-
-//   return (
-//     <div className="flex items-center p-3 bg-white rounded-b-2xl">
-//       <input
-//         className="flex-1 bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-full px-4 py-2 text-sm outline-none focus:ring-1 focus:ring-primary focus:border-primary"
-//         placeholder="Type a message..."
-//         value={text}
-//         onChange={(e) => setText(e.target.value)}
-//         onKeyDown={(e) => e.key === "Enter" && handleSend()}
-//       />
-
-//       <button
-//         className="ml-3 p-3 bg-primary text-white rounded-full hover:bg-primary/90 transition"
-//         onClick={handleSend}
-//       >
-//         <Send size={18} />
-//       </button>
-//     </div>
-//   );
-// }
-
-
 // src/components/messaging/MessageInput.jsx
-
 import { useState, useRef } from "react";
 import {
   Send,
   Paperclip,
   Image as ImageIcon,
   Video,
-  FileText,
 } from "lucide-react";
-
-// helper: doc kind from File object
-function getDocKindFromFile(file) {
-  if (!file) return "other";
-  const mimeType = (file.type || "").toLowerCase();
-  const name = (file.name || "").toLowerCase();
-
-  // PDF
-  if (mimeType.includes("pdf") || name.endsWith(".pdf")) return "pdf";
-
-  // Word
-  if (
-    mimeType.includes("word") ||
-    mimeType.includes("officedocument.wordprocessingml") ||
-    name.endsWith(".doc") ||
-    name.endsWith(".docx")
-  ) {
-    return "word";
-  }
-
-  // Excel
-  if (
-    mimeType.includes("excel") ||
-    mimeType.includes("spreadsheet") ||
-    mimeType.includes("officedocument.spreadsheetml") ||
-    name.endsWith(".xls") ||
-    name.endsWith(".xlsx")
-  ) {
-    return "excel";
-  }
-
-  // PowerPoint
-  if (
-    mimeType.includes("powerpoint") ||
-    mimeType.includes("presentation") ||
-    mimeType.includes("officedocument.presentationml") ||
-    name.endsWith(".ppt") ||
-    name.endsWith(".pptx")
-  ) {
-    return "ppt";
-  }
-
-  return "other";
-}
 
 export default function MessageInput({ onSend }) {
   const [text, setText] = useState("");
@@ -134,7 +55,11 @@ export default function MessageInput({ onSend }) {
     }
   };
 
-  const docKind = getDocKindFromFile(file);
+  const isImage = file && file.type.startsWith("image/");
+  const isVideo = file && file.type.startsWith("video/");
+  const badgeLabel = isImage ? "IMG" : isVideo ? "VID" : "FILE";
+  const badgeBg =
+    isImage ? "bg-blue-500" : isVideo ? "bg-purple-500" : "bg-gray-500";
 
   return (
     <div className="flex flex-col gap-2 bg-white dark:bg-[#0a0a0a] rounded-b-2xl">
@@ -152,29 +77,11 @@ export default function MessageInput({ onSend }) {
         <div className="px-3 pt-2">
           <div className="flex items-center justify-between bg-gray-100 dark:bg-gray-800 rounded-xl px-3 py-2">
             <div className="flex items-center gap-3 min-w-0">
-              {/* Badge for docs */}
+              {/* Badge for image/video */}
               <div
-                className={`w-8 h-8 flex items-center justify-center rounded-md text-[10px] font-bold text-white ${
-                  docKind === "pdf"
-                    ? "bg-red-500"
-                    : docKind === "word"
-                    ? "bg-blue-500"
-                    : docKind === "excel"
-                    ? "bg-green-500"
-                    : docKind === "ppt"
-                    ? "bg-orange-500"
-                    : "bg-gray-500"
-                }`}
+                className={`w-8 h-8 flex items-center justify-center rounded-md text-[10px] font-bold text-white ${badgeBg}`}
               >
-                {docKind === "pdf"
-                  ? "PDF"
-                  : docKind === "word"
-                  ? "DOC"
-                  : docKind === "excel"
-                  ? "XLS"
-                  : docKind === "ppt"
-                  ? "PPT"
-                  : "FILE"}
+                {badgeLabel}
               </div>
 
               <span className="text-xs text-gray-500 truncate max-w-[220px]">
@@ -225,18 +132,7 @@ export default function MessageInput({ onSend }) {
                 <Video size={16} />
                 <span>Video</span>
               </button>
-              <button
-                type="button"
-                onClick={() =>
-                  triggerFilePicker(
-                    ".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.csv"
-                  )
-                }
-                className="flex items-center gap-2 w-full px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-800"
-              >
-                <FileText size={16} />
-                <span>Document</span>
-              </button>
+              {/* Document option removed */}
             </div>
           )}
         </div>
