@@ -173,7 +173,7 @@ export default function EditProfile({ user }) {
   const [customSkillLabel, setCustomSkillLabel] = useState("");
   const [skillError, setSkillError] = useState("");
 
-  /* ---------- extended profile (Profile model) ---------- */
+  /* ---------- profile (Profile model: bio, interests, edu, exp) ---------- */
   const [profile, setProfile] = useState(null);
   const [profileLoading, setProfileLoading] = useState(true);
 
@@ -430,7 +430,7 @@ export default function EditProfile({ user }) {
       );
       setMessage("About section updated");
       setSuccessOpen(true);
-      setEditField(null);
+      setEditField(null); // exit edit mode
     } catch (err) {
       setMessage(err.message || "Failed to update about section");
       setErrorOpen(true);
@@ -494,11 +494,9 @@ export default function EditProfile({ user }) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.msg || "Failed to save education");
 
-      // always ensure profile has the latest education array
-      setProfile((prev) => ({
-        ...(prev || {}),
-        education: data.education,
-      }));
+      setProfile((prev) =>
+        prev ? { ...prev, education: data.education } : prev
+      );
       setMessage(
         editingEduId ? "Education updated successfully" : "Education added"
       );
@@ -536,10 +534,9 @@ export default function EditProfile({ user }) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.msg || "Failed to remove education");
 
-      setProfile((prev) => ({
-        ...(prev || {}),
-        education: data.education,
-      }));
+      setProfile((prev) =>
+        prev ? { ...prev, education: data.education } : prev
+      );
       setMessage("Education removed");
       setSuccessOpen(true);
     } catch (err) {
@@ -598,10 +595,9 @@ export default function EditProfile({ user }) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.msg || "Failed to save experience");
 
-      setProfile((prev) => ({
-        ...(prev || {}),
-        experience: data.experience,
-      }));
+      setProfile((prev) =>
+        prev ? { ...prev, experience: data.experience } : prev
+      );
       setMessage(
         editingExpId ? "Experience updated successfully" : "Experience added"
       );
@@ -639,10 +635,9 @@ export default function EditProfile({ user }) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.msg || "Failed to remove experience");
 
-      setProfile((prev) => ({
-        ...(prev || {}),
-        experience: data.experience,
-      }));
+      setProfile((prev) =>
+        prev ? { ...prev, experience: data.experience } : prev
+      );
       setMessage("Experience removed");
       setSuccessOpen(true);
     } catch (err) {
@@ -703,10 +698,19 @@ export default function EditProfile({ user }) {
             About
           </h2>
           <button
-            onClick={() =>
-              setEditField(editField === "about" ? null : "about")
-            }
-            className="text-gray-600 dark:text-gray-300 hover:text-primary transition"
+            onClick={() => {
+              if (editField === "about") {
+                // In edit mode → tick should save
+                if (!loading) {
+                  handleSaveBasics();
+                }
+              } else {
+                // Enter edit mode
+                setEditField("about");
+              }
+            }}
+            className="text-gray-600 dark:text-gray-300 hover:text-primary transition disabled:opacity-60"
+            disabled={loading}
           >
             {editField === "about" ? <Check size={18} /> : <Pencil size={18} />}
           </button>
@@ -807,19 +811,6 @@ export default function EditProfile({ user }) {
                 </p>
               )}
             </div>
-          </div>
-        )}
-
-        {editField === "about" && (
-          <div className="flex justify-end">
-            <button
-              type="button"
-              onClick={handleSaveBasics}
-              disabled={loading}
-              className="mt-2 px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/80 text-sm disabled:opacity-60"
-            >
-              {loading ? "Saving..." : "Save About"}
-            </button>
           </div>
         )}
       </div>
@@ -1213,7 +1204,7 @@ export default function EditProfile({ user }) {
 
                   <div>
                     <label className="text-sm text-gray-600 dark:text-gray-300">
-                      Degree / Program
+                      Degree / Program *
                     </label>
                     <input
                       className={inputBoxClass}
@@ -1225,12 +1216,13 @@ export default function EditProfile({ user }) {
                         }))
                       }
                       placeholder="e.g., BS Computer Science"
+                      required
                     />
                   </div>
 
                   <div>
                     <label className="text-sm text-gray-600 dark:text-gray-300">
-                      Field of Study
+                      Field of Study *
                     </label>
                     <input
                       className={inputBoxClass}
@@ -1242,12 +1234,13 @@ export default function EditProfile({ user }) {
                         }))
                       }
                       placeholder="e.g., Computer Science"
+                      required
                     />
                   </div>
 
                   <div>
                     <label className="text-sm text-gray-600 dark:text-gray-300">
-                      Marks / Percentage
+                      Marks / Percentage *
                     </label>
                     <input
                       type="number"
@@ -1263,13 +1256,14 @@ export default function EditProfile({ user }) {
                         }))
                       }
                       placeholder="e.g., 85"
+                      required
                     />
                   </div>
 
                   <div className="flex gap-3">
                     <div className="flex-1">
                       <label className="text-sm text-gray-600 dark:text-gray-300">
-                        Start Year
+                        Start Year *
                       </label>
                       <input
                         type="number"
@@ -1282,6 +1276,7 @@ export default function EditProfile({ user }) {
                           }))
                         }
                         placeholder="e.g., 2019"
+                        required
                       />
                     </div>
                     <div className="flex-1">
