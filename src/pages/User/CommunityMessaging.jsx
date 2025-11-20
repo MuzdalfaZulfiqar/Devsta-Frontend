@@ -292,6 +292,8 @@ export default function CommunityMessaging() {
   const [conversations, setConversations] = useState([]);
   const [selectedConversation, setSelectedConversation] = useState(null);
   const [messages, setMessages] = useState([]);
+  const [isSending, setIsSending] = useState(false);
+
   const [showGroupModal, setShowGroupModal] = useState(false);
 
   const socketRef = useRef(null);
@@ -316,6 +318,16 @@ export default function CommunityMessaging() {
     }
   }, [targetUserId, connectedUsers]);
 
+  useEffect(() => {
+    if (scrollRef.current) {
+      setShowScrollArrow(
+        scrollRef.current.scrollTop + scrollRef.current.clientHeight <
+          scrollRef.current.scrollHeight
+      );
+    }
+  }, [connectedUsers]);
+
+  // Keep ref updated for socket listener
   useEffect(() => {
     selectedConversationRef.current = selectedConversation?._id;
   }, [selectedConversation]);
@@ -347,16 +359,6 @@ export default function CommunityMessaging() {
 
       setMessages((prev) => {
         if (prev.some((m) => m._id === msg._id)) return prev;
-
-        const tempIndex = prev.findIndex(
-          (m) => m._id.startsWith("temp-") && m.text === msg.text
-        );
-        if (tempIndex !== -1) {
-          const newMessages = [...prev];
-          newMessages[tempIndex] = msg;
-          return newMessages;
-        }
-
         return [...prev, msg];
       });
     });
@@ -417,24 +419,80 @@ export default function CommunityMessaging() {
     }
   };
 
-  const handleSend = (text) => {
-    if (!text.trim() || !selectedConversation) return;
+  // Upload media to backend (Cloudinary) for images/videos
+  const uploadMessageMedia = async (file) => {
+    const token = localStorage.getItem("devsta_token");
+    const formData = new FormData();
+    formData.append("file", file);
 
-    const tempId = `temp-${Date.now()}`;
-    const optimisticMsg = {
-      _id: tempId,
-      text: text.trim(),
-      sender: { _id: currentUserId },
-      createdAt: new Date(),
-      conversation: selectedConversation._id,
-    };
-
-    setMessages((prev) => [...prev, optimisticMsg]);
-
-    socketRef.current?.emit("sendMessage", {
-      conversationId: selectedConversation._id,
-      text: text.trim(),
+    const res = await fetch(`${BACKEND_URL}/api/upload/message-media`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
     });
+
+    if (!res.ok) {
+      throw new Error("Failed to upload media");
+    }
+
+    return res.json(); // { url, type, mimeType, originalName, size, cloudinaryPublicId }
+  };
+
+  // handle text + optional multiple files
+  const handleSend = async ({ text, files }) => {
+    if (!selectedConversation) return;
+    const trimmed = text?.trim() || "";
+    const hasFiles = Array.isArray(files) && files.length > 0;
+
+    if (!trimmed && !hasFiles) return;
+
+    try {
+      setIsSending(true);
+
+      // CASE 1: Only text (no files) -> socket
+      if (!hasFiles) {
+        socketRef.current?.emit("sendMessage", {
+          conversationId: selectedConversation._id,
+          text: trimmed,
+        });
+        return;
+      }
+
+      // CASE 2: One or more images/videos
+      await Promise.all(
+        files.map(async (file, index) => {
+          const mime = (file.type || "").toLowerCase();
+          const isImage = mime.startsWith("image/");
+          const isVideo = mime.startsWith("video/");
+
+          if (!isImage && !isVideo) {
+            console.warn("Unsupported file type. Only images/videos are allowed.", file.type);
+            return;
+          }
+
+          const mediaFromServer = await uploadMessageMedia(file);
+
+          const forcedType = isImage ? "image" : "video";
+
+          socketRef.current?.emit("sendMessage", {
+            conversationId: selectedConversation._id,
+            // Attach text only with the first media to avoid repetition
+            text: index === 0 ? trimmed : "",
+            media: {
+              ...mediaFromServer,
+              type: forcedType, // force correct media type for client rendering
+            },
+          });
+        })
+      );
+    } catch (err) {
+      console.error("Error sending message:", err);
+      // TODO: show toast
+    } finally {
+      setIsSending(false);
+    }
   };
 
   const handleCreateGroup = async (name, memberIds) => {
@@ -556,14 +614,11 @@ export default function CommunityMessaging() {
                   key={(msg._id || `temp-${idx}`) + "-" + idx}
                   msg={msg}
                   currentUserId={currentUserId}
-                  otherUser={selectedConversation.participants?.find(
-                    (p) => p._id !== currentUserId
-                  )}
                 />
               ))}
             </div>
             <div className="p-3 border-t">
-              <MessageInput onSend={handleSend} />
+              <MessageInput onSend={handleSend} isSending={isSending} />
             </div>
           </>
         )}
