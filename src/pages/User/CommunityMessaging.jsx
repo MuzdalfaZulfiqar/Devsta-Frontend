@@ -286,6 +286,7 @@ import {
 } from "../../api/chat";
 import { fetchConnections } from "../../api/connections";
 import { BACKEND_URL } from "../../../config";
+import GroupSettingsModal from "../../components/messaging/GroupSettingsModal";
 
 export default function CommunityMessaging() {
   const [connectedUsers, setConnectedUsers] = useState([]);
@@ -310,6 +311,7 @@ export default function CommunityMessaging() {
 
   const [showScrollArrow, setShowScrollArrow] = useState(false);
   const [search, setSearch] = useState("");
+  const [showGroupSettingsModal, setShowGroupSettingsModal] = useState(false);
 
   // --- Effects ---
   useEffect(() => {
@@ -322,7 +324,7 @@ export default function CommunityMessaging() {
     if (scrollRef.current) {
       setShowScrollArrow(
         scrollRef.current.scrollTop + scrollRef.current.clientHeight <
-          scrollRef.current.scrollHeight
+        scrollRef.current.scrollHeight
       );
     }
   }, [connectedUsers]);
@@ -495,16 +497,49 @@ export default function CommunityMessaging() {
     }
   };
 
+  // const handleCreateGroup = async (name, memberIds) => {
+  //   try {
+  //     const newGroup = await createGroupConversation(name, memberIds);
+  //     // FIX → map participant IDs to connectedUsers full objects
+  //   newGroup.participants = newGroup.participants.map(id => {
+  //     return connectedUsers.find(u => u._id === id) || { _id: id };
+  //   });
+
+  //     setConversations((prev) => [newGroup, ...prev]);
+  //     setShowGroupModal(false);
+  //     openChat(newGroup);
+  //   } catch (err) {
+  //     console.error("Error creating group:", err);
+  //   }
+  // };
+
   const handleCreateGroup = async (name, memberIds) => {
     try {
       const newGroup = await createGroupConversation(name, memberIds);
+
+      // Map participant IDs → full user objects
+      newGroup.participants = newGroup.participants.map(id => {
+        return connectedUsers.find(u => u._id === id) || { _id: id };
+      });
+
       setConversations((prev) => [newGroup, ...prev]);
       setShowGroupModal(false);
       openChat(newGroup);
+
+      // 🔥 Show toast after backend success
+      import("../../utils/toast").then(({ showToast }) =>
+        showToast("Group created successfully!")
+      );
+
     } catch (err) {
       console.error("Error creating group:", err);
+
+      import("../../utils/toast").then(({ showToast }) =>
+        showToast("Failed to create group", 3500)
+      );
     }
   };
+
 
   // --- Filtered lists ---
   const filteredUsers = connectedUsers.filter((user) =>
@@ -549,19 +584,53 @@ export default function CommunityMessaging() {
             if (scrollRef.current) {
               setShowScrollArrow(
                 scrollRef.current.scrollTop + scrollRef.current.clientHeight <
-                  scrollRef.current.scrollHeight
+                scrollRef.current.scrollHeight
               );
             }
           }}
         >
-         <div className="space-y-2">
+          {/* <div className="space-y-2">
+            {filteredConversations.map((c, idx) => {
+              const isActive = selectedConversation?._id === c._id;
+
+              if (c.type === "group") {
+                return (
+                  <GroupCard
+                    key={c._id || `group-${idx}`} // ensure unique key
+                    group={c}
+                    currentUserId={currentUserId}
+                    active={isActive}
+                    onClick={() => openChat(c)}
+                  />
+                );
+              } else {
+                const otherUser = c.participants.find((p) => p._id !== currentUserId);
+                if (!otherUser) return null; // safeguard if undefined
+                return (
+                  <UserCard
+                    key={otherUser._id || `user-${idx}`} // ensure unique key
+                    user={otherUser}
+                    compact
+                    simple
+                    active={isActive}
+                    onClick={() => openChat(otherUser._id)}
+                  />
+                );
+              }
+            })}
+            {filteredConversations.length === 0 && (
+              <p className="text-gray-400 text-sm text-center mt-2">No results found</p>
+            )}
+          </div> */}
+
+          <div className="space-y-2">
   {filteredConversations.map((c, idx) => {
     const isActive = selectedConversation?._id === c._id;
 
     if (c.type === "group") {
       return (
         <GroupCard
-          key={c._id || `group-${idx}`} // ensure unique key
+          key={c._id || `group-${idx}`}
           group={c}
           currentUserId={currentUserId}
           active={isActive}
@@ -569,12 +638,21 @@ export default function CommunityMessaging() {
         />
       );
     } else {
-      const otherUser = c.participants.find((p) => p._id !== currentUserId);
-      if (!otherUser) return null; // safeguard if undefined
+      // --- FIXED: map direct conversation to full user object ---
+      const otherParticipantId = c.participants.find(
+        (p) => p._id !== currentUserId
+      )?._id;
+
+      const otherUser = connectedUsers.find(
+        (u) => u._id === otherParticipantId
+      );
+
+      if (!otherUser) return null; // safeguard if user not in connections
+
       return (
         <UserCard
-          key={otherUser._id || `user-${idx}`} // ensure unique key
-          user={otherUser}
+          key={otherUser._id || `user-${idx}`}
+          user={otherUser} // full user object now
           compact
           simple
           active={isActive}
@@ -583,10 +661,12 @@ export default function CommunityMessaging() {
       );
     }
   })}
+
   {filteredConversations.length === 0 && (
     <p className="text-gray-400 text-sm text-center mt-2">No results found</p>
   )}
 </div>
+
 
         </div>
       </div>
@@ -600,10 +680,16 @@ export default function CommunityMessaging() {
         ) : (
           <>
             {selectedConversation && (
+              // <ChatHeader
+              //   user={getOtherUser()}
+              //   group={selectedConversation.type === "group" ? selectedConversation : null}
+              // />
               <ChatHeader
                 user={getOtherUser()}
                 group={selectedConversation.type === "group" ? selectedConversation : null}
+                onOpenGroupSettings={() => setShowGroupSettingsModal(true)}
               />
+
             )}
             <div
               className="flex-1 p-3 overflow-y-auto flex flex-col space-y-3"
@@ -623,14 +709,68 @@ export default function CommunityMessaging() {
           </>
         )}
       </div>
+      {/* {showGroupSettingsModal && selectedConversation?.type === "group" && (
+      
+        <GroupSettingsModal
+  groupId={selectedConversation._id}
+  onClose={() => setShowGroupSettingsModal(false)}
+  connectedUsers={connectedUsers}
+  onGroupUpdate={(updatedGroup) => {
+    // Update the selected conversation
+    setSelectedConversation((prev) => ({
+      ...prev,
+      name: updatedGroup.groupName,
+      participants: updatedGroup.members,
+    }));
 
-   {showGroupModal && connectedUsers.length > 0 && (
-  <CreateGroupModal
-    connectedUsers={connectedUsers}
-    onCreateGroup={handleCreateGroup}
-    onClose={() => setShowGroupModal(false)}
-  />
-)}
+    // Update in the conversation list
+    setConversations((prev) =>
+      prev.map((c) =>
+        c._id === updatedGroup._id
+          ? { ...c, name: updatedGroup.groupName, participants: updatedGroup.members }
+          : c
+      )
+    );
+  }}
+/>
+
+      )} */}
+      {showGroupSettingsModal && selectedConversation?.type === "group" && (
+        <GroupSettingsModal
+          groupId={selectedConversation._id}
+          onClose={() => setShowGroupSettingsModal(false)}
+          connectedUsers={connectedUsers}
+          onGroupUpdate={(updatedGroup) => {
+            // Update selected conversation
+            setSelectedConversation((prev) => ({
+              ...prev,
+              name: updatedGroup.groupName,
+              participants: updatedGroup.members,
+            }));
+
+            // Update the conversation list
+            setConversations((prev) =>
+              prev.map((c) =>
+                c._id === updatedGroup._id
+                  ? { ...c, name: updatedGroup.groupName, participants: updatedGroup.members }
+                  : c
+              )
+            );
+           
+          }}
+
+          refreshGroup={loadConversations}
+        />
+      )}
+
+
+      {showGroupModal && connectedUsers.length > 0 && (
+        <CreateGroupModal
+          connectedUsers={connectedUsers}
+          onCreateGroup={handleCreateGroup}
+          onClose={() => setShowGroupModal(false)}
+        />
+      )}
 
     </div>
   );

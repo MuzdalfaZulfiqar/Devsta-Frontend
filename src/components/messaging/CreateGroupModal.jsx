@@ -5,6 +5,7 @@ import { X } from "lucide-react";
 export default function CreateGroupModal({ connectedUsers, onCreateGroup, onClose }) {
   const [groupName, setGroupName] = useState("");
   const [selectedMembers, setSelectedMembers] = useState([]);
+  const [error, setError] = useState("");
 
   const toggleMember = (userId) => {
     setSelectedMembers((prev) =>
@@ -13,10 +14,19 @@ export default function CreateGroupModal({ connectedUsers, onCreateGroup, onClos
   };
 
   const handleCreate = () => {
-    if (!groupName.trim()) return alert("Please enter a group name");
-    if (selectedMembers.length === 0) return alert("Select at least one member");
+    if (!groupName.trim())
+      return setError("Please enter a group name");
+
+    if (selectedMembers.length === 0)
+      return setError("Select at least one member");
+
+    setError("");
+
+    // Just call parent — DO NOT show toast here
     onCreateGroup(groupName.trim(), selectedMembers);
   };
+
+
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
@@ -30,24 +40,36 @@ export default function CreateGroupModal({ connectedUsers, onCreateGroup, onClos
 
         <h2 className="text-xl font-semibold mb-4">Create Group</h2>
 
-        {/* Group Name */}
+        {/* Error message */}
+        {error && (
+          <div className="mb-3 text-red-500 text-sm font-medium text-center bg-red-100 dark:bg-red-900/40 py-2 rounded-lg">
+            {error}
+          </div>
+        )}
+
         <input
           type="text"
           placeholder="Group Name"
           value={groupName}
-          onChange={(e) => setGroupName(e.target.value)}
+          onChange={(e) => {
+            setGroupName(e.target.value);
+            if (error) setError(""); // remove error on typing
+          }}
           className="w-full mb-4 px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-xl outline-none focus:ring-1 focus:ring-primary focus:border-primary bg-gray-100 dark:bg-gray-800"
         />
 
-        {/* Members List */}
         <div className="max-h-60 overflow-y-auto mb-4">
           {connectedUsers.map((user) => {
             const isSelected = selectedMembers.includes(user._id);
             return (
               <div
                 key={user._id}
-                className={`flex items-center p-2 mb-1 rounded-xl cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 ${isSelected ? "bg-primary/20" : ""}`}
-                onClick={() => toggleMember(user._id)}
+                className={`flex items-center p-2 mb-1 rounded-xl cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 ${isSelected ? "bg-primary/20" : ""
+                  }`}
+                onClick={() => {
+                  toggleMember(user._id);
+                  if (error) setError("");
+                }}
               >
                 <DevstaAvatar user={user} size={36} className="mr-2" />
                 <span className="text-sm">{user.name}</span>
