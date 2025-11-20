@@ -1,4 +1,7 @@
+import { useRoleMap } from "../../../hooks/useRoleMap";
 export default function GeneralInfo({ user }) {
+
+  const { formatRole } = useRoleMap();
 
   return (
     <div className="flex flex-col gap-6 w-full">
@@ -23,7 +26,7 @@ export default function GeneralInfo({ user }) {
 
         <div className="bg-white dark:bg-gray-900 border border-primary p-4 rounded-lg">
           <p className="text-gray-500 dark:text-gray-400 text-sm font-medium">Role</p>
-          <p className="text-gray-900 dark:text-white font-semibold">{user.primaryRole}</p>
+          <p className="text-gray-900 dark:text-white font-semibold">{formatRole(user.primaryRole)}</p>
         </div>
       </div>
 

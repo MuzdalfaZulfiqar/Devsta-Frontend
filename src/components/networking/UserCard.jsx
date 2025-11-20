@@ -77,42 +77,7 @@ export default function UserCard({ user, onClick, actionButtons, compact = false
         </div>
       </div>
       <div className="flex-shrink-0 flex gap-2">
-        {/* {actionButtons ? (
-          <div className="flex gap-2">{actionButtons}</div>
-        ) : (
-          <>
-            {["none", "cancelled", "declined"].includes(c.connectionStatus) && (
-              <button className={connectBtnCls} onClick={(e) => handleConnect(e, "connect")}>
-                <UserPlus size={14} /> Connect
-              </button>
-            )}
-            {c.connectionStatus === "pending_sent" && (
-              <div className="flex gap-2">
-                <button className={requestedBtnCls} disabled>
-                  Requested
-                </button>
-                <button className={cancelBtnCls} onClick={(e) => handleConnect(e, "cancel")}>
-                  Cancel
-                </button>
-              </div>
-            )}
-            {c.connectionStatus === "pending_received" && (
-              <div className="flex gap-2">
-                <button className={acceptBtnCls} onClick={(e) => handleConnect(e, "accept")}>
-                  <Check size={14} /> Accept
-                </button>
-                <button className={ignoreBtnCls} onClick={(e) => handleConnect(e, "ignore")}>
-                  <X size={14} /> Ignore
-                </button>
-              </div>
-            )}
-            {c.connectionStatus === "accepted" && (
-              <button className={connectedBtnCls} disabled>
-                Connected
-              </button>
-            )}
-          </>
-        )} */}
+  
 
         {!simple && (
           <div className="flex-shrink-0 flex gap-2">

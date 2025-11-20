@@ -19,6 +19,7 @@ import CommunityNotifications from "./pages/User/CommunityNotifications";
 import CommunityFeed from "./pages/User/CommunityFeed";
 import CommunityConnections from "./pages/User/CommunityConnections";
 import CommunityMessaging from "./pages/User/CommunityMessaging";
+import MyPublicProfilePageWrapper from "./pages/User/MyPublicProfilePageWrapper";
 
 function App() {
   const { user, showWelcome, setShowWelcome } = useAuth();
@@ -75,6 +76,15 @@ function App() {
             <Route index element={<PublicProfilePage />} />
           </Route>
         </Route>
+
+         <Route
+          path="/dashboard/community/profile/:userId"
+          element={
+            <ProtectedRoute requireOnboarding={true}>
+              <MyPublicProfilePageWrapper />
+            </ProtectedRoute>
+          }
+        />
 
 
         <Route path="/forgot-password" element={<ForgotPassword />} />

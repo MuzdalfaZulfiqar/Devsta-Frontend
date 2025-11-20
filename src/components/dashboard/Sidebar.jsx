@@ -84,18 +84,7 @@ export default function Sidebar({ isOpen, setIsOpen, onLogout, user }) {
         className="border-t border-primary/20 px-4 py-4 flex items-center gap-3 cursor-pointer hover:bg-primary/5 transition-all mt-auto"
         onClick={() => navigate("/dashboard/profile")}
       >
-        {/* {user?.avatar_url ? (
-          <img
-            src={user.avatar_url}
-            alt="avatar"
-            className="w-9 h-9 rounded-full border border-primary/30"
-          />
-        ) : (
-          <div className="w-9 h-9 flex items-center justify-center rounded-full border border-gray-400 bg-primary/10">
-            <User size={18} className="text-primary" />
-          </div>
-        )} */}
-
+   
 
         <DevstaAvatar user={user} size={36} />
 

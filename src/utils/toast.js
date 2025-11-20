@@ -1,3 +1,5 @@
+// src/utils/toast.js
+
 let toastContainer = null;
 
 export function showToast(message, duration = 3000) {
