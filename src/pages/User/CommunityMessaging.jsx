@@ -269,7 +269,7 @@
 //   );
 // }
 
-import React, { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import { io } from "socket.io-client";
 import MessageBubble from "../../components/messaging/MessageBubble";
 import MessageInput from "../../components/messaging/MessageInput";
