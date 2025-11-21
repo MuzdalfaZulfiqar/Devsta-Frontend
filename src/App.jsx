@@ -21,6 +21,9 @@ import CommunityConnections from "./pages/User/CommunityConnections";
 import CommunityMessaging from "./pages/User/CommunityMessaging";
 import MyPublicProfilePageWrapper from "./pages/User/MyPublicProfilePageWrapper";
 
+
+import AdminLayout from "./pages/admin/AdminLayout";
+
 function App() {
   const { user, showWelcome, setShowWelcome } = useAuth();
 
@@ -77,7 +80,7 @@ function App() {
           </Route>
         </Route>
 
-         <Route
+        <Route
           path="/dashboard/community/profile/:userId"
           element={
             <ProtectedRoute requireOnboarding={true}>
@@ -87,12 +90,16 @@ function App() {
         />
 
 
+
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/verify-otp" element={<VerifyOtp />} />
 
         <Route path="/skill-test" element={<SkillTest />} />
 
 
+
+  {/* Admin routes */}
+        <Route path="/admin/*" element={<AdminLayout />} />
         {/* Fallback */}
         <Route path="*" element={<Signup />} />
 
