@@ -777,19 +777,7 @@ export default function GroupSettingsDrawer({
                                     <div className="flex gap-2 items-center">
                                         {admins.includes(currentUserId) && currentUserId !== m._id && (
                                             <>
-                                                {/* <button
-                                                    className={`text-xs px-3 py-1 rounded-full border font-fragment transition ${m.isAdmin ? "border-primary text-primary bg-transparent hover:bg-primary/10" : "border-primary text-white bg-primary hover:bg-primary/90"}`}
-                                                    onClick={() => toggleAdmin(m._id, !m.isAdmin)}
-                                                >
-                                                    {m.isAdmin ? "Demote" : "Make Admin"}
-                                                </button>
-                                                <button
-                                                    className="text-xs px-3 py-1 rounded-full border border-red-500 text-red-500 hover:bg-red-500 hover:text-white transition font-fragment"
-                                                    onClick={() => handleRemoveMember(m._id)}
-                                                >
-                                                    Remove
-                                                </button> */}
-
+                                               
                                                 <button
                                                     className={`text-xs px-3 py-1 rounded-full border font-fragment transition ${m.isAdmin ? "border-primary text-primary bg-transparent hover:bg-primary/10" : "border-primary text-white bg-primary hover:bg-primary/90"}`}
                                                     onClick={() => toggleAdmin(m._id, !m.isAdmin)}

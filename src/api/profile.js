@@ -14,3 +14,23 @@ export async function updateUserProfile(data, token) {
   if (!response.ok) throw new Error(result.msg || "Failed to update profile");
   return result.user;
 }
+
+// api/profile.js
+export async function getMyProfile() {
+  const token = localStorage.getItem("devsta_token");
+
+  const res = await fetch(`${BACKEND_URL}/api/profile/me`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`, // <-- include JWT
+    },
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json();
+    throw new Error(errorData.msg || "Failed to fetch profile");
+  }
+
+  return res.json();
+}

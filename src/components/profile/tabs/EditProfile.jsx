@@ -30,8 +30,8 @@ const selectStyles = {
     backgroundColor: state.isSelected
       ? "#086972"
       : state.isFocused
-      ? "#e6f4f1"
-      : "#ffffff",
+        ? "#e6f4f1"
+        : "#ffffff",
     color: state.isSelected ? "#ffffff" : "#000000",
     cursor: "pointer",
   }),
@@ -148,10 +148,10 @@ export default function EditProfile({ user }) {
     primaryRole: user?.primaryRole || "",
     topSkills: Array.isArray(user?.topSkills)
       ? user.topSkills
-          .map((s) =>
-            typeof s === "string" ? s : s?.value ?? s?.key ?? s?.name ?? ""
-          )
-          .filter(Boolean)
+        .map((s) =>
+          typeof s === "string" ? s : s?.value ?? s?.key ?? s?.name ?? ""
+        )
+        .filter(Boolean)
       : [],
   });
 
@@ -946,11 +946,10 @@ export default function EditProfile({ user }) {
                           key={skill}
                           type="button"
                           onClick={() => toggleSkill(skill)}
-                          className={`flex items-center gap-1 px-3 py-1.5 rounded-full border text-sm font-medium transition-all duration-150 ${
-                            isSelected
+                          className={`flex items-center gap-1 px-3 py-1.5 rounded-full border text-sm font-medium transition-all duration-150 ${isSelected
                               ? "bg-primary text-white border-primary shadow-md scale-[1.02]"
                               : "bg-gray-100 dark:bg-gray-800 border-gray-400 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary"
-                          }`}
+                            }`}
                         >
                           {isSelected ? <X size={14} /> : <Plus size={14} />}
                           {skill}
@@ -981,17 +980,15 @@ export default function EditProfile({ user }) {
                       setShowCustomSkillInput((s) => !s);
                       setSkillError("");
                     }}
-                    className={`flex items-center gap-1.5 px-3.5 py-2 rounded-full border text-sm font-medium shadow-sm transition-all duration-200 ${
-                      showCustomSkillInput
+                    className={`flex items-center gap-1.5 px-3.5 py-2 rounded-full border text-sm font-medium shadow-sm transition-all duration-200 ${showCustomSkillInput
                         ? "bg-gradient-to-r from-primary to-primary/70 text-white border-primary scale-105"
                         : "bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700 border-gray-400 text-gray-700 dark:text-gray-300 hover:from-primary hover:to-primary/80 hover:text-white hover:border-primary"
-                    }`}
+                      }`}
                   >
                     <Plus
                       size={15}
-                      className={`transition-transform ${
-                        showCustomSkillInput ? "rotate-45" : ""
-                      }`}
+                      className={`transition-transform ${showCustomSkillInput ? "rotate-45" : ""
+                        }`}
                     />
                     Other
                   </button>
