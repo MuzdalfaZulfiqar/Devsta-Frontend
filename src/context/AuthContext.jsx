@@ -115,7 +115,7 @@ export default function AuthProvider({ children }) {
     const tokenFromUrl = params.get("token");
     const storedToken = localStorage.getItem("devsta_token");
     const finalToken = tokenFromUrl || storedToken;
-
+if (window.location.pathname.startsWith("/admin")) return;
     if (finalToken) {
       (async () => {
         // ⚡️ Step 1: validate the token with backend
