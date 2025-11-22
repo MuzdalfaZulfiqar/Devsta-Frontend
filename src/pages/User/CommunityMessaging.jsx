@@ -426,7 +426,7 @@
 //   );
 // }
 
-
+// src/pages/User/CommunityMessaging.jsx
 import { useEffect, useState, useRef } from "react";
 import { io } from "socket.io-client";
 import MessageBubble from "../../components/messaging/MessageBubble";
@@ -441,13 +441,13 @@ import {
   getMessages,
   listConversations,
   createGroupConversation,
-  markConversationAsRead, // ✅ NEW
+  markConversationAsRead, // ✅
 } from "../../api/chat";
 import { fetchConnections } from "../../api/connections";
 import { BACKEND_URL } from "../../../config";
 import GroupSettingsModal from "../../components/messaging/GroupSettingsModal";
 
-export default function CommunityMessaging() {
+export default function CommunityMessaging({ onUnreadCountChange }) {
   const [connectedUsers, setConnectedUsers] = useState([]);
   const [conversations, setConversations] = useState([]);
   const [selectedConversation, setSelectedConversation] = useState(null);
@@ -516,6 +516,15 @@ export default function CommunityMessaging() {
     });
   }, [conversations]);
 
+  // ✅ Report unread chat count to parent (for Messaging tab badge)
+  useEffect(() => {
+    if (!onUnreadCountChange) return;
+    const unseenChats = conversations.filter(
+      (c) => (c.unreadCount || 0) > 0
+    ).length;
+    onUnreadCountChange(unseenChats);
+  }, [conversations, onUnreadCountChange]);
+
   // --- Socket ---
   const setupSocket = () => {
     socketRef.current = io(BACKEND_URL, {
@@ -570,23 +579,59 @@ export default function CommunityMessaging() {
     }
   };
 
+  // --- Helpers to deal with populated OR id-only participants ---
+  const getOtherParticipant = (conversation) => {
+    if (!conversation || conversation.type === "group") return null;
+    const participants = conversation.participants || [];
+
+    const other = participants.find((p) => {
+      const id =
+        typeof p === "string"
+          ? p
+          : p && p._id
+          ? p._id.toString()
+          : p?.toString?.();
+      return id && id !== currentUserId;
+    });
+
+    return other || null;
+  };
+
+  const getDisplayUserForConversation = (conversation) => {
+    const other = getOtherParticipant(conversation);
+    if (!other) return null;
+
+    const otherId =
+      typeof other === "string"
+        ? other
+        : other && other._id
+        ? other._id.toString()
+        : other?.toString?.();
+
+    // Prefer full user from connections
+    const fromConnections =
+      connectedUsers.find((u) => u._id === otherId) || null;
+
+    if (fromConnections) return fromConnections;
+
+    // Fall back to the participant object itself if it has name/avatar
+    if (typeof other === "object" && other.name) return other;
+
+    return null;
+  };
+
   // --- Chat helpers ---
   const getOtherUser = () => {
     if (!selectedConversation) return null;
     if (selectedConversation.type === "group") return null;
-
-    // For direct conversations, selectedConversation.participants is array of IDs
-    const otherUserId = selectedConversation.participants.find(
-      (id) => id !== currentUserId
-    );
-    return connectedUsers.find((u) => u._id === otherUserId) || null;
+    return getDisplayUserForConversation(selectedConversation);
   };
 
   const openChat = async (conversationOrUser) => {
     try {
       let convo;
 
-      if (conversationOrUser.type) {
+      if (conversationOrUser && conversationOrUser.type) {
         // It's a full conversation (group) from listConversations
         convo = conversationOrUser;
       } else {
@@ -711,13 +756,18 @@ export default function CommunityMessaging() {
     }
   };
 
-  // --- Filtered lists ---
+  // --- Filtered conversations list ---
   const filteredConversations = conversations.filter((c) => {
     if (c.type === "group") {
-      return c.name.toLowerCase().includes(search.toLowerCase());
+      return (c.name || "")
+        .toLowerCase()
+        .includes(search.toLowerCase());
     }
-    const otherUser = c.participants.find((p) => p._id !== currentUserId);
-    return otherUser?.name.toLowerCase().includes(search.toLowerCase());
+
+    const otherUser = getDisplayUserForConversation(c);
+    return (otherUser?.name || "")
+      .toLowerCase()
+      .includes(search.toLowerCase());
   });
 
   return (
@@ -773,14 +823,7 @@ export default function CommunityMessaging() {
                   />
                 );
               } else {
-                const otherParticipantId = c.participants.find(
-                  (p) => p._id !== currentUserId
-                )?._id;
-
-                const otherUser = connectedUsers.find(
-                  (u) => u._id === otherParticipantId
-                );
-
+                const otherUser = getDisplayUserForConversation(c);
                 if (!otherUser) return null;
 
                 return (
@@ -791,7 +834,7 @@ export default function CommunityMessaging() {
                     simple
                     active={isActive}
                     onClick={() => openChat(otherUser._id)}
-                    unreadCount={c.unreadCount || 0} // you can use this inside UserCard UI
+                    unreadCount={c.unreadCount || 0}
                   />
                 );
               }
