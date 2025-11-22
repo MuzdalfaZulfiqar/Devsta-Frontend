@@ -1,3 +1,4 @@
+// src/pages/User/CommunityConnections.jsx
 import React, { useEffect, useState } from "react";
 import { Bell } from "lucide-react";
 import { fetchConnections } from "../../api/connections";
