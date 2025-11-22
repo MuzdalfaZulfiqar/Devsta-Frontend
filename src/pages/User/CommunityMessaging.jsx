@@ -426,6 +426,490 @@
 //   );
 // }
 
+
+// // src/pages/User/CommunityMessaging.jsx
+// import { useEffect, useState, useRef } from "react";
+// import MessageBubble from "../../components/messaging/MessageBubble";
+// import MessageInput from "../../components/messaging/MessageInput";
+// import ChatHeader from "../../components/messaging/ChatHeader";
+// import UserCard from "../../components/networking/UserCard";
+// import GroupCard from "../../components/messaging/GroupCard";
+// import CreateGroupModal from "../../components/messaging/CreateGroupModal";
+// import { useLocation } from "react-router-dom";
+// import {
+//   getOrCreateDirectConversation,
+//   getMessages,
+//   createGroupConversation,
+//   markConversationAsRead,
+// } from "../../api/chat";
+// import { fetchConnections } from "../../api/connections";
+// import { BACKEND_URL } from "../../../config";
+// import GroupSettingsModal from "../../components/messaging/GroupSettingsModal";
+// import { useSocket } from "../../context/SocketContext";
+
+// export default function CommunityMessaging() {
+//   const [connectedUsers, setConnectedUsers] = useState([]);
+//   const [selectedConversation, setSelectedConversation] = useState(null);
+//   const [messages, setMessages] = useState([]);
+//   const [isSending, setIsSending] = useState(false);
+//   const [showGroupModal, setShowGroupModal] = useState(false);
+//   const [showScrollArrow, setShowScrollArrow] = useState(false);
+//   const [search, setSearch] = useState("");
+//   const [showGroupSettingsModal, setShowGroupSettingsModal] = useState(false);
+
+//   const messagesContainerRef = useRef(null);
+//   const scrollRef = useRef(null);
+//   const leftContainerRef = useRef(null);
+
+//   const location = useLocation();
+//   const targetUserId = location.state?.targetUserId;
+
+//   const currentUser = JSON.parse(localStorage.getItem("devsta_user") || "{}");
+//   const currentUserId = currentUser._id?.toString();
+
+//   // 🔌 Global socket + global conversations state
+//   const {
+//     socket,
+//     conversations,
+//     setConversations,
+//     reloadConversations,
+//   } = useSocket();
+
+//   // --- Effects ---
+
+//   // Initial data load
+//   useEffect(() => {
+//     loadConnectedUsers();
+//     reloadConversations();
+//     // eslint-disable-next-line react-hooks/exhaustive-deps
+//   }, []);
+
+//   // Auto-open chat when navigated with targetUserId
+//   useEffect(() => {
+//     if (targetUserId && connectedUsers.length > 0) {
+//       openChat(targetUserId);
+//     }
+//     // eslint-disable-next-line react-hooks/exhaustive-deps
+//   }, [targetUserId, connectedUsers]);
+
+//   // Scroll arrow visibility
+//   useEffect(() => {
+//     if (scrollRef.current) {
+//       setShowScrollArrow(
+//         scrollRef.current.scrollTop + scrollRef.current.clientHeight <
+//           scrollRef.current.scrollHeight
+//       );
+//     }
+//   }, [connectedUsers]);
+
+//   // Scroll messages to bottom when new messages come
+//   useEffect(() => {
+//     const container = messagesContainerRef.current;
+//     if (container) container.scrollTop = container.scrollHeight;
+//   }, [messages]);
+
+//   // Listen to newMessage for the currently opened conversation
+//   useEffect(() => {
+//     if (!socket) return;
+
+//     const handleNewMessage = (msg) => {
+//       const convoId =
+//         typeof msg.conversation === "object" && msg.conversation._id
+//           ? msg.conversation._id.toString()
+//           : msg.conversation?.toString?.() || msg.conversation;
+
+//       if (!selectedConversation || selectedConversation._id !== convoId) {
+//         // Another chat → global SocketContext will handle unread + ordering
+//         return;
+//       }
+
+//       // Message for the open chat → append & mark read
+//       setMessages((prev) => {
+//         if (prev.some((m) => m._id === msg._id)) return prev;
+//         return [...prev, msg];
+//       });
+
+//       markConversationAsRead(convoId)
+//         .then(() => reloadConversations())
+//         .catch(() => {});
+//     };
+
+//     socket.on("newMessage", handleNewMessage);
+//     return () => {
+//       socket.off("newMessage", handleNewMessage);
+//     };
+//   }, [socket, selectedConversation, reloadConversations]);
+
+//   // --- Load data ---
+
+//   const loadConnectedUsers = async () => {
+//     try {
+//       const data = await fetchConnections({ limit: 200 });
+//       setConnectedUsers(
+//         (data.items || []).filter(
+//           (u) => u.connection?.connectionStatus === "accepted"
+//         )
+//       );
+//     } catch (err) {
+//       console.error("Error fetching connections:", err);
+//     }
+//   };
+
+//   // --- Helpers to deal with populated OR id-only participants ---
+
+//   const getOtherParticipant = (conversation) => {
+//     if (!conversation || conversation.type === "group") return null;
+//     const participants = conversation.participants || [];
+
+//     const other = participants.find((p) => {
+//       const id =
+//         typeof p === "string"
+//           ? p
+//           : p && p._id
+//           ? p._id.toString()
+//           : p?.toString?.();
+//       return id && id !== currentUserId;
+//     });
+
+//     return other || null;
+//   };
+
+//   const getDisplayUserForConversation = (conversation) => {
+//     const other = getOtherParticipant(conversation);
+//     if (!other) return null;
+
+//     const otherId =
+//       typeof other === "string"
+//         ? other
+//         : other && other._id
+//         ? other._id.toString()
+//         : other?.toString?.();
+
+//     const fromConnections =
+//       connectedUsers.find((u) => u._id === otherId) || null;
+
+//     if (fromConnections) return fromConnections;
+
+//     if (typeof other === "object" && other.name) return other;
+
+//     return null;
+//   };
+
+//   const getOtherUser = () => {
+//     if (!selectedConversation) return null;
+//     if (selectedConversation.type === "group") return null;
+//     return getDisplayUserForConversation(selectedConversation);
+//   };
+
+//   // --- Chat actions ---
+
+//   const openChat = async (conversationOrUser) => {
+//     try {
+//       let convo;
+
+//       if (conversationOrUser && conversationOrUser.type) {
+//         // It's a full conversation (group)
+//         convo = conversationOrUser;
+//       } else {
+//         // It's a userId → direct chat
+//         convo = await getOrCreateDirectConversation(conversationOrUser);
+//       }
+
+//       setSelectedConversation(convo);
+
+//       // Ensure socket has joined this conversation room
+//       if (socket && convo._id) {
+//         socket.emit("joinConversation", convo._id);
+//       }
+
+//       const msgs = await getMessages(convo._id);
+//       setMessages(msgs);
+
+//       // Mark as read + refresh global convos
+//       markConversationAsRead(convo._id)
+//         .then(() => reloadConversations())
+//         .catch(() => {});
+//     } catch (err) {
+//       console.error("Error opening chat:", err);
+//     }
+//   };
+
+//   // Upload media to backend (Cloudinary) for images/videos
+//   const uploadMessageMedia = async (file) => {
+//     const token = localStorage.getItem("devsta_token");
+//     const formData = new FormData();
+//     formData.append("file", file);
+
+//     const res = await fetch(`${BACKEND_URL}/api/upload/message-media`, {
+//       method: "POST",
+//       headers: {
+//         Authorization: `Bearer ${token}`,
+//       },
+//       body: formData,
+//     });
+
+//     if (!res.ok) {
+//       throw new Error("Failed to upload media");
+//     }
+
+//     return res.json(); // { url, type, mimeType, originalName, size, cloudinaryPublicId }
+//   };
+
+//   // handle text + optional multiple files
+//   const handleSend = async ({ text, files }) => {
+//     if (!selectedConversation || !socket) return;
+//     const trimmed = text?.trim() || "";
+//     const hasFiles = Array.isArray(files) && files.length > 0;
+
+//     if (!trimmed && !hasFiles) return;
+
+//     try {
+//       setIsSending(true);
+
+//       // CASE 1: Only text (no files) -> socket
+//       if (!hasFiles) {
+//         socket.emit("sendMessage", {
+//           conversationId: selectedConversation._id,
+//           text: trimmed,
+//         });
+//         return;
+//       }
+
+//       // CASE 2: One or more images/videos
+//       await Promise.all(
+//         files.map(async (file, index) => {
+//           const mime = (file.type || "").toLowerCase();
+//           const isImage = mime.startsWith("image/");
+//           const isVideo = mime.startsWith("video/");
+
+//           if (!isImage && !isVideo) {
+//             console.warn(
+//               "Unsupported file type. Only images/videos are allowed.",
+//               file.type
+//             );
+//             return;
+//           }
+
+//           const mediaFromServer = await uploadMessageMedia(file);
+//           const forcedType = isImage ? "image" : "video";
+
+//           socket.emit("sendMessage", {
+//             conversationId: selectedConversation._id,
+//             text: index === 0 ? trimmed : "",
+//             media: {
+//               ...mediaFromServer,
+//               type: forcedType,
+//             },
+//           });
+//         })
+//       );
+//     } catch (err) {
+//       console.error("Error sending message:", err);
+//     } finally {
+//       setIsSending(false);
+//     }
+//   };
+
+//   const handleCreateGroup = async (name, memberIds) => {
+//     try {
+//       const newGroup = await createGroupConversation(name, memberIds);
+
+//       newGroup.participants = newGroup.participants.map((id) => {
+//         return connectedUsers.find((u) => u._id === id) || { _id: id };
+//       });
+
+//       setConversations((prev) => [newGroup, ...prev]);
+//       setShowGroupModal(false);
+
+//       // Join its room & open chat
+//       if (socket && newGroup._id) {
+//         socket.emit("joinConversation", newGroup._id);
+//       }
+//       openChat(newGroup);
+
+//       import("../../utils/toast").then(({ showToast }) =>
+//         showToast("Group created successfully!")
+//       );
+//     } catch (err) {
+//       console.error("Error creating group:", err);
+
+//       import("../../utils/toast").then(({ showToast }) =>
+//         showToast("Failed to create group", 3500)
+//       );
+//     }
+//   };
+
+//   // --- Filtered conversations list ---
+
+//   const filteredConversations = conversations.filter((c) => {
+//     if (c.type === "group") {
+//       return (c.name || "")
+//         .toLowerCase()
+//         .includes(search.toLowerCase());
+//     }
+
+//     const otherUser = getDisplayUserForConversation(c);
+//     return (otherUser?.name || "")
+//       .toLowerCase()
+//       .includes(search.toLowerCase());
+//   });
+
+//   return (
+//     <div className="grid grid-cols-1 md:grid-cols-4 h-[72vh] gap-4">
+//       {/* LEFT: Connections + Groups */}
+//       <div
+//         className="bg-white dark:bg-[#0a0a0a] rounded-2xl p-4 h-[75vh] flex flex-col relative overflow-hidden"
+//         ref={leftContainerRef}
+//       >
+//         <div className="flex justify-between items-center mb-3">
+//           <h2 className="text-lg font-semibold">Your Connections</h2>
+//           <button
+//             className="text-primary font-semibold text-sm"
+//             onClick={() => setShowGroupModal(true)}
+//           >
+//             + Group
+//           </button>
+//         </div>
+
+//         <input
+//           type="text"
+//           placeholder="Search..."
+//           value={search}
+//           onChange={(e) => setSearch(e.target.value)}
+//           className="mb-3 w-full px-3 py-2 text-sm rounded-xl border border-gray-300 dark:border-gray-700 outline-none focus:ring-1 focus:ring-primary focus:border-primary bg-gray-100 dark:bg-gray-800"
+//         />
+
+//         <div
+//           className="flex-1 overflow-y-auto pr-2 no-scrollbar"
+//           ref={scrollRef}
+//           onScroll={() => {
+//             if (scrollRef.current) {
+//               setShowScrollArrow(
+//                 scrollRef.current.scrollTop +
+//                   scrollRef.current.clientHeight <
+//                   scrollRef.current.scrollHeight
+//               );
+//             }
+//           }}
+//         >
+//           <div className="space-y-2">
+//             {filteredConversations.map((c, idx) => {
+//               const isActive = selectedConversation?._id === c._id;
+
+//               if (c.type === "group") {
+//                 return (
+//                   <GroupCard
+//                     key={c._id || `group-${idx}`}
+//                     group={c}
+//                     currentUserId={currentUserId}
+//                     active={isActive}
+//                     onClick={() => openChat(c)}
+//                     unreadCount={c.unreadCount || 0}
+//                   />
+//                 );
+//               } else {
+//                 const otherUser = getDisplayUserForConversation(c);
+//                 if (!otherUser) return null;
+
+//                 return (
+//                   <UserCard
+//                     key={otherUser._id || `user-${idx}`}
+//                     user={otherUser}
+//                     compact
+//                     simple
+//                     active={isActive}
+//                     onClick={() => openChat(otherUser._id)}
+//                     unreadCount={c.unreadCount || 0}
+//                   />
+//                 );
+//               }
+//             })}
+
+//             {filteredConversations.length === 0 && (
+//               <p className="text-gray-400 text-sm text-center mt-2">
+//                 No results found
+//               </p>
+//             )}
+//           </div>
+//         </div>
+//       </div>
+
+//       {/* RIGHT: Chat */}
+//       <div className="md:col-span-3 bg-white dark:bg-[#0a0a0a] rounded-xl flex flex-col h-[75vh]">
+//         {!selectedConversation ? (
+//           <p className="text-gray-400 text-center my-auto">
+//             Select a user or group to start chatting
+//           </p>
+//         ) : (
+//           <>
+//             {selectedConversation && (
+//               <ChatHeader
+//                 user={getOtherUser()}
+//                 group={
+//                   selectedConversation.type === "group"
+//                     ? selectedConversation
+//                     : null
+//                 }
+//                 onOpenGroupSettings={() => setShowGroupSettingsModal(true)}
+//               />
+//             )}
+//             <div
+//               className="flex-1 p-3 overflow-y-auto flex flex-col space-y-3"
+//               ref={messagesContainerRef}
+//             >
+//               {messages.map((msg, idx) => (
+//                 <MessageBubble
+//                   key={(msg._id || `temp-${idx}`) + "-" + idx}
+//                   msg={msg}
+//                   currentUserId={currentUserId}
+//                 />
+//               ))}
+//             </div>
+//             <div className="p-3 border-t">
+//               <MessageInput onSend={handleSend} isSending={isSending} />
+//             </div>
+//           </>
+//         )}
+//       </div>
+
+//       {showGroupSettingsModal && selectedConversation?.type === "group" && (
+//         <GroupSettingsModal
+//           groupId={selectedConversation._id}
+//           onClose={() => setShowGroupSettingsModal(false)}
+//           connectedUsers={connectedUsers}
+//           onGroupUpdate={(updatedGroup) => {
+//             setSelectedConversation((prev) => ({
+//               ...prev,
+//               name: updatedGroup.groupName,
+//               participants: updatedGroup.members,
+//             }));
+
+//             setConversations((prev) =>
+//               prev.map((c) =>
+//                 c._id === updatedGroup._id
+//                   ? {
+//                       ...c,
+//                       name: updatedGroup.groupName,
+//                       participants: updatedGroup.members,
+//                     }
+//                   : c
+//               )
+//             );
+//           }}
+//           refreshGroup={reloadConversations}
+//         />
+//       )}
+
+//       {showGroupModal && connectedUsers.length > 0 && (
+//         <CreateGroupModal
+//           connectedUsers={connectedUsers}
+//           onCreateGroup={handleCreateGroup}
+//           onClose={() => setShowGroupModal(false)}
+//         />
+//       )}
+//     </div>
+//   );
+// }
 // src/pages/User/CommunityMessaging.jsx
 import { useEffect, useState, useRef } from "react";
 import MessageBubble from "../../components/messaging/MessageBubble";
@@ -451,6 +935,8 @@ export default function CommunityMessaging() {
   const [selectedConversation, setSelectedConversation] = useState(null);
   const [messages, setMessages] = useState([]);
   const [isSending, setIsSending] = useState(false);
+  const [isLoadingChat, setIsLoadingChat] = useState(false); // ⭐ NEW
+
   const [showGroupModal, setShowGroupModal] = useState(false);
   const [showScrollArrow, setShowScrollArrow] = useState(false);
   const [search, setSearch] = useState("");
@@ -486,7 +972,7 @@ export default function CommunityMessaging() {
   // Auto-open chat when navigated with targetUserId
   useEffect(() => {
     if (targetUserId && connectedUsers.length > 0) {
-      openChat(targetUserId);
+      openChat(targetUserId); // this is still userId-based (from profile, etc.)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [targetUserId, connectedUsers]);
@@ -604,32 +1090,40 @@ export default function CommunityMessaging() {
 
   const openChat = async (conversationOrUser) => {
     try {
+      if (!conversationOrUser) return;
+
+      setIsLoadingChat(true);
+
       let convo;
 
       if (conversationOrUser && conversationOrUser.type) {
-        // It's a full conversation (group)
+        // ⭐ It's a full conversation object (from left list, group or direct)
         convo = conversationOrUser;
       } else {
-        // It's a userId → direct chat
+        // ⭐ It's a userId → direct chat (from profile / targetUserId navigation)
         convo = await getOrCreateDirectConversation(conversationOrUser);
       }
 
+      // Immediately update UI with selected conversation
       setSelectedConversation(convo);
 
-      // Ensure socket has joined this conversation room
+      // Join its room
       if (socket && convo._id) {
         socket.emit("joinConversation", convo._id);
       }
 
+      // Load messages from backend
       const msgs = await getMessages(convo._id);
       setMessages(msgs);
 
-      // Mark as read + refresh global convos
+      // Mark as read + refresh global convos (badges)
       markConversationAsRead(convo._id)
         .then(() => reloadConversations())
         .catch(() => {});
     } catch (err) {
       console.error("Error opening chat:", err);
+    } finally {
+      setIsLoadingChat(false);
     }
   };
 
@@ -694,6 +1188,7 @@ export default function CommunityMessaging() {
 
           socket.emit("sendMessage", {
             conversationId: selectedConversation._id,
+            // Attach text only with the first media to avoid repetition
             text: index === 0 ? trimmed : "",
             media: {
               ...mediaFromServer,
@@ -713,6 +1208,7 @@ export default function CommunityMessaging() {
     try {
       const newGroup = await createGroupConversation(name, memberIds);
 
+      // Map participant IDs → full user objects
       newGroup.participants = newGroup.participants.map((id) => {
         return connectedUsers.find((u) => u._id === id) || { _id: id };
       });
@@ -802,7 +1298,7 @@ export default function CommunityMessaging() {
                     group={c}
                     currentUserId={currentUserId}
                     active={isActive}
-                    onClick={() => openChat(c)}
+                    onClick={() => openChat(c)} // ⭐ pass full conversation
                     unreadCount={c.unreadCount || 0}
                   />
                 );
@@ -817,7 +1313,8 @@ export default function CommunityMessaging() {
                     compact
                     simple
                     active={isActive}
-                    onClick={() => openChat(otherUser._id)}
+                    // ⭐ pass full conversation instead of only userId → skips extra API
+                    onClick={() => openChat(c)}
                     unreadCount={c.unreadCount || 0}
                   />
                 );
@@ -852,18 +1349,27 @@ export default function CommunityMessaging() {
                 onOpenGroupSettings={() => setShowGroupSettingsModal(true)}
               />
             )}
+
+            {/* Messages area */}
             <div
               className="flex-1 p-3 overflow-y-auto flex flex-col space-y-3"
               ref={messagesContainerRef}
             >
-              {messages.map((msg, idx) => (
-                <MessageBubble
-                  key={(msg._id || `temp-${idx}`) + "-" + idx}
-                  msg={msg}
-                  currentUserId={currentUserId}
-                />
-              ))}
+              {isLoadingChat ? (
+                <div className="flex-1 flex items-center justify-center text-gray-400 text-sm">
+                  Loading messages...
+                </div>
+              ) : (
+                messages.map((msg, idx) => (
+                  <MessageBubble
+                    key={(msg._id || `temp-${idx}`) + "-" + idx}
+                    msg={msg}
+                    currentUserId={currentUserId}
+                  />
+                ))
+              )}
             </div>
+
             <div className="p-3 border-t">
               <MessageInput onSend={handleSend} isSending={isSending} />
             </div>
@@ -877,12 +1383,14 @@ export default function CommunityMessaging() {
           onClose={() => setShowGroupSettingsModal(false)}
           connectedUsers={connectedUsers}
           onGroupUpdate={(updatedGroup) => {
+            // Update selected conversation
             setSelectedConversation((prev) => ({
               ...prev,
               name: updatedGroup.groupName,
               participants: updatedGroup.members,
             }));
 
+            // Update in the conversation list
             setConversations((prev) =>
               prev.map((c) =>
                 c._id === updatedGroup._id
