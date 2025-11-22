@@ -425,10 +425,8 @@
 //     </div>
 //   );
 // }
-
 // src/pages/User/CommunityMessaging.jsx
 import { useEffect, useState, useRef } from "react";
-import { io } from "socket.io-client";
 import MessageBubble from "../../components/messaging/MessageBubble";
 import MessageInput from "../../components/messaging/MessageInput";
 import ChatHeader from "../../components/messaging/ChatHeader";
@@ -439,26 +437,25 @@ import { useLocation } from "react-router-dom";
 import {
   getOrCreateDirectConversation,
   getMessages,
-  listConversations,
   createGroupConversation,
-  markConversationAsRead, // ✅
+  markConversationAsRead,
 } from "../../api/chat";
 import { fetchConnections } from "../../api/connections";
 import { BACKEND_URL } from "../../../config";
 import GroupSettingsModal from "../../components/messaging/GroupSettingsModal";
+import { useSocket } from "../../context/SocketContext";
 
-export default function CommunityMessaging({ onUnreadCountChange }) {
+export default function CommunityMessaging() {
   const [connectedUsers, setConnectedUsers] = useState([]);
-  const [conversations, setConversations] = useState([]);
   const [selectedConversation, setSelectedConversation] = useState(null);
   const [messages, setMessages] = useState([]);
   const [isSending, setIsSending] = useState(false);
-
   const [showGroupModal, setShowGroupModal] = useState(false);
+  const [showScrollArrow, setShowScrollArrow] = useState(false);
+  const [search, setSearch] = useState("");
+  const [showGroupSettingsModal, setShowGroupSettingsModal] = useState(false);
 
-  const socketRef = useRef(null);
   const messagesContainerRef = useRef(null);
-  const selectedConversationRef = useRef(null);
   const scrollRef = useRef(null);
   const leftContainerRef = useRef(null);
 
@@ -468,16 +465,20 @@ export default function CommunityMessaging({ onUnreadCountChange }) {
   const currentUser = JSON.parse(localStorage.getItem("devsta_user") || "{}");
   const currentUserId = currentUser._id?.toString();
 
-  const [showScrollArrow, setShowScrollArrow] = useState(false);
-  const [search, setSearch] = useState("");
-  const [showGroupSettingsModal, setShowGroupSettingsModal] = useState(false);
+  // 🔌 Global socket + global conversations state
+  const {
+    socket,
+    conversations,
+    setConversations,
+    reloadConversations,
+  } = useSocket();
 
   // --- Effects ---
+
+  // Initial data load
   useEffect(() => {
     loadConnectedUsers();
-    loadConversations();
-    setupSocket();
-    return () => socketRef.current?.disconnect();
+    reloadConversations();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -489,6 +490,7 @@ export default function CommunityMessaging({ onUnreadCountChange }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [targetUserId, connectedUsers]);
 
+  // Scroll arrow visibility
   useEffect(() => {
     if (scrollRef.current) {
       setShowScrollArrow(
@@ -498,65 +500,46 @@ export default function CommunityMessaging({ onUnreadCountChange }) {
     }
   }, [connectedUsers]);
 
-  // Keep ref updated so socket handler knows which convo is open
-  useEffect(() => {
-    selectedConversationRef.current = selectedConversation?._id?.toString();
-  }, [selectedConversation]);
-
+  // Scroll messages to bottom when new messages come
   useEffect(() => {
     const container = messagesContainerRef.current;
     if (container) container.scrollTop = container.scrollHeight;
   }, [messages]);
 
-  // Join rooms whenever conversation list changes
+  // Listen to newMessage for the currently opened conversation
   useEffect(() => {
-    if (!socketRef.current) return;
-    conversations.forEach((c) => {
-      socketRef.current.emit("joinConversation", c._id);
-    });
-  }, [conversations]);
+    if (!socket) return;
 
-  // ✅ Report unread chat count to parent (for Messaging tab badge)
-  useEffect(() => {
-    if (!onUnreadCountChange) return;
-    const unseenChats = conversations.filter(
-      (c) => (c.unreadCount || 0) > 0
-    ).length;
-    onUnreadCountChange(unseenChats);
-  }, [conversations, onUnreadCountChange]);
-
-  // --- Socket ---
-  const setupSocket = () => {
-    socketRef.current = io(BACKEND_URL, {
-      auth: { token: localStorage.getItem("devsta_token") },
-    });
-
-    socketRef.current.on("newMessage", (msg) => {
-      // Always refresh conversation list → updates ordering + unread badges
-      loadConversations();
-
+    const handleNewMessage = (msg) => {
       const convoId =
         typeof msg.conversation === "object" && msg.conversation._id
           ? msg.conversation._id.toString()
           : msg.conversation?.toString?.() || msg.conversation;
 
-      // If message is not for currently open conversation, only badges update
-      if (convoId !== selectedConversationRef.current) {
+      if (!selectedConversation || selectedConversation._id !== convoId) {
+        // Another chat → global SocketContext will handle unread + ordering
         return;
       }
 
-      // Append message in current thread
+      // Message for the open chat → append & mark read
       setMessages((prev) => {
         if (prev.some((m) => m._id === msg._id)) return prev;
         return [...prev, msg];
       });
 
-      // Mark as read when the conversation is open
-      markConversationAsRead(convoId).catch(() => {});
-    });
-  };
+      markConversationAsRead(convoId)
+        .then(() => reloadConversations())
+        .catch(() => {});
+    };
+
+    socket.on("newMessage", handleNewMessage);
+    return () => {
+      socket.off("newMessage", handleNewMessage);
+    };
+  }, [socket, selectedConversation, reloadConversations]);
 
   // --- Load data ---
+
   const loadConnectedUsers = async () => {
     try {
       const data = await fetchConnections({ limit: 200 });
@@ -570,16 +553,8 @@ export default function CommunityMessaging({ onUnreadCountChange }) {
     }
   };
 
-  const loadConversations = async () => {
-    try {
-      const convos = await listConversations();
-      setConversations(convos);
-    } catch (err) {
-      console.error("Error loading conversations:", err);
-    }
-  };
-
   // --- Helpers to deal with populated OR id-only participants ---
+
   const getOtherParticipant = (conversation) => {
     if (!conversation || conversation.type === "group") return null;
     const participants = conversation.participants || [];
@@ -608,31 +583,30 @@ export default function CommunityMessaging({ onUnreadCountChange }) {
         ? other._id.toString()
         : other?.toString?.();
 
-    // Prefer full user from connections
     const fromConnections =
       connectedUsers.find((u) => u._id === otherId) || null;
 
     if (fromConnections) return fromConnections;
 
-    // Fall back to the participant object itself if it has name/avatar
     if (typeof other === "object" && other.name) return other;
 
     return null;
   };
 
-  // --- Chat helpers ---
   const getOtherUser = () => {
     if (!selectedConversation) return null;
     if (selectedConversation.type === "group") return null;
     return getDisplayUserForConversation(selectedConversation);
   };
 
+  // --- Chat actions ---
+
   const openChat = async (conversationOrUser) => {
     try {
       let convo;
 
       if (conversationOrUser && conversationOrUser.type) {
-        // It's a full conversation (group) from listConversations
+        // It's a full conversation (group)
         convo = conversationOrUser;
       } else {
         // It's a userId → direct chat
@@ -640,14 +614,19 @@ export default function CommunityMessaging({ onUnreadCountChange }) {
       }
 
       setSelectedConversation(convo);
-      socketRef.current?.emit("joinConversation", convo._id);
+
+      // Ensure socket has joined this conversation room
+      if (socket && convo._id) {
+        socket.emit("joinConversation", convo._id);
+      }
 
       const msgs = await getMessages(convo._id);
       setMessages(msgs);
 
-      // Mark as read and refresh convo list
-      markConversationAsRead(convo._id).catch(() => {});
-      loadConversations();
+      // Mark as read + refresh global convos
+      markConversationAsRead(convo._id)
+        .then(() => reloadConversations())
+        .catch(() => {});
     } catch (err) {
       console.error("Error opening chat:", err);
     }
@@ -676,7 +655,7 @@ export default function CommunityMessaging({ onUnreadCountChange }) {
 
   // handle text + optional multiple files
   const handleSend = async ({ text, files }) => {
-    if (!selectedConversation) return;
+    if (!selectedConversation || !socket) return;
     const trimmed = text?.trim() || "";
     const hasFiles = Array.isArray(files) && files.length > 0;
 
@@ -687,7 +666,7 @@ export default function CommunityMessaging({ onUnreadCountChange }) {
 
       // CASE 1: Only text (no files) -> socket
       if (!hasFiles) {
-        socketRef.current?.emit("sendMessage", {
+        socket.emit("sendMessage", {
           conversationId: selectedConversation._id,
           text: trimmed,
         });
@@ -712,9 +691,8 @@ export default function CommunityMessaging({ onUnreadCountChange }) {
           const mediaFromServer = await uploadMessageMedia(file);
           const forcedType = isImage ? "image" : "video";
 
-          socketRef.current?.emit("sendMessage", {
+          socket.emit("sendMessage", {
             conversationId: selectedConversation._id,
-            // Attach text only with the first media to avoid repetition
             text: index === 0 ? trimmed : "",
             media: {
               ...mediaFromServer,
@@ -725,7 +703,6 @@ export default function CommunityMessaging({ onUnreadCountChange }) {
       );
     } catch (err) {
       console.error("Error sending message:", err);
-      // TODO: show toast
     } finally {
       setIsSending(false);
     }
@@ -735,13 +712,17 @@ export default function CommunityMessaging({ onUnreadCountChange }) {
     try {
       const newGroup = await createGroupConversation(name, memberIds);
 
-      // Map participant IDs → full user objects
       newGroup.participants = newGroup.participants.map((id) => {
         return connectedUsers.find((u) => u._id === id) || { _id: id };
       });
 
       setConversations((prev) => [newGroup, ...prev]);
       setShowGroupModal(false);
+
+      // Join its room & open chat
+      if (socket && newGroup._id) {
+        socket.emit("joinConversation", newGroup._id);
+      }
       openChat(newGroup);
 
       import("../../utils/toast").then(({ showToast }) =>
@@ -757,6 +738,7 @@ export default function CommunityMessaging({ onUnreadCountChange }) {
   };
 
   // --- Filtered conversations list ---
+
   const filteredConversations = conversations.filter((c) => {
     if (c.type === "group") {
       return (c.name || "")
@@ -801,7 +783,8 @@ export default function CommunityMessaging({ onUnreadCountChange }) {
           onScroll={() => {
             if (scrollRef.current) {
               setShowScrollArrow(
-                scrollRef.current.scrollTop + scrollRef.current.clientHeight <
+                scrollRef.current.scrollTop +
+                  scrollRef.current.clientHeight <
                   scrollRef.current.scrollHeight
               );
             }
@@ -911,7 +894,7 @@ export default function CommunityMessaging({ onUnreadCountChange }) {
               )
             );
           }}
-          refreshGroup={loadConversations}
+          refreshGroup={reloadConversations}
         />
       )}
 
