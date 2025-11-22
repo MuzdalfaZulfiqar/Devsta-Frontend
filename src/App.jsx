@@ -114,14 +114,12 @@
 // export default App;
 
 
-
 // src/App.jsx
 import React from "react";
 import { Routes, Route } from "react-router-dom";
 import { useAuth } from "./context/AuthContext";
 import { SocketProvider } from "./context/SocketContext";
 
-import AppRoutes from "./AppRoutes"; // (still here if you use it elsewhere)
 import Login from "./pages/User/Login";
 import Signup from "./pages/User/Signup";
 import Dashboard from "./pages/User/Dashboard";
@@ -145,6 +143,7 @@ import MyPublicProfilePageWrapper from "./pages/User/MyPublicProfilePageWrapper"
 import AdminLayout from "./pages/admin/AdminLayout";
 
 function App() {
+  // If you don't use these yet, you can also just do: const {} = useAuth();
   const { user, showWelcome, setShowWelcome } = useAuth();
 
   return (
@@ -227,7 +226,6 @@ function App() {
 
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/verify-otp" element={<VerifyOtp />} />
-
           <Route path="/skill-test" element={<SkillTest />} />
 
           {/* Admin routes */}
