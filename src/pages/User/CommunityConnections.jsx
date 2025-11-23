@@ -5,10 +5,12 @@ import { fetchConnections } from "../../api/connections";
 import UserCard from "../../components/networking/UserCard";
 import { useNavigate } from "react-router-dom";
 import { useConnections } from "../../context/ConnectionContext";
+import { useSocket } from "../../context/SocketContext"; // ⭐ NEW
 
 export default function CommunityConnections() {
   const navigate = useNavigate();
   const { setConnection } = useConnections();
+  const { socket } = useSocket(); // ⭐ NEW
   const [loading, setLoading] = useState(false);
   const [sentRequests, setSentRequests] = useState([]);
   const [receivedRequests, setReceivedRequests] = useState([]);
@@ -42,6 +44,23 @@ export default function CommunityConnections() {
   useEffect(() => {
     loadData();
   }, [setConnection]);
+
+
+
+  // ⭐ Realtime: reload connections whenever backend emits "connections:updated"
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleConnectionsUpdated = () => {
+      loadData();
+    };
+
+    socket.on("connections:updated", handleConnectionsUpdated);
+
+    return () => {
+      socket.off("connections:updated", handleConnectionsUpdated);
+    };
+  }, [socket]); 
 
   // Filtered connected users based on search query
   const filteredUsers = connectedUsers.filter((user) =>
