@@ -8,6 +8,7 @@ import AdminUsersPage from "./AdminUsersPage";
 import AdminPostsPage from "./AdminPostsPage";
 import AdminCommentsPage from "./AdminCommentsPage";
 import AdminDashboardPage from "./adminDashboardPage";
+import AdminReportsPage from "./AdminReportsPage";
 
 export default function AdminLayout() {
   return (
@@ -48,6 +49,14 @@ export default function AdminLayout() {
           element={
             <AdminProtectedRoute>
               <AdminCommentsPage />
+            </AdminProtectedRoute>
+          }
+        />
+        <Route
+          path="reports"
+          element={
+            <AdminProtectedRoute>
+              <AdminReportsPage />
             </AdminProtectedRoute>
           }
         />
