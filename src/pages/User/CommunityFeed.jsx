@@ -1,6 +1,4 @@
 // src/pages/User/CommunityFeed.jsx
-
-
 import React from "react";
 import FeedLayout from "../../components/networking/FeedLayout";
 
