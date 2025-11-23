@@ -1,3 +1,4 @@
+// src/pages/admin/AdminCommentsPage.jsx
 import { useEffect, useState } from "react";
 import AdminDashboardLayout from "../../components/admin/AdminDashboardLayout";
 import { fetchAllPosts, hideComment, unhideComment, deleteComment } from "../../api/admin";
