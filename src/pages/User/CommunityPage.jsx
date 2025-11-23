@@ -159,6 +159,20 @@ export default function CommunityPage() {
     };
   }, [socket]);
 
+  useEffect(() => {
+    if (!socket) return;
+
+    const handlePendingUpdated = ({ count }) => {
+      setPendingRequestsCount(count);
+    };
+
+    socket.on("connections:pendingCountUpdated", handlePendingUpdated);
+
+    return () => {
+      socket.off("connections:pendingCountUpdated", handlePendingUpdated);
+    };
+  }, [socket]);
+
   // 👉 When user opens Notifications tab, mark all as read + clear badge
   useEffect(() => {
     const isNotificationsRoute = location.pathname.endsWith("/notifications");
