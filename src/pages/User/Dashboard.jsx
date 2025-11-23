@@ -140,18 +140,6 @@ export default function Dashboard() {
   ];
   const allSourcesAvailable = sourcesAvailable.every(Boolean);
 
-
-  // Validate Skills card (always show)
-  // const validateSkillsCard = {
-  //   title: user.skillsValidated ? "Update Profile Score" : "Validate Skills",
-  //   description: user.skillsValidated
-  //     ? "Your skills are already validated. You can re-run validation if you've updated your resume, GitHub, or skill test."
-  //     : "Analyze your available data to calculate your DevSta profile score.",
-  //   actionLabel: user.skillsValidated ? "Re-run Validation" : "Validate Skills",
-  //   onAction: validateSkills,
-  //   isValidating,
-  // };
-
     // Scroll helper for "View Results"
   const scrollToSkillsCard = () => {
     const element = document.getElementById("validated-skills-section");
@@ -180,28 +168,6 @@ export default function Dashboard() {
         onAction: validateSkills,
         isValidating,
       };
-
-
-//   const scrollToSkillsCard = () => {
-//   const element = document.getElementById("validated-skills-section");
-//   if (element) {
-//     element.scrollIntoView({ behavior: "smooth" });
-//     setInfoTitle("View Your Skills");
-//     setInfoMessage("Here’s your validated skills. You can re-run validation below if needed.");
-//     setInfoOpen(true);
-//   }
-// };
-
-// // Then in your todoCards array
-// const validateSkillsCard = {
-//   title: user.skillsValidated ? "Update Profile Score" : "Validate Skills",
-//   description: user.skillsValidated
-//     ? "Your skills are already validated. Click to view or update your profile score."
-//     : "Analyze your available data to calculate your DevSta profile score.",
-//   actionLabel: "View Results",
-//   onAction: scrollToSkillsCard, // scroll instead of direct validation
-// };
-
 
   // To-Do / Action cards
   const todoCards = [
