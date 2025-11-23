@@ -38,10 +38,12 @@
 import React, { useEffect, useState } from "react";
 import { Bell } from "lucide-react";
 import { fetchNotifications } from "../../api/notifications";
+import { useSocket } from "../../context/SocketContext";
 
 export default function CommunityNotifications() {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(false);
+  const { socket } = useSocket();
 
   const loadNotifications = async () => {
     try {
@@ -59,7 +61,22 @@ export default function CommunityNotifications() {
     loadNotifications();
   }, []);
 
-  if (loading) {
+  // ⭐ Realtime: append new notifications when backend emits "notifications:new"
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleNewNotification = ({ notification }) => {
+      setNotifications((prev) => [notification, ...prev]);
+    };
+
+    socket.on("notifications:new", handleNewNotification);
+
+    return () => {
+      socket.off("notifications:new", handleNewNotification);
+    };
+  }, [socket]);
+
+  if (loading && !notifications.length) {
     return (
       <p className="text-gray-500 text-center py-10">
         Loading notifications...
