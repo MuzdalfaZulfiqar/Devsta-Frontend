@@ -134,7 +134,6 @@ import SkillTest from "./pages/User/SkillTest";
 import CommunityPage from "./pages/User/CommunityPage";
 import PublicProfilePage from "./pages/User/PublicProfilePage";
 import AllUsersWithProfile from "./components/networking/AllUsersWithProfile";
-import CommunityNotifications from "./pages/User/CommunityNotifications";
 import CommunityFeed from "./pages/User/CommunityFeed";
 import CommunityConnections from "./pages/User/CommunityConnections";
 import CommunityMessaging from "./pages/User/CommunityMessaging";
@@ -202,10 +201,6 @@ function App() {
             }
           >
             <Route index element={<AllUsersWithProfile />} />
-            <Route
-              path="notifications"
-              element={<CommunityNotifications />}
-            />
             <Route path="feed" element={<CommunityFeed />} />
             <Route path="connections" element={<CommunityConnections />} />
             <Route path="messaging" element={<CommunityMessaging />} />
