@@ -1,7 +1,9 @@
 // File: src/components/dashboard/Topbar.jsx
-import { Bell, X } from "lucide-react";
+
 import { useState } from "react";
 import { useNotifications } from "../../context/NotificationContext";
+import { Bell, X, Megaphone } from "lucide-react";
+
 
 export default function Topbar() {
   const { notifications, removeNotification } = useNotifications();
@@ -48,17 +50,49 @@ export function NotificationBell({ notifications, removeNotification }) {
                   key={n.id}
                   className="flex justify-between items-start p-3 border-b border-gray-200 dark:border-gray-800 text-sm"
                 >
-                  <div className="flex-1 text-gray-800 dark:text-gray-200">
-                    <p>{n.message}</p>
-                    {n.action && (
-                      <button
-                        onClick={n.action.onClick}
-                        className="text-primary text-xs mt-1 hover:underline"
-                      >
-                        {n.action.label}
-                      </button>
-                    )}
-                  </div>
+                 <div className="flex-1 flex flex-col gap-1">
+  {/* ICON + TITLE */}
+  <div className="flex items-center gap-2">
+    {n.type === "announcement" && n.icon === "megaphone" && (
+      <Megaphone size={16} className="text-primary flex-shrink-0" />
+    )}
+    {n.title && (
+      <p className="font-semibold text-sm text-gray-900 dark:text-white">
+        {n.title}
+      </p>
+    )}
+  </div>
+
+  {/* MESSAGE */}
+  <p className="text-xs text-gray-600 dark:text-gray-300">{n.message}</p>
+
+  {/* CATEGORY BADGE */}
+  {n.type === "announcement" && n.category && (
+    <span
+      className={`inline-block mt-1 px-2 py-0.5 text-[10px] rounded-full
+        ${
+          n.category === "Maintenance"
+            ? "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300"
+            : n.category === "News"
+            ? "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300"
+            : "bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300"
+        }`}
+    >
+      {n.category}
+    </span>
+  )}
+
+  {/* ACTION BUTTON */}
+  {n.action && (
+    <button
+      onClick={n.action.onClick}
+      className="text-primary text-xs mt-1 hover:underline"
+    >
+      {n.action.label}
+    </button>
+  )}
+</div>
+
                   <button
                     onClick={() => removeNotification(n.id)}
                     className="ml-2 text-gray-400 hover:text-primary"

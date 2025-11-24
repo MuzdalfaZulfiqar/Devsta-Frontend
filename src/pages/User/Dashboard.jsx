@@ -11,6 +11,7 @@ import GitHub from "../../components/profile/tabs/GitHub";
 import { uploadResume } from "../../api/onboarding";
 import { BACKEND_URL } from "../../../config";
 import ValidatedSkills from "../../components/dashboard/ValidatedSkills";
+import AnnouncementCard from "../../components/admin/AnnouncementCard";
 
 export default function Dashboard() {
   const { user, token, setUser } = useAuth();
@@ -23,6 +24,40 @@ export default function Dashboard() {
   const [infoOpen, setInfoOpen] = useState(false);
   const [infoTitle, setInfoTitle] = useState("");
   const [infoMessage, setInfoMessage] = useState("");
+
+  const [announcements, setAnnouncements] = useState([]);
+
+  // Fetch live announcements
+  useEffect(() => {
+    const fetchAnnouncements = async () => {
+      try {
+        const res = await fetch(`${BACKEND_URL}/api/users/announcements`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+        if (res.ok) {
+          setAnnouncements(data);
+
+          // Push to notifications
+          data.forEach((ann) => {
+            addNotification({
+  id: `announcement-${ann._id}`,
+  title: ann.title,
+  message: ann.message,
+  category: ann.category,
+  type: "announcement",
+  icon: "megaphone",
+});
+
+          });
+        }
+      } catch (err) {
+        console.error("Failed to fetch announcements", err);
+      }
+    };
+
+    fetchAnnouncements();
+  }, [token, addNotification]);
 
   useEffect(() => {
     if (user && !user.onboardingCompleted) navigate("/welcome");
@@ -71,20 +106,20 @@ export default function Dashboard() {
   const validateSkills = async () => {
 
     const sourcesCount =
-    (user.topSkills?.length > 0 ? 1 : 0) +
-    (user.githubConnected ? 1 : 0) +
-    (user.resumeUrl ? 1 : 0) +
-    (user.hasAttemptedQuiz ? 1 : 0);
+      (user.topSkills?.length > 0 ? 1 : 0) +
+      (user.githubConnected ? 1 : 0) +
+      (user.resumeUrl ? 1 : 0) +
+      (user.hasAttemptedQuiz ? 1 : 0);
 
-  if (sourcesCount < 2) {
-    setInfoTitle("Add More Sources");
-   setInfoMessage(
-  "Please connect at least one more data source (e.g., Resume, GitHub, or Skill Test) before running skill validation. This helps ensure your DevSta profile score is accurate."
-);
+    if (sourcesCount < 2) {
+      setInfoTitle("Add More Sources");
+      setInfoMessage(
+        "Please connect at least one more data source (e.g., Resume, GitHub, or Skill Test) before running skill validation. This helps ensure your DevSta profile score is accurate."
+      );
 
-    setInfoOpen(true);
-    return; // ⛔ stop here
-  }
+      setInfoOpen(true);
+      return; // ⛔ stop here
+    }
     try {
       setIsValidating(true);
       const response = await fetch(
@@ -140,7 +175,7 @@ export default function Dashboard() {
   ];
   const allSourcesAvailable = sourcesAvailable.every(Boolean);
 
-    // Scroll helper for "View Results"
+  // Scroll helper for "View Results"
   const scrollToSkillsCard = () => {
     const element = document.getElementById("validated-skills-section");
     if (element) {
@@ -154,20 +189,20 @@ export default function Dashboard() {
   // Dynamic Validate Skills card
   const validateSkillsCard = user.skillsValidated
     ? {
-        title: "View Your Validated Skills",
-        description:
-          "Your skills have been validated. Click below to view your confidence scores and profile ranking.",
-        actionLabel: "View Results",
-        onAction: scrollToSkillsCard,
-      }
+      title: "View Your Validated Skills",
+      description:
+        "Your skills have been validated. Click below to view your confidence scores and profile ranking.",
+      actionLabel: "View Results",
+      onAction: scrollToSkillsCard,
+    }
     : {
-        title: "Validate Skills",
-        description:
-          "Analyze your data (Resume, GitHub, or Skill Test) to generate your DevSta profile score.",
-        actionLabel: isValidating ? "Validating..." : "Validate Skills",
-        onAction: validateSkills,
-        isValidating,
-      };
+      title: "Validate Skills",
+      description:
+        "Analyze your data (Resume, GitHub, or Skill Test) to generate your DevSta profile score.",
+      actionLabel: isValidating ? "Validating..." : "Validate Skills",
+      onAction: validateSkills,
+      isValidating,
+    };
 
   // To-Do / Action cards
   const todoCards = [
@@ -241,6 +276,28 @@ export default function Dashboard() {
           </p>
         </div>
 
+        {/* Announcements Section */}
+        {announcements.length > 0 && (
+          <div className="mt-8">
+            <h2 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200">
+              Announcements
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {announcements.map((ann) => (
+                <AnnouncementCard
+  key={ann._id}
+  title={ann.title}
+  message={ann.message}
+  category={ann.category}
+  createdAt={ann.createdAt}
+/>
+
+              ))}
+            </div>
+          </div>
+        )}
+
+
         {/* To-Do / Actions Section */}
         {todoCards.length > 0 && (
           <div>
@@ -278,16 +335,16 @@ export default function Dashboard() {
 
         {/* Validated Skills Section */}
         {(user.skillsValidated || allSourcesAvailable) && (
-  <div id="validated-skills-section" className="mt-8">
-    <ValidatedSkills
-      validatedSkills={user.validatedSkills}
-      profileScore={user.profileScore}
-      user={user}
-      onValidate={validateSkills} // actual rerun function
-      isValidating={isValidating} // show spinner
-    />
-  </div>
-)}
+          <div id="validated-skills-section" className="mt-8">
+            <ValidatedSkills
+              validatedSkills={user.validatedSkills}
+              profileScore={user.profileScore}
+              user={user}
+              onValidate={validateSkills} // actual rerun function
+              isValidating={isValidating} // show spinner
+            />
+          </div>
+        )}
 
       </div>
 

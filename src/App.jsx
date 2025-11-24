@@ -140,6 +140,7 @@ import CommunityConnections from "./pages/User/CommunityConnections";
 import CommunityMessaging from "./pages/User/CommunityMessaging";
 import MyPublicProfilePageWrapper from "./pages/User/MyPublicProfilePageWrapper";
 
+
 import AdminLayout from "./pages/admin/AdminLayout";
 
 function App() {
@@ -149,6 +150,7 @@ function App() {
   return (
     <SocketProvider>
       <div className="min-h-screen">
+      
         <Routes>
           {/* Public routes */}
           <Route path="/" element={<Signup />} />

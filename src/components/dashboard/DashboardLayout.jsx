@@ -1,5 +1,5 @@
 // File: src/components/dashboard/DashboardLayout.jsx
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Sidebar from "./Sidebar";
 import Topbar, { NotificationBell } from "./Topbar";
 import { useNotifications } from "../../context/NotificationContext";
@@ -12,9 +12,13 @@ export default function DashboardLayout({ user, children }) {
 
   const handleLogout = () => logoutUser();
 
+
+
   return (
     <div className="flex w-full min-h-screen bg-gray-50 dark:bg-black text-gray-900 dark:text-white font-fragment transition-colors duration-300">
       {/* Sidebar */}
+
+
       <Sidebar
         isOpen={isOpen}
         setIsOpen={setIsOpen}
