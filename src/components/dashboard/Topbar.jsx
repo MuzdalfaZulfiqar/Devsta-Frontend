@@ -147,6 +147,20 @@ export default function Topbar() {
       console.error("Failed to mark notifications as read:", err);
     }
   };
+  const handleDismiss = async (notif) => {
+    const backendId = notif.raw?._id; // we stored original doc in .raw
+    try {
+      if (backendId) {
+        await dismissNotification(backendId); // tell backend it's dismissed
+      }
+    } catch (err) {
+      console.error("Failed to dismiss notification:", err);
+      // you can decide to early-return here if you don't want optimistic UI
+    }
+
+    // Remove from local context so it disappears immediately
+    removeNotification(notif.id);
+  };
 
   return (
     <div className="bg-white dark:bg-black border-b border-primary/20 px-6 h-16 flex justify-end items-center font-fragment text-gray-800 dark:text-white">
@@ -157,6 +171,7 @@ export default function Topbar() {
         removeNotification={removeNotification}
         markAsRead={markAsRead}
         onMarkAllRead={handleMarkAllRead}
+        onDismiss={handleDismiss} // 👈 pass handler
       />
     </div>
   );
@@ -170,6 +185,7 @@ export function NotificationBell({
   removeNotification,
   markAsRead,
   onMarkAllRead,
+  onDismiss, // 👈 NEW
 }) {
   const [open, setOpen] = useState(false);
 

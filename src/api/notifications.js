@@ -56,6 +56,14 @@ export const fetchNotifications = async () => {
   return data.items || [];
 };
 
+// ... your existing fetchNotifications, getUnreadNotificationCount, markNotificationsRead ...
+
+export async function dismissNotification(notificationId) {
+  // You can use PATCH or DELETE depending on how your backend is built
+  const res = await api.patch(`/notifications/${notificationId}/dismiss`);
+  return res.data;
+};
+
 //
 // -----------------------------------------------
 // MARK ALL NOTIFICATIONS AS READ
