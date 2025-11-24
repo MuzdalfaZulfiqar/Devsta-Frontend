@@ -3,6 +3,20 @@ import { BACKEND_URL } from "../../../config";
 
 const BASE_URL = `${BACKEND_URL}/api/admin`;
 
+// Helper for POST requests
+const post = async (url, token, body) => {
+  const res = await fetch(`${BASE_URL}${url}`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+  return res.json();
+};
+
+
 // Helper for GET requests
 const get = async (url, token) => {
   const res = await fetch(`${BASE_URL}${url}`, {
@@ -65,3 +79,11 @@ export const deleteUser = (userId, token) => del(`/users/${userId}`, token);
 
 // -------------------- ANALYTICS --------------------
 export const fetchAnalytics = (token) => get("/analytics", token);
+
+// -------------------- ANNOUNCEMENTS --------------------
+export const fetchAnnouncements = (token) => get("/announcements", token);
+export const createAnnouncement = (data, token) => post("/announcements", token, data);
+export const deleteAnnouncement = (id, token) => del(`/announcements/${id}`, token);
+
+// ✅ NEW: Post announcement to platform
+export const postAnnouncement = (id, token) => put(`/announcements/post/${id}`, token);
