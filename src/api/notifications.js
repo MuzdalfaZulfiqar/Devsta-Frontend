@@ -55,7 +55,6 @@ export const fetchNotifications = async () => {
   const data = await res.json();
   return data.items || [];
 };
-import api from "./apiClient"; // or whatever you already use
 
 // ... your existing fetchNotifications, getUnreadNotificationCount, markNotificationsRead ...
 
