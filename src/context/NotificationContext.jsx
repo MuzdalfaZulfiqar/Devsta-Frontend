@@ -30,7 +30,6 @@
 
 // export const useNotifications = () => useContext(NotificationContext);
 
-
 // src/context/NotificationContext.jsx
 import { createContext, useContext, useState, useCallback, useMemo } from "react";
 
@@ -39,15 +38,32 @@ const NotificationContext = createContext(null);
 export function NotificationProvider({ children }) {
   const [notifications, setNotifications] = useState([]);
 
+  // 👉 Use this when loading notifications from backend (full list)
+  const setFromServer = useCallback((items) => {
+    setNotifications(
+      (items || []).map((n) => ({
+        id: n._id || crypto.randomUUID?.() || String(Date.now()),
+        read: n.isRead ?? n.read ?? false,
+        createdAt: n.createdAt || new Date().toISOString(),
+        title: n.title || "Notification",
+        message: n.text || n.message || "",
+        raw: n, // keep original object if you need it
+      }))
+    );
+  }, []);
+
+  // 👉 Use this for new notifications (e.g. from socket)
   const addNotification = useCallback((payload) => {
-    // payload: { type, title, message, entityType, entityId, meta }
     const id = crypto.randomUUID?.() || String(Date.now());
     setNotifications((prev) => [
       {
         id,
         read: false,
-        createdAt: new Date().toISOString(),
-        ...payload,
+        createdAt: payload.createdAt || new Date().toISOString(),
+        title: payload.title || "Notification",
+        message: payload.message || "",
+        raw: payload.raw || null,
+        type: payload.type || "system",
       },
       ...prev,
     ]);
@@ -76,8 +92,9 @@ export function NotificationProvider({ children }) {
       markAsRead,
       markAllAsRead,
       removeNotification,
+      setFromServer, // 👈 expose this
     };
-  }, [notifications, addNotification, markAsRead, markAllAsRead, removeNotification]);
+  }, [notifications, addNotification, markAsRead, markAllAsRead, removeNotification, setFromServer]);
 
   return (
     <NotificationContext.Provider value={value}>
