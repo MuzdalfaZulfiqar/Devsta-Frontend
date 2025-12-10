@@ -127,7 +127,7 @@ export default function DashboardCard({
           className={`mt-4 px-5 py-2 rounded-xl font-semibold transition-all duration-200 flex items-center justify-center gap-2
             ${completed
               ? "bg-white text-primary border border-gray-300 dark:border-gray-600 hover:bg-primary hover:text-white"
-              : "bg-yellow text-white hover:bg-primary/90 shadow-sm"
+              : "bg-yellow-600 text-white hover:bg-primary/90 shadow-sm"
             }`}
         >
           {completed && <CheckCircle className="inline w-4 h-4 text-green-500" />}
