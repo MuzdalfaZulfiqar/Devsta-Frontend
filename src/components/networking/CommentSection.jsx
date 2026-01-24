@@ -1,6 +1,13 @@
 import { useEffect, useState } from "react";
 import CommentItem from "./CommentItem";
-import { listComments, addComment, updateComment, deleteComment } from "../../api/post";
+import {
+  listComments,
+  addComment,
+  updateComment,
+  deleteComment,
+  toggleHideComment,
+} from "../../api/post";
+
 
 export default function CommentSection({ postId, currentUserId, postAuthorId, setCommentsCount }) {
   const [comments, setComments] = useState([]);
@@ -63,6 +70,20 @@ export default function CommentSection({ postId, currentUserId, postAuthorId, se
       console.error("Failed to update comment:", err);
     }
   };
+const handleToggleHide = async (commentId, hidden) => {
+  try {
+    await toggleHideComment(postId, commentId, hidden);
+
+    // Remove from UI
+    setComments(prev => prev.filter(c => c._id !== commentId));
+
+    // Update PostCard count
+    setCommentsCount(prev => prev - 1); 
+  } catch (err) {
+    console.error("Failed to update comment visibility:", err);
+  }
+};
+
 
   if (loading) return <p className="text-gray-500 text-sm mt-2">Loading comments...</p>;
 
@@ -95,13 +116,15 @@ export default function CommentSection({ postId, currentUserId, postAuthorId, se
         <div className="flex flex-col gap-3">
           {comments.map(comment => (
             <CommentItem
-              key={comment._id}
-              comment={comment}
-              currentUserId={currentUserId}
-              postAuthorId={postAuthorId}
-              onDelete={handleDelete}
-              onUpdate={handleUpdate}
-            />
+  key={comment._id}
+  comment={comment}
+  currentUserId={currentUserId}
+  postAuthorId={postAuthorId}
+  onDelete={handleDelete}
+  onUpdate={handleUpdate}
+  onToggleHide={handleToggleHide}
+/>
+
           ))}
         </div>
       )}

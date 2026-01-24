@@ -16,6 +16,7 @@ import {
   unlikePost,
   updatePost,
   deletePost,
+   listComments,
 } from "../../api/post";
 import SuccessModal from "../SuccessModal";
 import ErrorModal from "../ErrorModal";
@@ -48,7 +49,9 @@ export default function PostCard({
   const [liked, setLiked] = useState(likedByCurrentUser);
   const [animating, setAnimating] = useState(false);
   const [loadingLike, setLoadingLike] = useState(false);
-  const [commentsCountState, setCommentsCountState] = useState(commentsCount);
+  // const [commentsCountState, setCommentsCountState] = useState(commentsCount);
+  const [commentsCountState, setCommentsCountState] = useState(0); // start at 0
+
   const [successModalOpen, setSuccessModalOpen] = useState(false);
   const [errorModalOpen, setErrorModalOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -69,32 +72,6 @@ export default function PostCard({
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
 
-  /* ---------- Sync post → local edit state ---------- */
-  //   useEffect(() => {
-  //     setEditedText(post.text || "");
-  //     setVisibleMedia(post.mediaUrls || []);
-  //   }, [post]);
-
-  /* ---------- Like handling ---------- */
-  //   const handleLikeToggle = async () => {
-  //     if (loadingLike) return;
-  //     const willLike = !liked;
-  //     setLiked(willLike);
-  //     setLikes((c) => (willLike ? c + 1 : c - 1));
-  //     setAnimating(true);
-  //     setLoadingLike(true);
-  //     try {
-  //       if (willLike) await likePost(post._id);
-  //       else await unlikePost(post._id);
-  //     } catch (err) {
-  //       console.error("Like/unlike failed:", err);
-  //       setLiked(!willLike);
-  //       setLikes((c) => (willLike ? c - 1 : c + 1));
-  //     } finally {
-  //       setLoadingLike(false);
-  //       setTimeout(() => setAnimating(false), 300);
-  //     }
-  //   };
   const handleLikeToggle = async () => {
     if (loadingLike) return;
 
@@ -134,6 +111,20 @@ export default function PostCard({
       setTimeout(() => setAnimating(false), 300);
     }
   };
+
+  useEffect(() => {
+  const fetchCommentsCount = async () => {
+    try {
+      const res = await listComments(post._id, 1, 1); // fetch 1 comment, total count is in res.total
+      setCommentsCountState(res.total || 0);           // total visible comments
+    } catch (err) {
+      console.error("Failed to fetch comments count", err);
+    }
+  };
+
+  fetchCommentsCount();
+}, [post._id]);
+
   /* ---------- Edit handling ---------- */
   const handleFileSelect = (e) => {
     const files = Array.from(e.target.files);
@@ -152,51 +143,6 @@ export default function PostCard({
     setEditedMediaFiles(prev => prev.filter((_, i) => i !== index));
     setVisibleMedia(prev => prev.filter((_, i) => i !== index));
   };
-
-  //   const handleSaveEdit = async () => {
-  //     if (!editedText.trim() && editedMediaFiles.length === 0) return;
-
-  //     try {
-  //       setSavingEdit(true);
-  //       const formData = new FormData();
-  //       formData.append("text", editedText);
-  //       editedMediaFiles.forEach((f) => formData.append("media", f));
-
-  //       const updatedPostRes = await updatePost(post._id, formData);
-  //       const updatedPost = updatedPostRes?.post || {};
-
-  //       const backendMediaUrls = Array.isArray(updatedPost.mediaUrls)
-  //         ? updatedPost.mediaUrls
-  //         : [];
-
-  //       // local preview URLs for newly added files
-  //       const localMediaUrls = editedMediaFiles.map((f) =>
-  //         typeof f === "string" ? f : URL.createObjectURL(f)
-  //       );
-
-  //       const combined = [...backendMediaUrls, ...localMediaUrls];
-
-  //       setVisibleMedia(combined);
-  //       setEditedText(updatedPost.text || editedText);
-  //       setEditedMediaFiles([]);
-  //       setIsEditing(false);
-
-  //       if (typeof onEditPost === "function") {
-  //         onEditPost({
-  //   ...updatedPost,
-  //   mediaUrls: backendMediaUrls,
-  //   text: editedText,  // ← USE editedText, NOT updatedPost.text
-  // });
-  //       }
-  //     } catch (err) {
-  //       console.error("Failed to update post:", err);
-  //       setErrorMessage(err?.message || "Failed to update post.");
-  //       setErrorModalOpen(true);
-  //     } finally {
-  //       setSavingEdit(false);
-  //     }
-  //   };
-
   const handleSaveEdit = async () => {
     if (!editedText.trim() && editedMediaFiles.length === 0 && deletedMediaUrls.length === 0) return;
 
@@ -297,6 +243,21 @@ export default function PostCard({
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, [lightboxOpen]);
+
+
+  const toggleComments = async () => {
+  setShowComments(prev => !prev);
+
+  if (!showComments) { // only fetch when opening
+    try {
+      const res = await listComments(post._id, 1, 20); // fetch first 20 visible comments
+      setCommentsCountState(res.total || 0);          // update count
+    } catch (err) {
+      console.error("Failed to fetch comments:", err);
+    }
+  }
+};
+
 
   /* ---------- Render ---------- */
   return (
@@ -549,9 +510,10 @@ export default function PostCard({
         </div>
 
         <div
-          className="flex items-center gap-2 px-3 py-1.5 rounded-full cursor-pointer hover:bg-primary/10 transition-colors"
-          onClick={() => setShowComments((v) => !v)}
-        >
+  className="flex items-center gap-2 px-3 py-1.5 rounded-full cursor-pointer hover:bg-primary/10 transition-colors"
+  onClick={toggleComments}
+>
+
           <FiMessageCircle className="text-gray-700" />
           <span className="text-gray-700 font-semibold text-sm">
             {commentsCountState} Comment
