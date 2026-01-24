@@ -21,7 +21,7 @@ export default function ResumeStep({ formData, setFormData, nextStep, prevStep, 
       <div>
         {formData.resume ? (
           <div className="flex items-center justify-between gap-4 border border-[#086972] rounded-lg px-3 py-2 bg-transparent">
-            <p className="text-white truncate">{formData.resume.name}</p>
+            <p className="text-black truncate">{formData.resume.name}</p>
             <button
               type="button"
               onClick={onDeleteResume}

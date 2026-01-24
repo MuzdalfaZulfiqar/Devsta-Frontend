@@ -180,3 +180,18 @@ export async function deleteComment(postId, commentId) {
   if (!res.ok) throw new Error("Failed to delete comment");
   return await res.json();
 }
+
+
+export async function toggleHideComment(postId, commentId, hidden) {
+  const res = await fetch(
+    `${BACKEND_URL}/api/posts/${postId}/comments/${commentId}/hide`,
+    {
+      method: "PUT",
+      headers: getHeaders(true),
+      body: JSON.stringify({ hidden }),
+    }
+  );
+
+  if (!res.ok) throw new Error("Failed to update comment visibility");
+  return await res.json();
+}

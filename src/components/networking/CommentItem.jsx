@@ -1,14 +1,27 @@
 import React, { useState } from "react";
 import DevstaAvatar from "../dashboard/DevstaAvatar";
-import { FiEdit, FiTrash2, FiCheck, FiX } from "react-icons/fi";
+import {
+  FiEdit,
+  FiTrash2,
+  FiCheck,
+  FiX,
+  FiMoreVertical,
+  FiEyeOff,
+} from "react-icons/fi";
 
-export default function CommentItem({ comment, currentUserId, postAuthorId, onDelete, onUpdate }) {
+
+
+export default function CommentItem({ comment, currentUserId, postAuthorId, onDelete, onUpdate,onToggleHide,  }) {
   const { author, text, createdAt, _id } = comment;
   const [isEditing, setIsEditing] = useState(false);
   const [editedText, setEditedText] = useState(text);
+  const [menuOpen, setMenuOpen] = useState(false);
+
 
   const isCommentAuthor = currentUserId === author._id;
-  const isPostAuthor = author._id === postAuthorId;
+  const isPostAuthor = currentUserId === postAuthorId;
+  const isCommentByPostAuthor = author._id === postAuthorId;
+
 
   const handleSave = () => {
     if (editedText.trim() && onUpdate) {
@@ -42,17 +55,18 @@ export default function CommentItem({ comment, currentUserId, postAuthorId, onDe
         <div className="flex items-center justify-between mb-2 flex-wrap">
           <div className="flex items-center gap-2">
             <span className="text-gray-900 font-semibold text-sm">{author.name}</span>
-            {isPostAuthor && (
-              <span className="text-[10px] bg-primary text-white px-2 py-0.5 rounded-full">
-                Author
-              </span>
-            )}
+            {isCommentByPostAuthor && (
+  <span className="text-[10px] bg-primary text-white px-2 py-0.5 rounded-full">
+    Author
+  </span>
+)}
+
             <span className="text-gray-500 font-normal text-xs">
               • {formatTimeAgo(createdAt)}
             </span>
           </div>
 
-          {isCommentAuthor && !isEditing && (
+         {/* {isCommentAuthor && !isEditing && (
             <div className="flex gap-2 text-gray-500">
               <button
                 onClick={() => setIsEditing(true)}
@@ -69,7 +83,59 @@ export default function CommentItem({ comment, currentUserId, postAuthorId, onDe
                 <FiTrash2 size={16} />
               </button>
             </div>
-          )}
+          )} */}
+
+          {(isCommentAuthor || isPostAuthor) && !isEditing && (
+  <div className="relative">
+    <button
+      onClick={() => setMenuOpen(v => !v)}
+      className="p-1 hover:text-primary rounded-full"
+    >
+      <FiMoreVertical size={16} />
+    </button>
+
+    {menuOpen && (
+      <div className="absolute right-0 mt-1 bg-white border rounded-lg shadow-md z-10 min-w-[120px]">
+        {isCommentAuthor && (
+          <button
+            onClick={() => {
+              setIsEditing(true);
+              setMenuOpen(false);
+            }}
+            className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-100 w-full"
+          >
+            <FiEdit size={14} /> Edit
+          </button>
+        )}
+
+        {(isCommentAuthor || isPostAuthor) && (
+          <button
+            onClick={() => {
+              onDelete(_id);
+              setMenuOpen(false);
+            }}
+            className="flex items-center gap-2 px-3 py-2 text-sm text-red-500 hover:bg-gray-100 w-full"
+          >
+            <FiTrash2 size={14} /> Delete
+          </button>
+        )}
+
+        {isPostAuthor && !isCommentAuthor && (
+          <button
+            onClick={() => {
+              onToggleHide(_id, true);
+              setMenuOpen(false);
+            }}
+            className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-100 w-full"
+          >
+            <FiEyeOff size={14} /> Hide
+          </button>
+        )}
+      </div>
+    )}
+  </div>
+)}
+
         </div>
 
         {/* Comment text / edit input */}
