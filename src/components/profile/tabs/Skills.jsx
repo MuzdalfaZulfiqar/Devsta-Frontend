@@ -201,7 +201,7 @@ export default function Skills({ user }) {
           {/* TOP SKILLS CARD */}
           <div className="flex-1 bg-white dark:bg-gray-900 border border-primary rounded-lg p-6 shadow-sm hover:shadow-md transition flex flex-col gap-4">
             <p className="text-gray-500 dark:text-gray-400 text-sm font-medium mb-2">
-              Top Skills (You added)
+              Top Skills
             </p>
 
             {topSkills.length > 0 ? (
@@ -225,7 +225,7 @@ export default function Skills({ user }) {
           {/* AI VALIDATED SKILLS CARD */}
           <div className="flex-1 bg-white dark:bg-gray-900 border border-primary rounded-lg p-6 shadow-sm hover:shadow-md transition flex flex-col gap-4">
             <p className="text-gray-500 dark:text-gray-400 text-sm font-medium mb-2">
-              AI Validated Skills (from Resume/GitHub/Test)
+              AI Validated Skills
             </p>
 
             {aiValidatedSkills.length > 0 ? (
