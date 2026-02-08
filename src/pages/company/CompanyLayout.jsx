@@ -84,9 +84,6 @@ import CompanyProfile from "./CompanyProfile";
 export default function CompanyLayout() {
   return (
     <Routes>
-      {/* Public routes */}
-      <Route path="login" element={<CompanyLogin />} />
-      <Route path="register" element={<CompanyRegister />} />
 
       {/* Protected routes */}
       <Route

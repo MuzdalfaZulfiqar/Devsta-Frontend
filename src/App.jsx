@@ -337,6 +337,24 @@ function App() {
             </CompanyAuthProvider>
           } />
 
+
+           <Route
+            path="/company/login"
+            element={
+              <CompanyAuthProvider>
+                <CompanyLogin />
+              </CompanyAuthProvider>
+            }
+          />
+          <Route
+            path="/company/register"
+            element={
+              <CompanyAuthProvider>
+                <CompanyRegister />
+              </CompanyAuthProvider>
+            }
+          />
+
           {/* Fallback */}
           <Route path="*" element={<Signup />} />
         </Routes>
