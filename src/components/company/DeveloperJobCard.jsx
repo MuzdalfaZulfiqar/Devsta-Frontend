@@ -1,5 +1,3 @@
-
-
 // src/components/company/DeveloperJobCard.jsx
 import React from 'react';
 import {
@@ -58,6 +56,7 @@ export default function DeveloperJobCard({ job, onClick }) {
       else if (periodLower === 'month') unitText = 'per month';
       else if (periodLower === 'year') unitText = 'per year';
       else if (periodLower === 'project') unitText = 'project';
+      else if (periodLower === 'stipend') unitText = 'stipend';
       else unitText = `per ${period}`;
     }
 

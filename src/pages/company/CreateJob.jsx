@@ -5,6 +5,7 @@ import SuccessModal from "../../components/SuccessModal";
 import ErrorModal from "../../components/ErrorModal";
 import CreatableSelect from "react-select/creatable";
 import Select from "react-select";
+import { MessageCircleWarning } from "lucide-react";
 
 // ✅ Shared dropdown styles
 const selectStyles = {
@@ -175,6 +176,25 @@ export default function CreateJob() {
     e.preventDefault();
     setLoading(true);
 
+    // ✅ Final compulsory fields check
+if (
+  !form.title ||
+  !form.description ||
+  !form.requiredSkills.length ||
+  !form.experienceLevel ||
+  !form.employmentType ||
+  !form.jobMode ||
+  !form.currency ||
+  !form.salaryPeriod ||
+  !form.requirements.length ||
+  !form.benefits.length
+) {
+  setModalMessage("All fields are compulsory. Please complete the form.");
+  setErrorOpen(true);
+  setLoading(false);
+  return;
+}
+
     // ✅ Validate Job Mode
     if (!form.jobMode?.value) {
       setModalMessage("Please select job mode.");
@@ -254,11 +274,17 @@ export default function CreateJob() {
     <CompanyDashboardLayout>
       <div className="max-w-3xl mx-auto">
         <div className="bg-white border rounded-2xl shadow-sm p-8">
-          <h1 className="text-3xl font-bold mb-6">Post a New Job</h1>
+          {/* <h1 className="text-3xl font-bold mb-6">Post a New Job</h1> */}
+          <h1 className="text-3xl font-bold mb-2">Post a New Job</h1>
+
+          <div className="mb-6 rounded-lg border border-blue-300 bg-blue-50 px-4 py-3 text-sm text-blue-700">
+            <MessageCircleWarning className="inline-block mr-2" size={20} />
+            All fields are mandatory. Please complete every section before posting the job.
+          </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <input
-              placeholder="Job Title"
+              placeholder="Job Title *"
               className="input"
               value={form.title}
               onChange={(e) => setForm({ ...form, title: e.target.value })}
@@ -266,7 +292,7 @@ export default function CreateJob() {
             />
 
             <textarea
-              placeholder="Job Description"
+              placeholder="Job Description *"
               className="input h-32"
               value={form.description}
               onChange={(e) => setForm({ ...form, description: e.target.value })}
@@ -275,14 +301,14 @@ export default function CreateJob() {
 
             <CreatableSelect
               isMulti
-              placeholder="Required Skills"
+              placeholder="Required Skills *"
               styles={selectStyles}
               value={form.requiredSkills}
               onChange={(v) => setForm({ ...form, requiredSkills: v })}
             />
 
             <Select
-              placeholder="Select Experience"
+              placeholder="Select Experience *"
               styles={selectStyles}
               options={experienceOptions}
               value={form.experienceLevel}
@@ -290,7 +316,7 @@ export default function CreateJob() {
             />
 
             <Select
-              placeholder="Select Employment Type"
+              placeholder="Select Employment Type *"
               styles={selectStyles}
               options={employmentOptions}
               value={form.employmentType}
@@ -299,7 +325,7 @@ export default function CreateJob() {
 
             {/* ---------------- JOB MODE ---------------- */}
             <Select
-              placeholder="Select Job Mode"
+              placeholder="Select Job Mode *"
               styles={selectStyles}
               options={jobModeOptions}
               value={form.jobMode}
@@ -312,7 +338,7 @@ export default function CreateJob() {
             {(form.jobMode?.value === "hybrid" || form.jobMode?.value === "onsite") && (
               <div className="relative mt-4" ref={locationBoxRef}>
                 <input
-                  placeholder="Search or type location"
+                  placeholder="Search or type location *"
                   className="input"
                   value={typingLocation}
                   onChange={(e) => {
@@ -362,7 +388,7 @@ export default function CreateJob() {
               {/* Currency */}
               <div className="w-32">
                 <Select
-                  placeholder="Currency"
+                  placeholder="Currency *"
                   styles={selectStyles}
                   options={[
                     { value: "USD", label: "USD" },
@@ -378,13 +404,13 @@ export default function CreateJob() {
 
               {/* Min/Max Salary */}
               <input
-                placeholder="Min Salary"
+                placeholder="Min Salary *"
                 className="input flex-1"
                 value={form.salaryMin}
                 onChange={(e) => setForm({ ...form, salaryMin: e.target.value })}
               />
               <input
-                placeholder="Max Salary"
+                placeholder="Max Salary *"
                 className="input flex-1"
                 value={form.salaryMax}
                 onChange={(e) => setForm({ ...form, salaryMax: e.target.value })}
@@ -392,7 +418,7 @@ export default function CreateJob() {
             </div>
 
             <Select
-              placeholder="Salary Period"
+              placeholder="Salary Period *"
               styles={selectStyles}
               options={salaryPeriodOptions}
               value={form.salaryPeriod}
@@ -402,14 +428,14 @@ export default function CreateJob() {
 
             <CreatableSelect
               isMulti
-              placeholder="Job Requirements (press enter)"
+              placeholder="Job Requirements (press enter to add new one) *"
               styles={selectStyles}
               value={form.requirements}
               onChange={(v) => setForm({ ...form, requirements: v })}
             />
             <CreatableSelect
               isMulti
-              placeholder="What you will get (benefits, perks)"
+              placeholder="What benefits/perks will employees get? (press enter to add new one) *"
               styles={selectStyles}
               value={form.benefits}
               onChange={(v) => setForm({ ...form, benefits: v })}
