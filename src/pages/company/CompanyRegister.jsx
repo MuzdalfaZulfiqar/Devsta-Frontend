@@ -73,7 +73,7 @@ export default function CompanyRegister() {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                Company name
+                Company name *
               </label>
               <div className="relative">
                 <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
@@ -91,7 +91,7 @@ export default function CompanyRegister() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                Business email
+                Business email *
               </label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
@@ -109,7 +109,7 @@ export default function CompanyRegister() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                Password
+                Password *
               </label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
@@ -167,7 +167,7 @@ export default function CompanyRegister() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                Website (optional)
+                Website
               </label>
               <div className="relative">
                 <Globe className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />

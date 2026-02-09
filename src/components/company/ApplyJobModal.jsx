@@ -135,7 +135,7 @@ export default function ApplyJobModal({ job, onClose, onApplied }) {
 
           {/* Name */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
             <input
               type="text"
               name="name"
@@ -148,7 +148,7 @@ export default function ApplyJobModal({ job, onClose, onApplied }) {
 
           {/* Email */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
             <input
               type="email"
               name="email"
@@ -161,19 +161,20 @@ export default function ApplyJobModal({ job, onClose, onApplied }) {
 
           {/* Phone */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Phone *</label>
             <input
               type="tel"
               name="phone"
               value={formData.phone}
               onChange={handleChange}
+              required
               className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-primary"
             />
           </div>
 
           {/* Resume */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Resume</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Resume *</label>
 
             {(resumeUrl || resumeFile) && (
               <p className="text-sm mb-1">
