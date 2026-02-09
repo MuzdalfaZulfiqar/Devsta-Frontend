@@ -12,7 +12,6 @@ import {
 } from "react-icons/md";
 import { getJobById } from "../../api/company/publicJobs";
 import ApplyJobModal from "./ApplyJobModal";
-import { showToast } from "../../utils/toast";
 // 🔴 NEW: Import useAuth to get token
 import { useAuth } from "../../context/AuthContext";
 

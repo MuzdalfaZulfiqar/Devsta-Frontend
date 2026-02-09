@@ -10,7 +10,7 @@ import { getJobsByCompany, getCompanyById } from "../../api/company/publicJobs";
 import { useNavigate } from "react-router-dom";
 import MyApplicationsPage from "./MyApplicationsPage";
 export default function JobsPage() {
-    const { user } = useAuth();
+    const { user, token } = useAuth();
     const navigate = useNavigate();
 
     const [activeTab, setActiveTab] = useState("all");
@@ -33,7 +33,7 @@ export default function JobsPage() {
             const fullCompany = await getCompanyById(company._id);
 
             // 2️⃣ Fetch company jobs
-            const jobs = await getJobsByCompany(company._id);
+            const jobs = await getJobsByCompany(company._id, token);
 
             // 3️⃣ Set state FIRST
             setSelectedCompany(fullCompany);
@@ -139,7 +139,6 @@ export default function JobsPage() {
                     <CompanyInfoCard
                         company={selectedCompany}
                         activeJobs={companyActiveJobs}
-
                         onClose={handleClosePanel}
                         onViewJob={(jobId) => {
                             setSelectedJobId(jobId);
