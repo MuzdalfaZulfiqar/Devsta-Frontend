@@ -11,7 +11,8 @@ export const getActiveJobs = async (params = {}, token) => {
     headers: token
       ? { Authorization: `Bearer ${token}` }
       : {},
-  });
+  }
+  );
 
   const json = await res.json();
 
@@ -40,22 +41,32 @@ export const getJobById = async (jobId, token) => {
 };
 
 /* ─────────────── GET JOBS BY COMPANY ─────────────── */
-export const getJobsByCompany = async (companyId) => {
-  const res = await fetch(`${BASE_URL}?companyId=${companyId}`);
+// export const getJobsByCompany = async (companyId) => {
+//   const res = await fetch(`${BASE_URL}?companyId=${companyId}`);
+//   const json = await res.json();
+
+//   if (!res.ok) {
+//     throw new Error(json.message || "Failed to fetch company jobs");
+//   }
+
+//   return json;
+// };
+
+export const getJobsByCompany = async (companyId, token) => {
+  const res = await fetch(`${BASE_URL}?companyId=${companyId}`, {
+    headers: token
+      ? { Authorization: `Bearer ${token}` }
+      : {},
+  });
+
   const json = await res.json();
-
-  if (!res.ok) {
-    throw new Error(json.message || "Failed to fetch company jobs");
-  }
-
+  if (!res.ok) throw new Error(json.message || "Failed to fetch company jobs");
   return json;
 };
 
 /* ─────────────── GET COMPANY PUBLIC PROFILE ─────────────── */
 export const getCompanyById = async (companyId) => {
-  const res = await fetch(
-    `${BACKEND_URL}/api/company/publicjobs/company/${companyId}`
-  );
+  const res = await fetch(`${BASE_URL}/company/${companyId}`);
 
   const json = await res.json();
 
@@ -65,5 +76,6 @@ export const getCompanyById = async (companyId) => {
 
   return json;
 };
+
 
 
