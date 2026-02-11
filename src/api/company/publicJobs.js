@@ -1,0 +1,81 @@
+// src/api/company/publicJobs.js
+import { BACKEND_URL } from "../../../config";
+
+const BASE_URL = `${BACKEND_URL}/api/developer/publicjobs`;
+
+/* ─────────────── GET ACTIVE JOBS (with optional auth) ─────────────── */
+export const getActiveJobs = async (params = {}, token) => {
+  const query = new URLSearchParams(params).toString();
+
+  const res = await fetch(`${BASE_URL}?${query}`, {
+    headers: token
+      ? { Authorization: `Bearer ${token}` }
+      : {},
+  }
+  );
+
+  const json = await res.json();
+
+  if (!res.ok) {
+    throw new Error(json.message || "Failed to fetch jobs");
+  }
+
+  return json;
+};
+
+/* ─────────────── GET SINGLE JOB (supports hasApplied) ─────────────── */
+export const getJobById = async (jobId, token) => {
+  const res = await fetch(`${BASE_URL}/${jobId}`, {
+    headers: token
+      ? { Authorization: `Bearer ${token}` }
+      : {},
+  });
+
+  const json = await res.json();
+
+  if (!res.ok) {
+    throw new Error(json.message || "Failed to fetch job");
+  }
+
+  return json;
+};
+
+/* ─────────────── GET JOBS BY COMPANY ─────────────── */
+// export const getJobsByCompany = async (companyId) => {
+//   const res = await fetch(`${BASE_URL}?companyId=${companyId}`);
+//   const json = await res.json();
+
+//   if (!res.ok) {
+//     throw new Error(json.message || "Failed to fetch company jobs");
+//   }
+
+//   return json;
+// };
+
+export const getJobsByCompany = async (companyId, token) => {
+  const res = await fetch(`${BASE_URL}?companyId=${companyId}`, {
+    headers: token
+      ? { Authorization: `Bearer ${token}` }
+      : {},
+  });
+
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.message || "Failed to fetch company jobs");
+  return json;
+};
+
+/* ─────────────── GET COMPANY PUBLIC PROFILE ─────────────── */
+export const getCompanyById = async (companyId) => {
+  const res = await fetch(`${BASE_URL}/company/${companyId}`);
+
+  const json = await res.json();
+
+  if (!res.ok) {
+    throw new Error(json.message || "Failed to fetch company");
+  }
+
+  return json;
+};
+
+
+
