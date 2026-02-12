@@ -1,6 +1,6 @@
+// src/components/networking/AllUsersWithProfile.jsx
 import React, { useEffect, useState } from "react";
 import { Outlet, useNavigate, useParams } from "react-router-dom";
-import DeveloperFilters from "./DeveloperFilters";
 import DevelopersList from "./DevelopersList";
 import { fetchConnections } from "../../api/connections";
 import { ArrowLeft } from "lucide-react";
