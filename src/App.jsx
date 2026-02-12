@@ -34,6 +34,7 @@ import CompanyProtectedRoute from "./components/company/CompanyProtectedRoute";
 import JobsPage from "./pages/company/JobsPage";
 import MyApplicationsPage from "./pages/company/MyApplicationsPage";
 import FirstStageApplicantsPage from "./pages/company/FirstStageApplicantsPage";
+import ResumePage from "./pages/User/ResumePage";
 
 function App() {
   const { user, showWelcome, setShowWelcome } = useAuth();
@@ -133,6 +134,14 @@ function App() {
             }
           />
 
+          <Route
+            path="/dashboard/portfolio"
+            element={
+              <ProtectedRoute requireOnboarding={true}>
+                <ResumePage />
+              </ProtectedRoute>
+            }
+          />
 
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/verify-otp" element={<VerifyOtp />} />

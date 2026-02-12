@@ -17,22 +17,54 @@ export default function MyJobs() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editJob, setEditJob] = useState(null);
   const [editModalOpen, setEditModalOpen] = useState(false);
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState(null);
+  const LIMIT = 6;
 
+  // const loadJobs = async () => {
+  //   setLoading(true);
+  //   try {
+  //     const data = await getMyJobs();
+  //     setJobs(data);
+  //   } catch (err) {
+  //     console.error("Failed to load jobs", err);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
   const loadJobs = async () => {
     setLoading(true);
     try {
-      const data = await getMyJobs();
-      setJobs(data);
+      const data = await getMyJobs({
+        page,
+        limit: LIMIT,
+        search: searchQuery,
+        status: filter,
+        sort: sortOrder.value,
+      });
+
+      setJobs(data.jobs);
+      setPagination(data.pagination);
     } catch (err) {
-      console.error("Failed to load jobs", err);
+      showToast("Failed to load jobs ❌");
     } finally {
       setLoading(false);
     }
   };
 
+
+  // useEffect(() => {
+  //   loadJobs();
+  // }, []);
+
   useEffect(() => {
     loadJobs();
-  }, []);
+  }, [page, searchQuery, filter, sortOrder]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [searchQuery, filter, sortOrder]);
+
 
   const handleToggle = async (id) => {
     try {
@@ -69,25 +101,7 @@ export default function MyJobs() {
   };
 
   // Filter + search + sort
-  const filteredJobs = jobs
-    .filter((job) => {
-      if (filter === "all") return true;
-      if (filter === "active") return job.isActive;
-      if (filter === "closed") return !job.isActive;
-      return true;
-    })
-    .filter((job) => {
-      const query = searchQuery.toLowerCase();
-      return (
-        job.title.toLowerCase().includes(query) ||
-        (job.location && job.location.toLowerCase().includes(query)) ||
-        (job.requiredSkills && job.requiredSkills.some(skill => skill.toLowerCase().includes(query)))
-      );
-    })
-    .sort((a, b) => {
-      if (sortOrder.value === "latest") return new Date(b.createdAt) - new Date(a.createdAt);
-      return new Date(a.createdAt) - new Date(b.createdAt);
-    });
+
 
   // react-select styles
   const selectStyles = {
@@ -114,6 +128,7 @@ export default function MyJobs() {
     { value: "oldest", label: "Oldest" },
   ];
 
+
   return (
     <CompanyDashboardLayout>
       <div className="max-w-6xl mx-auto py-8">
@@ -127,11 +142,10 @@ export default function MyJobs() {
               <button
                 key={f}
                 onClick={() => setFilter(f)}
-                className={`px-4 py-2 rounded-full font-medium ${
-                  filter === f
-                    ? "bg-primary text-white"
-                    : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200"
-                } transition`}
+                className={`px-4 py-2 rounded-full font-medium ${filter === f
+                  ? "bg-primary text-white"
+                  : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200"
+                  } transition`}
               >
                 {f.charAt(0).toUpperCase() + f.slice(1)}
               </button>
@@ -164,11 +178,11 @@ export default function MyJobs() {
         {/* Jobs List */}
         {loading ? (
           <p className="text-gray-500 dark:text-gray-400">Loading jobs...</p>
-        ) : filteredJobs.length === 0 ? (
+        ) : jobs.length === 0 ? (
           <p className="text-gray-500 dark:text-gray-400">No jobs found.</p>
         ) : (
           <div className="space-y-6">
-            {filteredJobs.map((job) => (
+            {jobs.map((job) => (
               <JobCard
                 key={job._id}
                 job={job}
@@ -179,6 +193,41 @@ export default function MyJobs() {
             ))}
           </div>
         )}
+
+
+        {pagination && pagination.totalPages > 1 && (
+          <div className="flex justify-center items-center gap-2 mt-8">
+            <button
+              disabled={page === 1}
+              onClick={() => setPage((p) => p - 1)}
+              className="px-4 py-2 rounded-lg bg-gray-200 disabled:opacity-50"
+            >
+              Prev
+            </button>
+
+            {[...Array(pagination.totalPages)].map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setPage(i + 1)}
+                className={`px-4 py-2 rounded-lg ${page === i + 1
+                  ? "bg-primary text-white"
+                  : "bg-gray-200"
+                  }`}
+              >
+                {i + 1}
+              </button>
+            ))}
+
+            <button
+              disabled={page === pagination.totalPages}
+              onClick={() => setPage((p) => p + 1)}
+              className="px-4 py-2 rounded-lg bg-gray-200 disabled:opacity-50"
+            >
+              Next
+            </button>
+          </div>
+        )}
+
 
         {/* Confirm Delete Modal */}
         <ConfirmModal

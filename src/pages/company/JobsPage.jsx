@@ -33,11 +33,13 @@ export default function JobsPage() {
             const fullCompany = await getCompanyById(company._id);
 
             // 2️⃣ Fetch company jobs
-            const jobs = await getJobsByCompany(company._id, token);
+            // const jobs = await getJobsByCompany(company._id, token);
+
+            const response = await getJobsByCompany(company._id, token);
 
             // 3️⃣ Set state FIRST
             setSelectedCompany(fullCompany);
-            setCompanyActiveJobs(jobs);
+          setCompanyActiveJobs(Array.isArray(response.jobs) ? response.jobs : []);
 
             // 4️⃣ THEN open panel
             setShowCompanyPanel(true);

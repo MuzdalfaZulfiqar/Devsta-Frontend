@@ -4,21 +4,62 @@ import { BACKEND_URL } from "../../../config";
 const BASE_URL = `${BACKEND_URL}/api/developer/publicjobs`;
 
 /* ─────────────── GET ACTIVE JOBS (with optional auth) ─────────────── */
-export const getActiveJobs = async (params = {}, token) => {
-  const query = new URLSearchParams(params).toString();
+// export const getActiveJobs = async (params = {}, token) => {
+//   const query = new URLSearchParams(params).toString();
 
-  const res = await fetch(`${BASE_URL}?${query}`, {
-    headers: token
-      ? { Authorization: `Bearer ${token}` }
-      : {},
-  }
-  );
+//   const res = await fetch(`${BASE_URL}?${query}`, {
+//     headers: token
+//       ? { Authorization: `Bearer ${token}` }
+//       : {},
+//   }
+//   );
+
+//   const json = await res.json();
+
+//   if (!res.ok) {
+//     throw new Error(json.message || "Failed to fetch jobs");
+//   }
+
+//   return json;
+// };
+
+export const getActiveJobs = async (
+  {
+    page = 1,
+    limit = 6,
+    search = "",
+    companyId,
+    jobMode,
+    employmentType,
+    experienceLevel,
+    location,
+  } = {},
+  token
+) => {
+  const rawParams = {
+  page,
+  limit,
+  search,
+  companyId,
+  jobMode,
+  employmentType,
+  experienceLevel,
+  location,
+};
+
+const params = new URLSearchParams(
+  Object.entries(rawParams).filter(
+    ([_, v]) => v !== undefined && v !== "" && v !== null
+  )
+);
+
+
+  const res = await fetch(`${BASE_URL}?${params}`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
 
   const json = await res.json();
-
-  if (!res.ok) {
-    throw new Error(json.message || "Failed to fetch jobs");
-  }
+  if (!res.ok) throw new Error(json.message);
 
   return json;
 };

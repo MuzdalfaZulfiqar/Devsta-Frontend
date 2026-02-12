@@ -1,4 +1,106 @@
-// src/pages/developer/MyApplicationsPage.jsx
+// // src/pages/developer/MyApplicationsPage.jsx
+// import { useEffect, useState } from "react";
+// import { useAuth } from "../../context/AuthContext";
+// import { getMyApplications } from "../../api/company/jobApplications";
+// import MyApplicationCard from "../../components/company/MyApplicationCard";
+// import { showToast } from "../../utils/toast";
+
+// export default function MyApplicationsPage({ onViewJob }) {
+//   const { token } = useAuth();
+
+//   const [applications, setApplications] = useState([]);
+//   const [filteredApps, setFilteredApps] = useState([]);
+//   const [loading, setLoading] = useState(true);
+//   const [search, setSearch] = useState("");
+
+//   // 🔹 Fetch applications
+//   useEffect(() => {
+//     (async () => {
+//       try {
+//         const data = await getMyApplications(token);
+//         setApplications(data);
+//         setFilteredApps(data);
+//       } catch (err) {
+//         showToast(err.message || "Failed to load applications");
+//       } finally {
+//         setLoading(false);
+//       }
+//     })();
+//   }, [token]);
+
+//   // 🔹 Apply search filter
+//   useEffect(() => {
+//     const timeout = setTimeout(() => {
+//       setFilteredApps(
+//         applications.filter((app) => {
+//           const { job } = app;
+//           return (
+//             !search ||
+//             job.title.toLowerCase().includes(search.toLowerCase()) ||
+//             job.company?.companyName.toLowerCase().includes(search.toLowerCase())
+//           );
+//         })
+//       );
+//     }, 200); // debounce
+
+//     return () => clearTimeout(timeout);
+//   }, [search, applications]);
+
+//   if (loading) {
+//     return (
+//       <div className="py-10 text-center">
+//         <p className="text-gray-500 text-sm animate-pulse">
+//           Loading your applications…
+//         </p>
+//       </div>
+//     );
+//   }
+
+//   if (applications.length === 0) {
+//     return (
+//       <div className="text-center py-16">
+//         <div className="mx-auto max-w-md">
+//           <h3 className="text-lg font-semibold text-gray-900">
+//             No applications yet
+//           </h3>
+//           <p className="mt-2 text-sm text-gray-500">
+//             When you apply to jobs, they’ll appear here so you can easily track them.
+//           </p>
+//         </div>
+//       </div>
+//     );
+//   }
+
+//   return (
+//     <div className="flex flex-col gap-5">
+//       {/* 🔍 Search input */}
+//       <input
+//         type="text"
+//         placeholder="Search jobs, company…"
+//         value={search}
+//         onChange={(e) => setSearch(e.target.value)}
+//         className="border rounded-lg px-4 py-2 w-full"
+//       />
+
+//       {/* 🔹 Applications grid */}
+//       {filteredApps.length === 0 ? (
+//         <p className="text-gray-500 text-sm mt-4">
+//           No applications match your search
+//         </p>
+//       ) : (
+//         <div className="grid gap-5 sm:grid-cols-2 lg:gap-6 mt-2">
+//           {filteredApps.map((app) => (
+//             <MyApplicationCard
+//               key={app._id}
+//               application={app}
+//               onViewJob={onViewJob}
+//             />
+//           ))}
+//         </div>
+//       )}
+//     </div>
+//   );
+// }
 import { useEffect, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { getMyApplications } from "../../api/company/jobApplications";
@@ -9,94 +111,111 @@ export default function MyApplicationsPage({ onViewJob }) {
   const { token } = useAuth();
 
   const [applications, setApplications] = useState([]);
-  const [filteredApps, setFilteredApps] = useState([]);
+  const [pagination, setPagination] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState("");
 
-  // 🔹 Fetch applications
+  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState(search);
+
+  const LIMIT = 6;
+
+  // 🔹 Debounce search input
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(search), 300);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  // 🔹 Fetch applications with pagination & debounced search
   useEffect(() => {
     (async () => {
       try {
-        const data = await getMyApplications(token);
-        setApplications(data);
-        setFilteredApps(data);
+        setLoading(true);
+        const data = await getMyApplications(
+          { page, limit: LIMIT, search: debouncedSearch },
+          token
+        );
+        setApplications(data.applications);
+        setPagination(data.pagination);
       } catch (err) {
         showToast(err.message || "Failed to load applications");
       } finally {
         setLoading(false);
       }
     })();
-  }, [token]);
-
-  // 🔹 Apply search filter
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      setFilteredApps(
-        applications.filter((app) => {
-          const { job } = app;
-          return (
-            !search ||
-            job.title.toLowerCase().includes(search.toLowerCase()) ||
-            job.company?.companyName.toLowerCase().includes(search.toLowerCase())
-          );
-        })
-      );
-    }, 200); // debounce
-
-    return () => clearTimeout(timeout);
-  }, [search, applications]);
-
-  if (loading) {
-    return (
-      <div className="py-10 text-center">
-        <p className="text-gray-500 text-sm animate-pulse">
-          Loading your applications…
-        </p>
-      </div>
-    );
-  }
-
-  if (applications.length === 0) {
-    return (
-      <div className="text-center py-16">
-        <div className="mx-auto max-w-md">
-          <h3 className="text-lg font-semibold text-gray-900">
-            No applications yet
-          </h3>
-          <p className="mt-2 text-sm text-gray-500">
-            When you apply to jobs, they’ll appear here so you can easily track them.
-          </p>
-        </div>
-      </div>
-    );
-  }
+  }, [page, debouncedSearch, token]);
 
   return (
     <div className="flex flex-col gap-5">
-      {/* 🔍 Search input */}
+      {/* 🔍 Search */}
       <input
         type="text"
         placeholder="Search jobs, company…"
         value={search}
-        onChange={(e) => setSearch(e.target.value)}
+        onChange={(e) => {
+          setPage(1);
+          setSearch(e.target.value);
+        }}
         className="border rounded-lg px-4 py-2 w-full"
       />
 
-      {/* 🔹 Applications grid */}
-      {filteredApps.length === 0 ? (
-        <p className="text-gray-500 text-sm mt-4">
-          No applications match your search
+      {/* 📦 Applications */}
+      {loading ? (
+        <p className="text-gray-500 text-sm animate-pulse py-10 text-center">
+          Loading your applications…
         </p>
-      ) : (
-        <div className="grid gap-5 sm:grid-cols-3 lg:gap-6 mt-2">
-          {filteredApps.map((app) => (
-            <MyApplicationCard
-              key={app._id}
-              application={app}
-              onViewJob={onViewJob}
-            />
-          ))}
+      ) : applications.length === 0 ? (
+        <div className="text-center py-16">
+          <h3 className="text-lg font-semibold">No applications yet</h3>
+          <p className="text-sm text-gray-500 mt-2">
+            When you apply to jobs, they’ll appear here.
+          </p>
         </div>
+      ) : (
+        <>
+          <div className="grid gap-5 sm:grid-cols-2 mt-2">
+            {applications.map((app) => (
+              <MyApplicationCard
+                key={app._id}
+                application={app}
+                onViewJob={onViewJob}
+              />
+            ))}
+          </div>
+
+          {/* 📄 Pagination */}
+          {pagination && pagination.totalPages > 1 && (
+            <div className="flex justify-center gap-2 pt-6">
+              <button
+                disabled={page === 1}
+                onClick={() => setPage((p) => p - 1)}
+                className="px-3 py-1 rounded bg-gray-200 disabled:opacity-50"
+              >
+                Prev
+              </button>
+
+              {Array.from({ length: pagination.totalPages }).map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setPage(i + 1)}
+                  className={`px-3 py-1 rounded ${
+                    page === i + 1 ? "bg-primary text-white" : "bg-gray-200"
+                  }`}
+                >
+                  {i + 1}
+                </button>
+              ))}
+
+              <button
+                disabled={page === pagination.totalPages}
+                onClick={() => setPage((p) => p + 1)}
+                className="px-3 py-1 rounded bg-gray-200 disabled:opacity-50"
+              >
+                Next
+              </button>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
