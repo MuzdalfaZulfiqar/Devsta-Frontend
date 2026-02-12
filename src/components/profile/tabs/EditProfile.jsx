@@ -137,6 +137,17 @@ const emptyExpForm = {
   description: "",
 };
 
+
+const emptyProjectForm = {
+  title: "",
+  description: "",
+  technologies: "",
+  projectUrl: "",
+  githubUrl: "",
+  startDate: "",
+  endDate: "",
+};
+
 export default function EditProfile({ user }) {
   const { token, setUser } = useAuth();
 
@@ -190,6 +201,9 @@ export default function EditProfile({ user }) {
   const [expForm, setExpForm] = useState(emptyExpForm);
   const [editingExpId, setEditingExpId] = useState(null);
 
+
+  const [projectForm, setProjectForm] = useState(emptyProjectForm);
+  const [editingProjectId, setEditingProjectId] = useState(null);
   const inputBoxClass =
     "mt-1 w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:outline-none bg-transparent text-gray-900 dark:text-white";
   const boxContainer =
@@ -546,6 +560,115 @@ export default function EditProfile({ user }) {
       setLoading(false);
     }
   };
+
+  /* ---------- handlers: Project ---------- */
+  const startAddProject = () => {
+    setEditingProjectId(null);
+    setProjectForm(emptyProjectForm);
+    setEditField("projects");
+  };
+
+
+  const startEditProject = (project) => {
+    setEditingProjectId(project._id);
+    setProjectForm({
+      title: project.title || "",
+      description: project.description || "",
+      technologies: project.techStack?.join(", ") || "",
+
+      projectUrl: project.projectUrl || "",
+      githubUrl: project.githubUrl || "",
+      startDate: project.startDate?.slice(0, 10) || "",
+      endDate: project.endDate?.slice(0, 10) || "",
+    });
+    setEditField("projects");
+  };
+
+
+
+  const handleSaveProject = async () => {
+    try {
+      setLoading(true);
+
+      const headers = {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      };
+
+      const body = {
+        ...projectForm,
+        technologies: projectForm.technologies
+          .split(",")
+          .map((t) => t.trim())
+          .filter(Boolean),
+      };
+
+      const url = editingProjectId
+        ? `${BACKEND_URL}/api/profile/projects/${editingProjectId}`
+        : `${BACKEND_URL}/api/profile/projects`;
+
+      const method = editingProjectId ? "PUT" : "POST";
+
+      const res = await fetch(url, {
+        method,
+        headers,
+        body: JSON.stringify(body),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.msg);
+
+      setProfile((prev) =>
+        prev ? { ...prev, projects: data.projects } : prev
+      );
+
+      setMessage(
+        editingProjectId
+          ? "Project updated successfully"
+          : "Project added successfully"
+      );
+      setSuccessOpen(true);
+
+      setProjectForm(emptyProjectForm);
+      setEditingProjectId(null);
+      setEditField(null);
+    } catch (err) {
+      setMessage(err.message || "Failed to save project");
+      setErrorOpen(true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteProject = async (projectId) => {
+    if (!window.confirm("Remove this project?")) return;
+
+    try {
+      const res = await fetch(
+        `${BACKEND_URL}/api/profile/projects/${projectId}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.msg);
+
+      setProfile((prev) =>
+        prev ? { ...prev, projects: data.projects } : prev
+      );
+
+      setMessage("Project removed");
+      setSuccessOpen(true);
+    } catch (err) {
+      setMessage(err.message || "Failed to remove project");
+      setErrorOpen(true);
+    }
+  };
+
 
   /* ---------- handlers: Experience ---------- */
   const startAddExperience = () => {
@@ -947,8 +1070,8 @@ export default function EditProfile({ user }) {
                           type="button"
                           onClick={() => toggleSkill(skill)}
                           className={`flex items-center gap-1 px-3 py-1.5 rounded-full border text-sm font-medium transition-all duration-150 ${isSelected
-                              ? "bg-primary text-white border-primary shadow-md scale-[1.02]"
-                              : "bg-gray-100 dark:bg-gray-800 border-gray-400 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary"
+                            ? "bg-primary text-white border-primary shadow-md scale-[1.02]"
+                            : "bg-gray-100 dark:bg-gray-800 border-gray-400 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary"
                             }`}
                         >
                           {isSelected ? <X size={14} /> : <Plus size={14} />}
@@ -981,8 +1104,8 @@ export default function EditProfile({ user }) {
                       setSkillError("");
                     }}
                     className={`flex items-center gap-1.5 px-3.5 py-2 rounded-full border text-sm font-medium shadow-sm transition-all duration-200 ${showCustomSkillInput
-                        ? "bg-gradient-to-r from-primary to-primary/70 text-white border-primary scale-105"
-                        : "bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700 border-gray-400 text-gray-700 dark:text-gray-300 hover:from-primary hover:to-primary/80 hover:text-white hover:border-primary"
+                      ? "bg-gradient-to-r from-primary to-primary/70 text-white border-primary scale-105"
+                      : "bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700 border-gray-400 text-gray-700 dark:text-gray-300 hover:from-primary hover:to-primary/80 hover:text-white hover:border-primary"
                       }`}
                   >
                     <Plus
@@ -1570,6 +1693,256 @@ export default function EditProfile({ user }) {
               </form>
             )}
           </>
+        )}
+      </div>
+
+
+      {/* ===================== PROJECTS SECTION ===================== */}
+      <div className="flex flex-col gap-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+            Projects
+          </h2>
+
+          <button
+            type="button"
+            onClick={() => {
+              if (editField === "projects") {
+                setEditField(null);
+                setEditingProjectId(null);
+                setProjectForm(emptyProjectForm);
+              } else {
+                startAddProject();
+              }
+            }}
+            className="flex items-center gap-1 px-3 py-1.5 text-sm border border-primary rounded-md text-primary hover:bg-primary hover:text-white transition"
+          >
+            {editField === "projects" ? (
+              <>
+                <X size={14} />
+                Cancel
+              </>
+            ) : (
+              <>
+                <Plus size={14} />
+                Add
+              </>
+            )}
+          </button>
+        </div>
+
+        {profile?.projects?.length ? (
+          <div className="flex flex-col gap-3">
+            {profile.projects.map((project) => (
+              <div
+                key={project._id}
+                className={`${boxContainer} flex flex-col gap-2`}
+              >
+                <div className="flex justify-between items-start gap-2">
+                  <div>
+                    <p className="font-semibold text-gray-900 dark:text-white">
+                      {project.title}
+                    </p>
+
+                    {project.description && (
+                      <p className="text-sm text-gray-600 dark:text-gray-300">
+                        {project.description}
+                      </p>
+                    )}
+
+                    {project.techStack?.length > 0 && (
+                      <p className="text-xs text-gray-500 mt-1">
+                        Tech Stack: {project.techStack.join(", ")}
+                      </p>
+                    )}
+
+
+                    {(project.startDate || project.endDate) && (
+                      <p className="text-xs text-gray-500">
+                        {project.startDate?.slice(0, 10) || "—"} –{" "}
+                        {project.endDate?.slice(0, 10) || "Present"}
+                      </p>
+                    )}
+
+                    {project.projectUrl && (
+                      <a
+                        href={project.projectUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-xs text-primary hover:underline block"
+                      >
+                        Live Demo
+                      </a>
+                    )}
+
+                    {project.githubUrl && (
+                      <a
+                        href={project.githubUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-xs text-primary hover:underline block"
+                      >
+                        GitHub
+                      </a>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => startEditProject(project)}
+                      className="text-xs px-2 py-1 rounded-md border border-gray-300 text-gray-700 dark:text-gray-200 hover:border-primary hover:text-primary"
+                    >
+                      Edit
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteProject(project._id)}
+                      className="text-xs px-2 py-1 rounded-md border border-red-500 text-red-500 hover:bg-red-500 hover:text-white flex items-center gap-1"
+                    >
+                      <Trash2 size={12} />
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-gray-500 dark:text-gray-400 text-sm">
+            No projects added yet. Click <b>Add</b> to add your projects.
+          </p>
+        )}
+
+        {editField === "projects" && (
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleSaveProject();
+            }}
+            className={`${boxContainer} flex flex-col gap-3`}
+          >
+            <h3 className="font-semibold text-gray-900 dark:text-white">
+              {editingProjectId ? "Edit Project" : "Add Project"}
+            </h3>
+
+            <input
+              className={inputBoxClass}
+              placeholder="Project Title *"
+              value={projectForm.title}
+              onChange={(e) =>
+                setProjectForm((prev) => ({
+                  ...prev,
+                  title: e.target.value,
+                }))
+              }
+              required
+            />
+
+            <textarea
+              className={inputBoxClass}
+              placeholder="Description"
+              rows={3}
+              value={projectForm.description}
+              onChange={(e) =>
+                setProjectForm((prev) => ({
+                  ...prev,
+                  description: e.target.value,
+                }))
+              }
+            />
+
+            <input
+              className={inputBoxClass}
+              placeholder="Technologies (comma separated)"
+              value={projectForm.technologies}
+              onChange={(e) =>
+                setProjectForm((prev) => ({
+                  ...prev,
+                  technologies: e.target.value,
+                }))
+              }
+            />
+
+            <input
+              className={inputBoxClass}
+              placeholder="Project URL"
+              value={projectForm.projectUrl}
+              onChange={(e) =>
+                setProjectForm((prev) => ({
+                  ...prev,
+                  projectUrl: e.target.value,
+                }))
+              }
+            />
+
+            <input
+              className={inputBoxClass}
+              placeholder="GitHub URL"
+              value={projectForm.githubUrl}
+              onChange={(e) =>
+                setProjectForm((prev) => ({
+                  ...prev,
+                  githubUrl: e.target.value,
+                }))
+              }
+            />
+
+            <div className="flex gap-3">
+              <label className="text-sm text-gray-600 dark:text-gray-300">
+                Start Date
+              </label>
+              <input
+                type="date"
+                className={inputBoxClass}
+                value={projectForm.startDate}
+                onChange={(e) =>
+                  setProjectForm((prev) => ({
+                    ...prev,
+                    startDate: e.target.value,
+                  }))
+                }
+              />
+
+              <label className="text-sm text-gray-600 dark:text-gray-300">
+                End Date
+              </label>
+              <input
+                type="date"
+                className={inputBoxClass}
+                value={projectForm.endDate}
+                onChange={(e) =>
+                  setProjectForm((prev) => ({
+                    ...prev,
+                    endDate: e.target.value,
+                  }))
+                }
+              />
+            </div>
+
+            <div className="flex justify-end gap-2 mt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setEditField(null);
+                  setEditingProjectId(null);
+                  setProjectForm(emptyProjectForm);
+                }}
+                className="px-4 py-2 rounded-md border border-gray-300 text-gray-700 dark:text-gray-200 hover:border-gray-500 text-sm"
+              >
+                Cancel
+              </button>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="px-4 py-2 rounded-md bg-primary text-white hover:bg-primary/80 text-sm disabled:opacity-60"
+              >
+                {loading ? "Saving..." : "Save Project"}
+              </button>
+            </div>
+          </form>
         )}
       </div>
 
