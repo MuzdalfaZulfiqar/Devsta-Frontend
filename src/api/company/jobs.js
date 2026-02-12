@@ -25,20 +25,44 @@ export const createJob = async (data) => {
 };
 
 // GET COMPANY JOBS
-export const getMyJobs = async () => {
-  const res = await fetch(`${BASE_URL}/my`, {
-    method: "GET",
+// export const getMyJobs = async () => {
+//   const res = await fetch(`${BASE_URL}/my`, {
+//     method: "GET",
+//     headers: getAuthHeaders(),
+//   });
+
+//   const json = await res.json();
+
+//   if (!res.ok) {
+//     throw new Error(json.message || "Failed to fetch jobs");
+//   }
+
+//   return json;
+// };
+export const getMyJobs = async ({
+  page = 1,
+  limit = 6,
+  search = "",
+  status = "all",
+  sort = "latest",
+}) => {
+  const params = new URLSearchParams({
+    page,
+    limit,
+    search,
+    status,
+    sort,
+  });
+
+  const res = await fetch(`${BASE_URL}/my?${params}`, {
     headers: getAuthHeaders(),
   });
 
   const json = await res.json();
-
-  if (!res.ok) {
-    throw new Error(json.message || "Failed to fetch jobs");
-  }
-
+  if (!res.ok) throw new Error(json.message);
   return json;
 };
+
 
 // TOGGLE JOB STATUS (active / closed)
 export const toggleJobStatus = async (jobId) => {
