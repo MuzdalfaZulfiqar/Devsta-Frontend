@@ -33,8 +33,12 @@ export default function ApplyJobModal({ job, onClose, onApplied }) {
 
     (async () => {
       try {
-        const myApps = await getMyApplications(token);
-        const existingApp = myApps.find((app) => app.job._id === job._id);
+        // const myApps = await getMyApplications(token);
+        const myApps = await getMyApplications({ page: 1, limit: 6, search: "" }, token);
+
+        // const existingApp = myApps.find((app) => app.job._id === job._id);
+        const existingApp = myApps.applications.find((app) => app.job._id === job._id);
+
 
         if (existingApp?.developerSnapshot?.resumeUrl) {
           setResumeUrl(`${BACKEND_URL}/api/developer/jobApplications/${job._id}/resume`);
@@ -67,8 +71,12 @@ export default function ApplyJobModal({ job, onClose, onApplied }) {
     try {
       setLoading(true);
 
-      const myApps = await getMyApplications(token);
-      const existingApp = myApps.find((app) => app.job._id === job._id);
+      // const myApps = await getMyApplications(token);
+      const myApps = await getMyApplications({ page: 1, limit: 6, search: "" }, token);
+
+      // const existingApp = myApps.find((app) => app.job._id === job._id);
+      const existingApp = myApps.applications.find((app) => app.job._id === job._id);
+
 
       if (!existingApp) {
         await applyForJob(job._id, formData, token);
