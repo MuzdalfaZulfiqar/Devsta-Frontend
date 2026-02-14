@@ -1,5 +1,4 @@
 
-
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import CompanyDashboardLayout from "../../components/company/CompanyDashboardLayout";
@@ -32,23 +31,58 @@ export default function FirstStageApplicantsPage() {
     if (jobId) fetchApplicants();
   }, [jobId]);
 
-  const handleViewResume = (userId) => {
-    const previewUrl = `${BACKEND_URL}/api/users/resume/${userId}`;
-    window.open(previewUrl, "_blank");
-  };
+ const handleViewResume = async (userId) => {
+  try {
+    const token = localStorage.getItem("companyToken");
 
-  const handleDownloadResume = (userId) => {
-    const downloadUrl = `${BACKEND_URL}/api/users/resume/${userId}`;
-    fetch(downloadUrl)
-      .then((res) => res.blob())
-      .then((blob) => {
-        const link = document.createElement("a");
-        link.href = window.URL.createObjectURL(blob);
-        link.download = "resume.pdf";
-        link.click();
-      })
-      .catch((err) => console.error(err));
-  };
+    const response = await fetch(
+      `${BACKEND_URL}/api/company/jobs/${jobId}/${userId}/resume`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    if (!response.ok) throw new Error("Failed to fetch resume");
+
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+
+    window.open(url, "_blank");
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+const handleDownloadResume = async (userId) => {
+  try {
+    const token = localStorage.getItem("companyToken");
+
+    const response = await fetch(
+      `${BACKEND_URL}/api/company/jobs/${jobId}/${userId}/resume`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    if (!response.ok) throw new Error("Failed to download resume");
+
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "resume.pdf";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  } catch (err) {
+    console.error(err);
+  }
+};
 
   return (
     <CompanyDashboardLayout>

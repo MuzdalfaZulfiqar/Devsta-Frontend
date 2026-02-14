@@ -35,16 +35,6 @@ export const uploadResumeForJob = async (jobId, file, token) => {
   return json.resumeUrl;
 };
 
-// Get my applications
-// export const getMyApplications = async (token) => {
-//   const res = await fetch(`${BASE_URL}/my`, {
-//     headers: { Authorization: `Bearer ${token}` },
-//   });
-//   const json = await res.json();
-//   if (!res.ok) throw new Error(json.message || "Failed to fetch applications");
-//   return json;
-// };
-
 
 export const getMyApplications = async (
   { page = 1, limit = 6, search = "" } = {},
@@ -58,8 +48,6 @@ export const getMyApplications = async (
   if (!res.ok) throw new Error(json.message || "Failed to fetch applications");
   return json;
 };
-
-
 
 // Get backend URL for inline view/download
 export const getApplicationResumeUrl = (jobId) => {

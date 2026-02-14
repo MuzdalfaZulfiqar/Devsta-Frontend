@@ -1,32 +1,23 @@
-// src/api/resume.js
 import { BACKEND_URL } from "../../config";
+import axios from "axios";
 
-// src/api/resume.js
-const API_BASE = "/api/resume-portfolio"; // ← update this
+/**
+ * Generate resume for current user
+ * @param {Object} payload - { userId, job_description, required_skills }
+ * @param {string} token - JWT token from AuthContext
+ */
+export async function generateResume(payload, token) {
+  if (!token) throw new Error("User not authenticated");
 
-
-export async function generateResume(token) {
-  const formData = new FormData();
-  formData.append("user_profile", JSON.stringify({})); // minimal payload
-  const res = await fetch(`${BACKEND_URL}${API_BASE}/generate`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-    body: formData,
-  });
-  return res.json();
-}
-
-export async function generateTailoredResume(jobId, token) {
-  const formData = new FormData();
-  formData.append("jobId", jobId);
-  const res = await fetch(`${BACKEND_URL}${API_BASE}/generate-tailored`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-    body: formData,
-  });
-  return res.json();
+  try {
+    const res = await axios.post(`${BACKEND_URL}/api/resume/generate`, payload, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return res.data;
+  } catch (err) {
+    console.error("Error generating resume:", err);
+    throw err.response?.data || err;
+  }
 }
