@@ -3,25 +3,6 @@ import { BACKEND_URL } from "../../../config";
 
 const BASE_URL = `${BACKEND_URL}/api/developer/publicjobs`;
 
-/* ─────────────── GET ACTIVE JOBS (with optional auth) ─────────────── */
-// export const getActiveJobs = async (params = {}, token) => {
-//   const query = new URLSearchParams(params).toString();
-
-//   const res = await fetch(`${BASE_URL}?${query}`, {
-//     headers: token
-//       ? { Authorization: `Bearer ${token}` }
-//       : {},
-//   }
-//   );
-
-//   const json = await res.json();
-
-//   if (!res.ok) {
-//     throw new Error(json.message || "Failed to fetch jobs");
-//   }
-
-//   return json;
-// };
 
 export const getActiveJobs = async (
   {
