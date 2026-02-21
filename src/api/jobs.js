@@ -9,7 +9,7 @@ const API_BASE = import.meta.env.VITE_API_URL || "https://devsta-backend.onrende
 //   });
 //   return data; // { userId, items: [{ score, job }] }
 // }
-export async function getRecommendedJobs({ k = 50 } = {}, token) {
+export async function getRecommendedJobs({ k = 40 } = {}, token) {
   if (!token) throw new Error("Unauthorized: token missing");
 
   const { data } = await axios.get(`${API_BASE}/api/jobs/recommended?k=${k}`, {
