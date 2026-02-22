@@ -106,12 +106,38 @@ export const updateJob = async (jobId, data) => {
 };
 
 
-// GET FIRST STAGE APPLICANTS
-export const getFirstStageApplicants = async (jobId) => {
-  const res = await fetch(`${BASE_URL}/${jobId}/first-stage-applicants`, {
-    headers: getAuthHeaders(),
-  });
+export const getFirstStageApplicants = async (jobId, status = "applied") => {
+  const res = await fetch(
+    `${BASE_URL}/${jobId}/first-stage-applicants?status=${status}`,
+    { headers: getAuthHeaders() }
+  );
   const json = await res.json();
   if (!res.ok) throw new Error(json.message || "Failed to fetch applicants");
+  return json;
+};
+
+export const sendTestToApplicant = async (jobId, applicationId) => {
+  const res = await fetch(
+    `${BASE_URL}/${jobId}/applications/${applicationId}/send-test`,
+    {
+      method: "PATCH",
+      headers: getAuthHeaders(),
+    }
+  );
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.message || "Failed to send test");
+  return json;
+};
+export const saveInterviewScore = async (jobId, applicationId, score) => {
+  const res = await fetch(
+    `${BASE_URL}/${jobId}/applications/${applicationId}/interview`,
+    {
+      method: "PATCH",
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ score }),
+    }
+  );
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.message || "Failed to save interview score");
   return json;
 };
