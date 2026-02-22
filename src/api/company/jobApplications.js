@@ -1,5 +1,3 @@
-
-
 import { BACKEND_URL } from "../../../config";
 
 const BASE_URL = `${BACKEND_URL}/api/developer/jobApplications`;
