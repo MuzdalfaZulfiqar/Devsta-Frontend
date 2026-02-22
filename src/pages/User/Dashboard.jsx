@@ -275,7 +275,17 @@ export default function Dashboard() {
             view your achievements.
           </p>
         </div>
-
+{
+  /* Add a button for coding environment */
+}
+<div className="mt-6">
+  <button
+    onClick={() => navigate("/dashboard/coding-test")}
+    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+  >
+    Open Coding Environment
+  </button>
+</div>
         {/* Announcements Section */}
         {announcements.length > 0 && (
           <div className="mt-8">

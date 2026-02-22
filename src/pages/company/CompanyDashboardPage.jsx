@@ -2,32 +2,67 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import CompanyDashboardLayout from "../../components/company/CompanyDashboardLayout";
 import { getMyJobs } from "../../api/company/jobs";
+import { getJobStats } from "../../api/company/jobs";
 
 export default function CompanyDashboardPage() {
   const company = JSON.parse(localStorage.getItem("companyInfo") || "{}");
-  const [jobs, setJobs] = useState([]);
+  // const [jobs, setJobs] = useState([]);
+  const [stats, setStats] = useState({
+  totalJobs: 0,
+  activeJobs: 0,
+  closedJobs: 0,
+});
+
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  const fetchJobs = async () => {
-    setLoading(true);
-    try {
-      const data = await getMyJobs();
-      setJobs(data || []);
-    } catch (err) {
-      console.error("Failed to load jobs:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // const fetchJobs = async () => {
+  //   setLoading(true);
+  //   try {
+  //     const data = await getMyJobs();
+  //     setJobs(data || []);
+  //   } catch (err) {
+  //     console.error("Failed to load jobs:", err);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+//   const fetchJobs = async () => {
+//   setLoading(true);
+//   try {
+//     const data = await getMyJobs();
+//     setJobs(data.jobs || []);
+//   } catch (err) {
+//     console.error("Failed to load jobs:", err);
+//   } finally {
+//     setLoading(false);
+//   }
+// };
 
+
+const fetchStats = async () => {
+  setLoading(true);
+  try {
+    const data = await getJobStats();
+    setStats(data);
+  } catch (err) {
+    console.error("Failed to load stats:", err);
+  } finally {
+    setLoading(false);
+  }
+};
+
+  // useEffect(() => {
+  //   fetchJobs();
+  // }, []);
   useEffect(() => {
-    fetchJobs();
-  }, []);
+  fetchStats();
+}, []);
 
-  const totalJobs = jobs.length;
-  const activeJobs = jobs.filter((j) => j.isActive).length;
-  const closedJobs = jobs.filter((j) => !j.isActive).length;
+
+  // const totalJobs = jobs.length;
+  // const activeJobs = jobs.filter((j) => j.isActive).length;
+  // const closedJobs = jobs.filter((j) => !j.isActive).length;
 
   return (
     <CompanyDashboardLayout>
@@ -55,7 +90,8 @@ export default function CompanyDashboardPage() {
                 Total Jobs Posted
               </p>
               <p className="text-4xl font-bold text-gray-900 dark:text-white mt-3">
-                {loading ? "—" : totalJobs}
+                {loading ? "—" : stats.totalJobs}
+
               </p>
             </div>
 
@@ -65,7 +101,7 @@ export default function CompanyDashboardPage() {
                 Active Jobs
               </p>
               <p className="text-4xl font-bold text-green-600 dark:text-green-500 mt-3">
-                {loading ? "—" : activeJobs}
+                {loading ? "—" : stats.activeJobs}
               </p>
             </div>
 
@@ -75,7 +111,7 @@ export default function CompanyDashboardPage() {
                 Closed Jobs
               </p>
               <p className="text-4xl font-bold text-gray-700 dark:text-gray-300 mt-3">
-                {loading ? "—" : closedJobs}
+                {loading ? "—" : stats.closedJobs}
               </p>
             </div>
           </div>

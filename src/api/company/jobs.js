@@ -39,13 +39,15 @@ export const createJob = async (data) => {
 
 //   return json;
 // };
+
 export const getMyJobs = async ({
   page = 1,
   limit = 6,
   search = "",
   status = "all",
   sort = "latest",
-}) => {
+} = {}) => {
+
   const params = new URLSearchParams({
     page,
     limit,
@@ -113,5 +115,48 @@ export const getFirstStageApplicants = async (jobId) => {
   });
   const json = await res.json();
   if (!res.ok) throw new Error(json.message || "Failed to fetch applicants");
+  return json;
+}
+
+// GET SINGLE JOB BY ID
+export const getJobById = async (jobId) => {
+  const res = await fetch(`${BASE_URL}/${jobId}`, {
+    method: "GET",
+    headers: getAuthHeaders(),
+  });
+
+  const json = await res.json();
+
+  if (!res.ok) {
+    throw new Error(json.message || "Failed to fetch job");
+  }
+
+  return json;
+};
+
+export const getJobStats = async () => {
+  const res = await fetch(`${BASE_URL}/stats`, {
+    headers: getAuthHeaders(),
+  });
+
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.message);
+  return json;
+};
+// In src/api/company/jobs.js
+
+export const saveJobTestConfig = async (jobId, config) => {
+  const res = await fetch(`${BASE_URL}/${jobId}/test-config`, {
+    method: "PUT",
+    headers: getAuthHeaders(),  // ← use this (already has token)
+    body: JSON.stringify(config),
+  });
+
+  const json = await res.json();
+
+  if (!res.ok) {
+    throw new Error(json.message || json.error || "Failed to save test configuration");
+  }
+
   return json;
 };
