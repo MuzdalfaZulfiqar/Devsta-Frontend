@@ -10,6 +10,7 @@ import CreateJob from "./CreateJob";
 import MyJobs from "./MyJobs";
 import FirstStageApplicantsPage from "./FirstStageApplicantsPage";
 import CompanyProfile from "./CompanyProfile";
+import CompanyCodingChallengePage from "./CompanyCodingChallengePage";
 
 export default function CompanyLayout() {
   return (
@@ -35,6 +36,15 @@ export default function CompanyLayout() {
       <Route
         path="profile"
         element={<CompanyProtectedRoute><CompanyProfile /></CompanyProtectedRoute>}
+      />
+
+      <Route
+        path="jobs/:jobId/challenges"
+        element={
+          <CompanyProtectedRoute>
+            <CompanyCodingChallengePage />
+          </CompanyProtectedRoute>
+        }
       />
     </Routes>
   );

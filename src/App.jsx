@@ -35,6 +35,7 @@ import JobsPage from "./pages/company/JobsPage";
 import MyApplicationsPage from "./pages/company/MyApplicationsPage";
 import FirstStageApplicantsPage from "./pages/company/FirstStageApplicantsPage";
 import ResumePage from "./pages/User/ResumePage";
+import CodingTestPage from "./pages/User/CodingTestPage";
 
 function App() {
   const { user, showWelcome, setShowWelcome } = useAuth();
@@ -142,6 +143,25 @@ function App() {
               </ProtectedRoute>
             }
           />
+           {/* <Route
+            path="/dashboard/coding-test"
+            element={
+              <ProtectedRoute requireOnboarding={true}>
+                <CodingTestPage />
+              </ProtectedRoute>
+            }
+          /> */}
+
+          <Route
+  path="/dashboard/coding-test/:jobId"
+  element={
+    <ProtectedRoute requireOnboarding={true}>
+      <CodingTestPage />
+    </ProtectedRoute>
+  }
+/>
+
+          {/* <Route path="/coding-test" element={<CodingTestPage />} /> */}
 
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/verify-otp" element={<VerifyOtp />} />
