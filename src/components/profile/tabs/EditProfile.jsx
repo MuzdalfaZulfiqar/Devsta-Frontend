@@ -301,7 +301,7 @@ export default function EditProfile({ user }) {
     return () => {
       cancelled = true;
     };
-  }, [token]);
+  }, [token, user?.resumeUrl]);
 
   /* ---------- know the exact backend "Other" role value ---------- */
   const otherRoleValue = useMemo(() => {

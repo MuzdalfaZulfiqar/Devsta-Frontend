@@ -1,3 +1,4 @@
+// src/components/company/AllJobsTab.jsx
 import { useEffect, useMemo, useState } from "react";
 import DeveloperJobCard from "./DeveloperJobCard";
 import JobFilters from "./JobFilters";

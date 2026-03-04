@@ -1,3 +1,4 @@
+// src/pages/company/CompanyLayout.jsx
 import React from "react";
 import { Routes, Route } from "react-router-dom";
 import CompanyProtectedRoute from "../../components/company/CompanyProtectedRoute";

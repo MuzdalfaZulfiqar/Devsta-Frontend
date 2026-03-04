@@ -1,3 +1,4 @@
+// src/components/company/CompanyTopbar.jsx
 export default function CompanyTopbar() {
   const company = JSON.parse(localStorage.getItem("companyInfo"));
 

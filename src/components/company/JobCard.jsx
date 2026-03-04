@@ -1,4 +1,4 @@
-
+// src/components/company/JobCard.jsx
 import React from "react";
 import { MapPin, Clock, DollarSign, RefreshCw, Users, Edit, Trash2, ChevronRight, Briefcase } from "lucide-react";
 import { useNavigate } from "react-router-dom";

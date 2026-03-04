@@ -1,3 +1,4 @@
+// src/components/company/CompanyDashboardLayout.jsx
 import { useState } from "react";
 import CompanySidebar from "./CompanySidebar";
 import CompanyTopbar from "./CompanyTopbar";
