@@ -6,6 +6,16 @@ import axios from "axios";
  * @param {Object} payload - { userId, job_description, required_skills }
  * @param {string} token - JWT token from AuthContext
  */
+export async function fetchResumePdf(userId, token) {
+  if (!token) throw new Error("User not authenticated");
+
+  const res = await axios.get(`${BACKEND_URL}/api/resume/${userId}`, {
+    headers: { Authorization: `Bearer ${token}` },
+    responseType: "blob",
+  });
+
+  return res.data; // Blob
+}
 export async function generateResume(payload, token) {
   if (!token) throw new Error("User not authenticated");
 

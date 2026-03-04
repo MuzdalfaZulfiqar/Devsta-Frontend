@@ -1,3 +1,4 @@
+// src/components/company/CompanyProtectedRoute.jsx
 import { Navigate } from "react-router-dom";
 import { useCompanyAuth } from "../../context/CompanyAuthContext";
 

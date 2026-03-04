@@ -1,3 +1,4 @@
+// src/pages/company/MyJobs.jsx
 import React, { useEffect, useState } from "react";
 import CompanyDashboardLayout from "../../components/company/CompanyDashboardLayout";
 import { getMyJobs, toggleJobStatus, deleteJob } from "../../api/company/jobs";

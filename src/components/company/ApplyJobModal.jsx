@@ -1,3 +1,4 @@
+// src/components/company/ApplyJobModal.jsx
 import React, { useState, useEffect } from "react";
 import { MdClose } from "react-icons/md";
 import { useAuth } from "../../context/AuthContext";

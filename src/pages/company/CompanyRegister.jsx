@@ -1,3 +1,4 @@
+// src/pages/company/CompanyRegister.jsx
 import { useState } from "react";
 import { Building2, Mail, Lock, Globe, BriefcaseBusiness } from "lucide-react";
 import { registerCompany } from "../../api/company/auth";

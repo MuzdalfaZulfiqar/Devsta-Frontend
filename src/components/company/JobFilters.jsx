@@ -1,3 +1,4 @@
+// src/components/company/JobFilters.jsx
 import { useState } from "react";
 import Select from "react-select";
 

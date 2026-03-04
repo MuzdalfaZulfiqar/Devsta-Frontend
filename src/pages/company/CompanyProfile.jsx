@@ -1,3 +1,4 @@
+// src/pages/company/CompanyProfile.jsx
 import { useState, useEffect, useRef } from "react";
 import CompanyDashboardLayout from "../../components/company/CompanyDashboardLayout";
 import { useCompanyAuth } from "../../context/CompanyAuthContext";

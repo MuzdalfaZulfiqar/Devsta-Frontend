@@ -1,3 +1,4 @@
+// src/pages/company/CreateJob.jsx
 import { useState, useEffect, useRef } from "react";
 import CompanyDashboardLayout from "../../components/company/CompanyDashboardLayout";
 import { createJob } from "../../api/company/jobs";
@@ -64,8 +65,6 @@ export default function CreateJob() {
     currency: "",
     salaryPeriod: null,
   });
-
-
 
   const [loading, setLoading] = useState(false);
   const [successOpen, setSuccessOpen] = useState(false);
