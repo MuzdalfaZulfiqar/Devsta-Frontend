@@ -13,7 +13,7 @@ export default function CompanySidebar({ isOpen, setIsOpen, onLogout }) {
     { label: "Dashboard", icon: Home, href: "/company/dashboard" },
     { label: "Post Job", icon: Briefcase, href: "/company/jobs/new" },
     { label: "Company Jobs", icon: Users, href: "/company/jobs" },
-    { label: "Profile", icon: Users, href: "/company/profile" }, 
+    { label: "Profile", icon: Users, href: "/company/profile" },
   ];
 
   return (
@@ -39,18 +39,17 @@ export default function CompanySidebar({ isOpen, setIsOpen, onLogout }) {
       <nav className="flex-1 mt-4 px-2 space-y-1">
         {menuItems.map(({ label, icon: Icon, href }) => (
           <NavLink
-  key={label}
-  to={href}
-  end={href === "/company/dashboard" || href === "/company/jobs"}
-  className={({ isActive }) =>
-    `flex items-center gap-3 px-4 py-2 font-semibold transition-all ${
-      isActive
-        ? "bg-primary text-white rounded-md"
-        : "text-gray-800 dark:text-gray-200 hover:bg-primary/10 hover:text-primary rounded-md"
-    }`
-  }
-  onClick={() => setIsOpen(false)}
->
+            key={label}
+            to={href}
+            end={href === "/company/dashboard" || href === "/company/jobs"}
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-4 py-2 font-semibold transition-all ${isActive
+                ? "bg-primary text-white rounded-md"
+                : "text-gray-800 dark:text-gray-200 hover:bg-primary/10 hover:text-primary rounded-md"
+              }`
+            }
+            onClick={() => setIsOpen(false)}
+          >
 
             <Icon size={18} />
             <span>{label}</span>

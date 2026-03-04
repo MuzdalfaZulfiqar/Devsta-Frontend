@@ -9,6 +9,7 @@ import { useAuth } from "../../context/AuthContext";
 import { getJobsByCompany, getCompanyById } from "../../api/company/publicJobs";
 import { useNavigate } from "react-router-dom";
 import MyApplicationsPage from "./MyApplicationsPage";
+import { useEffect } from "react";
 export default function JobsPage() {
     const { user, token } = useAuth();
     const navigate = useNavigate();
@@ -27,6 +28,23 @@ export default function JobsPage() {
         setShowJobModal(true);
     };
 
+    // Auto-switch tab + scroll when hash is present
+  useEffect(() => {
+    if (window.location.hash === "#my-applications-section") {
+      // Switch to My Applications tab
+      setActiveTab("applications");
+
+      // Wait for tab content to render, then scroll
+      setTimeout(() => {
+        const element = document.getElementById("my-applications-section");
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth", block: "start" });
+         
+         
+        }
+      }, 600); // 600ms delay — enough for tab switch + render
+    }
+  }, []); // Run once on mount
     const handleSelectCompany = async (company) => {
         try {
             // 1️⃣ Fetch full company

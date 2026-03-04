@@ -39,13 +39,15 @@ export const createJob = async (data) => {
 
 //   return json;
 // };
+
 export const getMyJobs = async ({
   page = 1,
   limit = 6,
   search = "",
   status = "all",
   sort = "latest",
-}) => {
+} = {}) => {
+
   const params = new URLSearchParams({
     page,
     limit,
@@ -114,20 +116,105 @@ export const getFirstStageApplicants = async (jobId, status = "applied") => {
   const json = await res.json();
   if (!res.ok) throw new Error(json.message || "Failed to fetch applicants");
   return json;
+}
+
+// GET SINGLE JOB BY ID
+export const getJobById = async (jobId) => {
+  const res = await fetch(`${BASE_URL}/${jobId}`, {
+    method: "GET",
+    headers: getAuthHeaders(),
+  });
+
+  const json = await res.json();
+
+  if (!res.ok) {
+    throw new Error(json.message || "Failed to fetch job");
+  }
+
+  return json;
 };
 
-export const sendTestToApplicant = async (jobId, applicationId) => {
+export const getJobStats = async () => {
+  const res = await fetch(`${BASE_URL}/stats`, {
+    headers: getAuthHeaders(),
+  });
+
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.message);
+  return json;
+};
+// In src/api/company/jobs.js
+
+export const saveJobTestConfig = async (jobId, config) => {
+  const res = await fetch(`${BASE_URL}/${jobId}/test-config`, {
+    method: "PUT",
+    headers: getAuthHeaders(),  // ← use this (already has token)
+    body: JSON.stringify(config),
+  });
+
+  const json = await res.json();
+
+  if (!res.ok) {
+    throw new Error(json.message || json.error || "Failed to save test configuration");
+  }
+
+  return json;
+};
+
+// export const sendTestToApplicant = async (jobId, applicationId) => {
+//   const res = await fetch(
+//     `${BASE_URL}/${jobId}/applications/${applicationId}/send-test`,
+//     {
+//       method: "PATCH",
+//       headers: getAuthHeaders(),
+//     }
+//   );
+//   const json = await res.json();
+//   if (!res.ok) throw new Error(json.message || "Failed to send test");
+//   return json;
+// };
+// export const saveInterviewScore = async (jobId, applicationId, score) => {
+//   const res = await fetch(
+//     `${BASE_URL}/${jobId}/applications/${applicationId}/interview`,
+//     {
+//       method: "PATCH",
+//       headers: getAuthHeaders(),
+//       body: JSON.stringify({ score }),
+//     }
+//   );
+//   const json = await res.json();
+//   if (!res.ok) throw new Error(json.message || "Failed to save interview score");
+//   return json;
+// };
+
+// export const sendTestToApplicant = async (jobId, applicationId) => {
+//   const res = await fetch(
+//     `${BASE_URL}/${jobId}/applications/${applicationId}/send-test`,
+//     {
+//       method: "PATCH",
+//       headers: getAuthHeaders(),
+//     }
+//   );
+//   const json = await res.json();
+//   if (!res.ok) throw new Error(json.message || "Failed to send test");
+//   return json;
+// };
+
+export const sendTestToApplicant = async (jobId, applicationId, payload = {}) => {
   const res = await fetch(
     `${BASE_URL}/${jobId}/applications/${applicationId}/send-test`,
     {
       method: "PATCH",
       headers: getAuthHeaders(),
+      body: JSON.stringify(payload),   // now sends { durationDays }
     }
   );
   const json = await res.json();
   if (!res.ok) throw new Error(json.message || "Failed to send test");
   return json;
 };
+
+
 export const saveInterviewScore = async (jobId, applicationId, score) => {
   const res = await fetch(
     `${BASE_URL}/${jobId}/applications/${applicationId}/interview`,
@@ -139,5 +226,71 @@ export const saveInterviewScore = async (jobId, applicationId, score) => {
   );
   const json = await res.json();
   if (!res.ok) throw new Error(json.message || "Failed to save interview score");
+  return json;
+};
+
+// ─────────────────────────────────────────────
+// NEW Draft Selection APIs
+// ─────────────────────────────────────────────
+
+export const addDraftApplicants = async (jobId, applicationIds) => {
+  const res = await fetch(`${BASE_URL}/${jobId}/draft-applicants/add`, {
+    method: "PATCH",
+    headers: getAuthHeaders(),
+    body: JSON.stringify({ applicationIds }),
+  });
+
+  const json = await res.json();
+
+  if (!res.ok) {
+    throw new Error(json.message || "Failed to add draft applicants");
+  }
+
+  return json;
+};
+
+export const removeDraftApplicants = async (jobId, applicationIds) => {
+  const res = await fetch(`${BASE_URL}/${jobId}/draft-applicants/remove`, {
+    method: "PATCH",
+    headers: getAuthHeaders(),
+    body: JSON.stringify({ applicationIds }),
+  });
+
+  const json = await res.json();
+
+  if (!res.ok) {
+    throw new Error(json.message || "Failed to remove draft applicants");
+  }
+
+  return json;
+};
+
+export const getDraftApplicants = async (jobId) => {
+  const res = await fetch(`${BASE_URL}/${jobId}/draft-applicants`, {
+    method: "GET",
+    headers: getAuthHeaders(),
+  });
+
+  const json = await res.json();
+
+  if (!res.ok) {
+    throw new Error(json.message || "Failed to fetch draft applicants");
+  }
+
+  return json;
+};
+
+export const clearDraftApplicants = async (jobId) => {
+  const res = await fetch(`${BASE_URL}/${jobId}/draft-applicants`, {
+    method: "DELETE",
+    headers: getAuthHeaders(),
+  });
+
+  const json = await res.json();
+
+  if (!res.ok) {
+    throw new Error(json.message || "Failed to clear draft applicants");
+  }
+
   return json;
 };
