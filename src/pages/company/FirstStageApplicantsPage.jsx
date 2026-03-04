@@ -1971,7 +1971,8 @@
 
 // src/pages/company/FirstStageApplicantsPage.jsx
 import { useEffect, useMemo, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { FileText } from "lucide-react";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import CompanyDashboardLayout from "../../components/company/CompanyDashboardLayout";
 import {
   getFirstStageApplicants,
@@ -2129,7 +2130,7 @@ function TestStatusBadge({ assessment }) {
 
 export default function FirstStageApplicantsPage() {
   const { jobId } = useParams();
-
+const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("applied");
   const [job, setJob] = useState(null);
   const [applicants, setApplicants] = useState([]);
@@ -2473,12 +2474,21 @@ useEffect(() => {
   //   [draftApplicants, uninvitedApplicants]
   // );
 
+  // const tableHead = useMemo(() => {
+  //   if (activeTab === "applied") return ["", "Name", "Email", "Phone", "Test Status", "Applied", "ML Scores", "Resume", "GitHub", "Action"];
+  //   if (activeTab === "assessment") return ["", "Name", "Email", "Phone", "Assessment", "Coding Score", "Applied", "Resume", "GitHub"];
+  //   if (activeTab === "shortlisted") return ["", "Name", "Email", "Phone", "Test", "Interview Score", "Applied", "Resume", "GitHub", "Actions", "Coding", "Interview"];
+  //   return [];
+  // }, [activeTab]);
+
+
   const tableHead = useMemo(() => {
-    if (activeTab === "applied") return ["", "Name", "Email", "Phone", "Test Status", "Applied", "ML Scores", "Resume", "GitHub", "Action"];
-    if (activeTab === "assessment") return ["", "Name", "Email", "Phone", "Assessment", "Coding Score", "Applied", "Resume", "GitHub"];
-    if (activeTab === "shortlisted") return ["", "Name", "Email", "Phone", "Test", "Interview Score", "Applied", "Resume", "GitHub", "Actions", "Coding", "Interview"];
-    return [];
-  }, [activeTab]);
+  if (activeTab === "applied") return ["", "Name", "Email", "Phone", "Test Status", "Applied", "ML Scores", "Resume", "GitHub", "Action", "Report"]; // ← Added "Report"
+  if (activeTab === "assessment") return ["", "Name", "Email", "Phone", "Assessment", "Coding Score", "Applied", "Resume", "GitHub", "Report"]; // ← Added "Report"
+  if (activeTab === "shortlisted") return ["", "Name", "Email", "Phone", "Test", "Interview Score", "Applied", "Resume", "GitHub", "Actions", "Coding", "Interview", "Report"]; // ← Added "Report"
+  // if (activeTab === "final") return ["Name", "Email", "Test Score", "Interview Score", "Actions", "Report"]; // ← Added "Report"
+  return [];
+}, [activeTab]);
 
   const allVisibleSelected = useMemo(() => {
     if (!["applied", "assessment", "shortlisted"].includes(activeTab)) return false;
@@ -2900,6 +2910,15 @@ useEffect(() => {
                                 </button>
                               )}
                             </td>
+                            <td className="px-5 py-3.5 whitespace-nowrap">
+      <button
+        onClick={() => navigate(`/company/jobs/${jobId}/applications/${app._id}/report`)}
+        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:hover:bg-emerald-900/50 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 transition"
+        title="View comprehensive candidate report">
+        <FileText size={12} />
+        Report
+      </button>
+    </td>
                           </>
                         )}
 
@@ -2945,6 +2964,15 @@ useEffect(() => {
                                 </a>
                               ) : "—"}
                             </td>
+
+                            <td className="px-5 py-3.5 whitespace-nowrap">
+    <button
+      onClick={() => navigate(`/company/jobs/${jobId}/applications/${app._id}/report`)}
+      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:hover:bg-emerald-900/50 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 transition">
+      <FileText size={12} />
+      Report
+    </button>
+  </td>
                           </>
                         )}
 
@@ -3028,6 +3056,14 @@ useEffect(() => {
                                 </button>
                               )}
                             </td>
+                             <td className="px-5 py-3.5 whitespace-nowrap">
+    <button
+      onClick={() => navigate(`/company/jobs/${jobId}/applications/${app._id}/report`)}
+      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:hover:bg-emerald-900/50 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 transition">
+      <FileText size={12} />
+      Report
+    </button>
+  </td>
                           </>
                         )}
                       </tr>
