@@ -1,92 +1,645 @@
-// hooks/useAssessmentSession.js  (mocked version for testing)
-import { useState, useEffect } from "react";
+// // hooks/useAssessmentSession.js
+// import { useState, useEffect } from "react";
+
+// export default function useAssessmentSession(jobId) {
+//   const [session, setSession] = useState(null);
+//   const [timeLeft, setTimeLeft] = useState(0);
+//   const [submitted, setSubmitted] = useState(false);
+//   const [error, setError] = useState(null);
+//   const [loading, setLoading] = useState(true);
+
+//   // Fetch session once on mount
+//   useEffect(() => {
+//     if (!jobId) {
+//       setError("No job ID provided");
+//       setLoading(false);
+//       return;
+//     }
+
+//     const fetchSession = async () => {
+//       setLoading(true);
+//       try {
+//         const token = localStorage.getItem("token"); // or however you store it
+//         if (!token) throw new Error("No authentication token found");
+
+//         const res = await fetch(`/api/developer/${jobId}/session`, {
+//           headers: {
+//             Authorization: `Bearer ${token}`,
+//             "Content-Type": "application/json",
+//           },
+//         });
+
+//         const data = await res.json();
+
+//         if (!res.ok) {
+//           throw new Error(data.error || "Failed to load test session");
+//         }
+
+//         setSession(data);
+//         setError(null);
+
+//         // Calculate initial time left
+//         const endTime = new Date(data.endsAt).getTime();
+//         const remaining = Math.floor((endTime - Date.now()) / 1000);
+//         setTimeLeft(remaining > 0 ? remaining : 0);
+//       } catch (err) {
+//         setError(err.message);
+//         console.error("Session fetch error:", err);
+//       } finally {
+//         setLoading(false);
+//       }
+//     };
+
+//     fetchSession();
+
+//     // Refresh session every 30 seconds (handles expiry, status changes)
+//     const refreshInterval = setInterval(fetchSession, 30000);
+//     return () => clearInterval(refreshInterval);
+//   }, [jobId]);
+
+//   // Countdown timer
+//   useEffect(() => {
+//     if (timeLeft <= 0 || submitted || loading) return;
+
+//     const timer = setInterval(() => {
+//       setTimeLeft((prev) => {
+//         if (prev <= 1) {
+//           handleSubmit(true); // auto-submit when time reaches 0
+//           clearInterval(timer);
+//           return 0;
+//         }
+//         return prev - 1;
+//       });
+//     }, 1000);
+
+//     return () => clearInterval(timer);
+//   }, [timeLeft, submitted, loading]);
+
+//   const handleSubmit = async (auto = false) => {
+//     if (submitted) return;
+
+//     try {
+//       const token = localStorage.getItem("token");
+//       const res = await fetch(`/api/developer/${jobId}/submit`, {
+//         method: "POST",
+//         headers: {
+//           "Content-Type": "application/json",
+//           Authorization: `Bearer ${token}`,
+//         },
+//       });
+
+//       const data = await res.json();
+
+//       if (!res.ok) {
+//         throw new Error(data.error || "Failed to submit test");
+//       }
+
+//       setSubmitted(true);
+//       alert(auto ? "Time expired. Test auto-submitted." : "Test submitted successfully!");
+//     } catch (err) {
+//       console.error("Submit failed:", err);
+//       alert("Submission failed. Please try again or contact support.");
+//     }
+//   };
+
+//   return { session, timeLeft, submitted, handleSubmit, error, loading };
+// }
+
+// import { useState, useEffect } from "react";
+// import { BACKEND_URL } from "../../config";
+
+// export default function useAssessmentSession(jobId) {
+//   const [session, setSession] = useState(null);
+//   const [timeLeft, setTimeLeft] = useState(0);
+//   const [submitted, setSubmitted] = useState(false);
+//   const [error, setError] = useState(null);
+//   const [loading, setLoading] = useState(true);
+
+//   useEffect(() => {
+//     if (!jobId) {
+//       setError("No job ID provided");
+//       setLoading(false);
+//       return;
+//     }
+
+//     const initializeSession = async () => {
+//       setLoading(true);
+//       setError(null);
+
+//       try {
+//         const token = localStorage.getItem("devsta_token");
+//         if (!token) {
+//           throw new Error("No authentication token found. Please log in again.");
+//         }
+
+//         const headers = {
+//           Authorization: `Bearer ${token}`,
+//           "Content-Type": "application/json",
+//         };
+
+//         // Try to get existing session
+//         let res = await fetch(`${BACKEND_URL}/api/developer/test/${jobId}/session`, { headers });
+
+//         let data;
+//         if (res.ok) {
+//           data = await res.json();
+//         } else if (res.status === 404) {
+//           // No session → start one
+//           console.log("No session found, starting new test...");
+//           res = await fetch(`${BACKEND_URL}/api/developer/test/${jobId}/start`, {
+//             method: "POST",
+//             headers,
+//           });
+
+//           if (!res.ok) {
+//             const errData = await res.json();
+//             throw new Error(errData.error || "Failed to start test session");
+//           }
+
+//           // Fetch the new session
+//           res = await fetch(`${BACKEND_URL}/api/developer/test/${jobId}/session`, { headers });
+//           if (!res.ok) {
+//             const errData = await res.json();
+//             throw new Error(errData.error || "Failed to fetch session after start");
+//           }
+
+//           data = await res.json();
+//         } else {
+//           const errData = await res.json();
+//           throw new Error(errData.error || "Failed to load test session");
+//         }
+
+//         // Set session and calculate time
+//         setSession(data);
+//         if (data?.endsAt) {
+//           const endTime = new Date(data.endsAt).getTime();
+//           const remaining = Math.floor((endTime - Date.now()) / 1000);
+//           setTimeLeft(remaining > 0 ? remaining : 0);
+//         }
+
+//       } catch (err) {
+//         setError(err.message);
+//         console.error("Session initialization error:", err);
+//       } finally {
+//         setLoading(false);
+//       }
+//     };
+
+//     initializeSession();
+
+//     const refreshInterval = setInterval(initializeSession, 30000);
+//     return () => clearInterval(refreshInterval);
+//   }, [jobId]);
+
+//   // Timer countdown — guard against null session
+//   useEffect(() => {
+//     if (timeLeft <= 0 || submitted || loading || !session?.endsAt) return;
+
+//     const timer = setInterval(() => {
+//       setTimeLeft((prev) => {
+//         if (prev <= 1) {
+//           handleSubmit(true);
+//           clearInterval(timer);
+//           return 0;
+//         }
+//         return prev - 1;
+//       });
+//     }, 1000);
+
+//     return () => clearInterval(timer);
+//   }, [timeLeft, submitted, loading, session]);
+
+//  const handleSubmit = async (auto = false) => {
+//   if (submitted) return;
+
+//   try {
+//     const token = localStorage.getItem("devsta_token");
+//     if (!token) throw new Error("No authentication token found");
+
+//     const res = await fetch(`${BACKEND_URL}/api/developer/test/${jobId}/submit`, {
+//       method: "POST",
+//       headers: {
+//         "Content-Type": "application/json",
+//         Authorization: `Bearer ${token}`,
+//       },
+//     });
+
+//     const data = await res.json();
+
+//     if (!res.ok) {
+//       throw new Error(data.error || "Failed to submit test");
+//     }
+
+//     setSubmitted(true);
+
+//     // Show nice modal instead of alert
+//     setInfoModal({
+//       open: true,
+//       title: auto ? "Time Expired" : "Test Submitted",
+//       message: auto 
+//         ? "Your time has expired. The test has been auto-submitted." 
+//         : "Your test has been submitted successfully!",
+//     });
+
+//   } catch (err) {
+//     console.error("Submit failed:", err);
+//     setInfoModal({
+//       open: true,
+//       title: "Submission Failed",
+//       message: err.message || "Something went wrong. Please try again.",
+//     });
+//   }
+// };
+
+//   return { session, timeLeft, submitted, handleSubmit, error, loading };
+// }
+
+
+// import { useState, useEffect } from "react";
+// import { BACKEND_URL } from "../../config";
+
+// export default function useAssessmentSession(jobId) {
+//   const [session, setSession] = useState(null);
+//   const [timeLeft, setTimeLeft] = useState(0);
+//   const [submitted, setSubmitted] = useState(false);
+//   const [error, setError] = useState(null);
+//   const [loading, setLoading] = useState(true);
+
+//   useEffect(() => {
+//     if (!jobId) {
+//       setError("No job ID provided");
+//       setLoading(false);
+//       return;
+//     }
+
+//     const initializeSession = async () => {
+//       setLoading(true);
+//       setError(null);
+
+//       try {
+//         const token = localStorage.getItem("devsta_token");
+//         if (!token) {
+//           throw new Error("No authentication token found. Please log in again.");
+//         }
+
+//         const headers = {
+//           Authorization: `Bearer ${token}`,
+//           "Content-Type": "application/json",
+//         };
+
+//         let res = await fetch(`${BACKEND_URL}/api/developer/test/${jobId}/session`, { headers });
+//         let data;
+
+//         if (res.ok) {
+//           data = await res.json();
+//         } else if (res.status === 404) {
+//           // No session → auto-start
+//           res = await fetch(`${BACKEND_URL}/api/developer/test/${jobId}/start`, {
+//             method: "POST",
+//             headers,
+//           });
+
+//           if (!res.ok) {
+//             const errData = await res.json();
+//             throw new Error(errData.error || "Failed to start test session");
+//           }
+
+//           // Fetch newly created session
+//           res = await fetch(`${BACKEND_URL}/api/developer/test/${jobId}/session`, { headers });
+//           if (!res.ok) {
+//             const errData = await res.json();
+//             throw new Error(errData.error || "Failed to fetch session after start");
+//           }
+
+//           data = await res.json();
+//         } else {
+//           const errData = await res.json();
+//           throw new Error(errData.error || "Failed to load test session");
+//         }
+
+//         setSession(data);
+//         if (data?.endsAt) {
+//           const endTime = new Date(data.endsAt).getTime();
+//           const remaining = Math.floor((endTime - Date.now()) / 1000);
+//           setTimeLeft(remaining > 0 ? remaining : 0);
+//         }
+//       } catch (err) {
+//         setError(err.message);
+//         console.error("Session init error:", err);
+//       } finally {
+//         setLoading(false);
+//       }
+//     };
+
+//     initializeSession();
+
+//     // Refresh every 30s
+//     const refreshInterval = setInterval(initializeSession, 30000);
+//     return () => clearInterval(refreshInterval);
+//   }, [jobId]);
+
+//   // Countdown timer
+//   useEffect(() => {
+//     if (timeLeft <= 0 || submitted || loading || !session?.endsAt) return;
+
+//     const timer = setInterval(() => {
+//       setTimeLeft((prev) => {
+//         if (prev <= 1) {
+//           handleSubmit(true); // auto-submit on timeout
+//           clearInterval(timer);
+//           return 0;
+//         }
+//         return prev - 1;
+//       });
+//     }, 1000);
+
+//     return () => clearInterval(timer);
+//   }, [timeLeft, submitted, loading, session]);
+
+//   const handleSubmit = async (auto = false) => {
+//     if (submitted) return { success: false, error: "Already submitted" };
+
+//     try {
+//       const token = localStorage.getItem("devsta_token");
+//       if (!token) throw new Error("No authentication token found");
+
+//       const res = await fetch(`${BACKEND_URL}/api/developer/test/${jobId}/submit`, {
+//         method: "POST",
+//         headers: {
+//           "Content-Type": "application/json",
+//           Authorization: `Bearer ${token}`,
+//         },
+//       });
+
+//       const data = await res.json();
+
+//       if (!res.ok) {
+//         throw new Error(data.error || "Failed to submit test");
+//       }
+
+//       setSubmitted(true);
+//       return { success: true, auto };
+//     } catch (err) {
+//       console.error("Submit failed:", err);
+//       return { success: false, error: err.message };
+//     }
+//   };
+
+//   return { session, timeLeft, submitted, handleSubmit, error, loading };
+// }
+
+
+
+import { useState, useEffect, useRef } from "react";
+import { BACKEND_URL } from "../../config";
 
 export default function useAssessmentSession(jobId) {
   const [session, setSession] = useState(null);
   const [timeLeft, setTimeLeft] = useState(0);
   const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [isInitializing, setIsInitializing] = useState(false);
 
+  const initRef = useRef(0);
+  
+  // const handleSubmit = async (auto = false, reason = null) => {
+  //   if (submitted) return { success: false, error: "Already submitted" };
+  
+  //   try {
+  //     const token = localStorage.getItem("devsta_token");
+  //     const res = await fetch(`${BACKEND_URL}/api/developer/test/${jobId}/submit`, {
+  //       method: "POST",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //         Authorization: `Bearer ${token}`,
+  //       },
+  //       body: JSON.stringify({ 
+  //         auto,
+  //         reason: auto ? (reason || "unknown_auto_reason") : null
+  //       }),
+  //     });
+  
+  //     const data = await res.json();
+  //     if (!res.ok) throw new Error(data.error || "Submit failed");
+  
+  //     setSubmitted(true);
+  
+  //     // Update local session state immediately
+  //     setSession(prev => prev ? {
+  //       ...prev,
+  //       status: auto ? "auto-submitted" : "submitted",
+  //       submissionType: auto ? "auto" : "manual",
+  //       autoSubmitReason: auto ? (reason || "violation_detected") : null,
+  //       closedAt: new Date().toISOString()
+  //     } : prev);
+  
+  //     return { success: true, auto };
+  //   } catch (err) {
+  //     console.error("Submit failed:", err);
+  //     return { success: false, error: err.message };
+  //   }
+  // };
+  // useAssessmentSession hook
+const handleSubmit = async (auto = false, reason = null, submissions = []) => {
+  if (submitted) return { success: false, error: "Already submitted" };
+
+  try {
+    const token = localStorage.getItem("devsta_token");
+    const res = await fetch(`${BACKEND_URL}/api/developer/test/${jobId}/submit`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ 
+        auto,
+        reason: auto ? (reason || "unknown_auto_reason") : null,
+        submissions   // ← NEW: send the array!
+      }),
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Submit failed");
+
+    setSubmitted(true);
+
+    setSession(prev => prev ? {
+      ...prev,
+      status: auto ? "auto-submitted" : "submitted",
+      submissionType: auto ? "auto" : "manual",
+      autoSubmitReason: auto ? (reason || "violation_detected") : null,
+      closedAt: new Date().toISOString()
+    } : prev);
+
+    return { success: true, auto };
+  } catch (err) {
+    console.error("Submit failed:", err);
+    return { success: false, error: err.message };
+  }
+};
+  
+  
   useEffect(() => {
-    // Mock session data — pretend the backend returned this
-    const mockSession = {
-      sessionId: "mock-session-123",
-      startedAt: new Date().toISOString(),
-      endsAt: new Date(Date.now() + 45 * 60 * 1000).toISOString(), // 45 minutes from now
-      testTotalTime: 45,
-      challenges: [
-        {
-          challengeId: "ch1",
-          title: "Echo Input",
-          problemStatement: "Write a program that reads a single line of input and prints it exactly as received.",
-          constraints: "Input will contain a single line of text.\nNo extra spaces or newlines allowed.\nMaximum length: 1000 characters.",
-          testCases: [
-            { input: "Hello", expected_output: "Hello" },
-            { input: "World!", expected_output: "World!" },
-            { input: "  leading spaces", expected_output: "  leading spaces" },
-            { input: "12345", expected_output: "12345" },
-          ],
-          timeLimit: 15, // minutes
-          order: 0,
-        },
-        {
-          challengeId: "ch2",
-          title: "Reverse String",
-          problemStatement: "Write a function that takes a string and returns it reversed.",
-          constraints: "String length between 1 and 5000 characters.\nMay contain any printable characters.",
-          testCases: [
-            { input: "hello", expected_output: "olleh" },
-            { input: "racecar", expected_output: "racecar" },
-            { input: "A man a plan a canal Panama", expected_output: "amanaP lanac a nalp a nam A" },
-            { input: "12321", expected_output: "12321" },
-          ],
-          timeLimit: 20,
-          order: 1,
-        },
-        {
-          challengeId: "ch3",
-          title: "Sum of Two Numbers",
-          problemStatement: "Given two integers, return their sum.",
-          constraints: "-10^9 ≤ a, b ≤ 10^9",
-          testCases: [
-            { input: "1\n2", expected_output: "3" },
-            { input: "-5\n7", expected_output: "2" },
-            { input: "0\n0", expected_output: "0" },
-            { input: "1000000000\n-1000000000", expected_output: "0" },
-          ],
-          timeLimit: 10,
-          order: 2,
-        },
-      ],
-      submissions: [], // empty for now
+    if (!jobId) {
+      setError("No job ID provided");
+      setLoading(false);
+      return;
+    }
+
+    const initializeSession = async () => {
+      if (isInitializing || submitted) return;
+
+      setIsInitializing(true);
+      setLoading(true);
+      if (initRef.current === 0) setError(null);
+
+      try {
+        const token = localStorage.getItem("devsta_token");
+        if (!token) throw new Error("No authentication token found.");
+
+        const headers = {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        };
+
+        let res = await fetch(`${BACKEND_URL}/api/developer/test/${jobId}/session`, { headers });
+        let data;
+
+        if (res.ok) {
+          data = await res.json();
+        } else if (res.status === 404) {
+          // No session → start new
+          res = await fetch(`${BACKEND_URL}/api/developer/test/${jobId}/start`, {
+            method: "POST",
+            headers,
+          });
+
+          if (res.ok) {
+            res = await fetch(`${BACKEND_URL}/api/developer/test/${jobId}/session`, { headers });
+            if (!res.ok) throw new Error("Failed to fetch after start");
+            data = await res.json();
+          } else {
+            const errData = await res.json().catch(() => ({}));
+            const msg = errData.error || "Failed to start";
+
+            if (msg.toLowerCase().includes("already started") || res.status === 400) {
+              console.warn(`[useAssessmentSession ${jobId}] 400 detected:`, msg);
+
+              if (msg.toLowerCase().includes("submitted") || msg.toLowerCase().includes("closed")) {
+                // Already submitted → show message, no retry
+                setError("This test has already been submitted. You cannot start it again.");
+                return;
+              }
+
+              // Possible race → retry limited times
+              if (initRef.current < 3) {
+                setTimeout(initializeSession, 800);
+                return;
+              } else {
+                setError("Could not start test session. Please refresh or contact support.");
+                return;
+              }
+            }
+
+            throw new Error(msg);
+          }
+        } else {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.error || "Failed to load session");
+        }
+
+        setSession(data);
+        setError(null);
+
+        if (data?.status === "submitted" || data?.status === "auto-submitted") {
+          setSubmitted(true);
+        }
+
+        if (data?.endsAt) {
+          const endTime = new Date(data.endsAt).getTime();
+          const remaining = Math.floor((endTime - Date.now()) / 1000);
+          setTimeLeft(remaining > 0 ? remaining : 0);
+        }
+      } catch (err) {
+        console.error("Session init error:", err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
+        setIsInitializing(false);
+        initRef.current++;
+      }
     };
 
-    setSession(mockSession);
+    initializeSession();
 
-    // Calculate initial time left
-    const endTime = new Date(mockSession.endsAt).getTime();
-    const remaining = Math.floor((endTime - Date.now()) / 1000);
-    setTimeLeft(remaining > 0 ? remaining : 0);
-
-    // Timer countdown
+    // Poll only when needed
     const interval = setInterval(() => {
-      const now = Date.now();
-      const remaining = Math.floor((endTime - now) / 1000);
-      setTimeLeft(remaining > 0 ? remaining : 0);
-      if (remaining <= 0) {
-        handleSubmit(true);
-        clearInterval(interval);
+      if (session && !submitted && timeLeft > 15 && !isInitializing) {
+        initializeSession();
       }
-    }, 1000);
+    }, 20000);
 
     return () => clearInterval(interval);
-  }, [jobId]);
+  }, [jobId]); // ← important: only jobId dependency
 
-  const handleSubmit = (auto = false) => {
-    if (submitted) return;
-    setSubmitted(true);
-    alert(auto ? "Time expired. Test auto-submitted." : "Test submitted successfully!");
-    // In real version → call backend submit
-  };
+  // Countdown timer
+  // useEffect(() => {
+  //   if (timeLeft <= 0 || submitted || loading || !session?.endsAt) return;
 
-  return { session, timeLeft, submitted, handleSubmit };
+  //   const timer = setInterval(() => {
+  //     setTimeLeft((prev) => {
+  //       if (prev <= 1) {
+  //         handleSubmit(true);
+  //         return 0;
+  //       }
+  //       return prev - 1;
+  //     });
+  //   }, 1000);
+
+  //   return () => clearInterval(timer);
+  // }, [timeLeft, submitted, loading, session]);
+
+
+  useEffect(() => {
+  if (timeLeft <= 0 || submitted || loading || !session?.endsAt) return;
+
+  const timer = setInterval(() => {
+    setTimeLeft((prev) => {
+      if (prev <= 1) {
+        handleSubmit(true, "time_expired");   // ← send reason
+        return 0;
+      }
+      return prev - 1;
+    });
+  }, 1000);
+
+  return () => clearInterval(timer);
+}, [timeLeft, submitted, loading, session, handleSubmit]);
+
+
+  // const handleSubmit = async (auto = false) => {
+  //   if (submitted) return { success: false, error: "Already submitted" };
+
+  //   try {
+  //     const token = localStorage.getItem("devsta_token");
+  //     const res = await fetch(`${BACKEND_URL}/api/developer/test/${jobId}/submit`, {
+  //       method: "POST",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //         Authorization: `Bearer ${token}`,
+  //       },
+  //     });
+
+  //     const data = await res.json();
+  //     if (!res.ok) throw new Error(data.error || "Submit failed");
+
+  //     setSubmitted(true);
+  //     return { success: true, auto };
+  //   } catch (err) {
+  //     return { success: false, error: err.message };
+  //   }
+  // };
+// in useAssessmentSession hook — improve handleSubmit
+  return { session, timeLeft, submitted, handleSubmit, error, loading, isInitializing };
 }

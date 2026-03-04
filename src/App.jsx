@@ -143,14 +143,23 @@ function App() {
               </ProtectedRoute>
             }
           />
-           <Route
+           {/* <Route
             path="/dashboard/coding-test"
             element={
               <ProtectedRoute requireOnboarding={true}>
                 <CodingTestPage />
               </ProtectedRoute>
             }
-          />
+          /> */}
+
+          <Route
+  path="/dashboard/coding-test/:jobId"
+  element={
+    <ProtectedRoute requireOnboarding={true}>
+      <CodingTestPage />
+    </ProtectedRoute>
+  }
+/>
 
           {/* <Route path="/coding-test" element={<CodingTestPage />} /> */}
 

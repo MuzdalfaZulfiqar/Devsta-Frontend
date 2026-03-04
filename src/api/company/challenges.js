@@ -58,7 +58,7 @@
 //   return res.json();
 // };
 
-
+// api/company/challenges.js
 import { BACKEND_URL } from "../../../config";
 
 const getToken = () => localStorage.getItem("companyToken");

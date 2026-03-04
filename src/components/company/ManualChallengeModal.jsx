@@ -63,6 +63,8 @@ export default function ManualChallengeModal({ isOpen, onClose, onSubmit, initia
     resetForm();
   };
 
+  const isEditing = !!initialData;
+
   if (!isOpen) return null;
 
   return (
@@ -101,6 +103,39 @@ export default function ManualChallengeModal({ isOpen, onClose, onSubmit, initia
             ×
           </button>
         </div>
+
+        {/* ──── NEW WARNING BLOCK ──── */}
+        {isEditing && (
+          <div className="bg-red-50 border-l-4 border-red-600 p-5 mx-6 mt-5 rounded-lg">
+            <div className="flex items-start gap-3">
+              <svg 
+                className="text-red-600 mt-0.5 flex-shrink-0" 
+                width="20" height="20" 
+                viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+              >
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" y1="8" x2="12" y2="12" />
+                <line x1="12" y1="16" x2="12.01" y2="16" />
+              </svg>
+              <div>
+                <p className="font-medium text-red-800 text-base">
+                  Warning: Editing a challenge that may already be in use
+                </p>
+                <p className="text-sm text-red-700 mt-2 leading-relaxed">
+                  If this challenge has already been sent to any candidates:
+                </p>
+                <ul className="mt-2 ml-5 space-y-1.5 text-sm text-red-700 list-disc">
+                  <li>Changes will <strong>only affect future candidates</strong></li>
+                  <li>Previous candidates will keep the <strong>old version</strong></li>
+                  <li>This can make scoring <strong>unfair or inconsistent</strong></li>
+                </ul>
+                <p className="mt-3 text-sm font-medium text-red-800">
+                  <strong>Recommended:</strong> Create a <strong>new challenge</strong> instead of editing this one.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Scrollable content */}
         <div
@@ -323,7 +358,8 @@ export default function ManualChallengeModal({ isOpen, onClose, onSubmit, initia
                   transition-colors font-medium shadow-sm
                 "
               >
-                {initialData ? "Update Challenge" : "Save Challenge"}
+                {/* {initialData ? "Update Challenge" : "Save Challenge"} */}
+                {isEditing ? "Update Challenge" : "Save Challenge"}
               </button>
             </div>
           </form>

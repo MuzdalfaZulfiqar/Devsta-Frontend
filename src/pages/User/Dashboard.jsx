@@ -26,7 +26,7 @@ export default function Dashboard() {
   const [infoMessage, setInfoMessage] = useState("");
 
   const [announcements, setAnnouncements] = useState([]);
-
+  const [hasPendingCodingTest, setHasPendingCodingTest] = useState(false);
   // Fetch live announcements
   useEffect(() => {
     const fetchAnnouncements = async () => {
@@ -41,13 +41,13 @@ export default function Dashboard() {
           // Push to notifications
           data.forEach((ann) => {
             addNotification({
-  id: `announcement-${ann._id}`,
-  title: ann.title,
-  message: ann.message,
-  category: ann.category,
-  type: "announcement",
-  icon: "megaphone",
-});
+              id: `announcement-${ann._id}`,
+              title: ann.title,
+              message: ann.message,
+              category: ann.category,
+              type: "announcement",
+              icon: "megaphone",
+            });
 
           });
         }
@@ -59,6 +59,40 @@ export default function Dashboard() {
     fetchAnnouncements();
   }, [token, addNotification]);
 
+  // Check for pending coding tests (invited assessments)
+  useEffect(() => {
+    const checkPendingTests = async () => {
+      try {
+        const res = await fetch(`${BACKEND_URL}/api/developer/test/invited-tests`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+        if (res.ok && data.invitedTests?.length > 0) {
+          setHasPendingCodingTest(true);
+          
+          // Optional: Notify once
+          addNotification({
+            id: "pending-coding-test",
+            title: "Coding Test Invited!",
+            message: `You have been invited to take a coding test for ${data.invitedTests[0].job.title}.`,
+            category: "assessment",
+            type: "info",
+            icon: "code",
+            action: {
+              label: "Start Test",
+              onClick: () => navigate("/dashboard/coding-test")
+            }
+          });
+        }
+      } catch (err) {
+        console.error("Failed to check pending tests", err);
+      }
+    };
+
+    if (token) {
+      checkPendingTests();
+    }
+  }, [token, navigate, addNotification]);
   useEffect(() => {
     if (user && !user.onboardingCompleted) navigate("/welcome");
 
@@ -227,6 +261,16 @@ export default function Dashboard() {
       actionLabel: "Start Test",
       onAction: () => navigate("/skill-test"),
     },
+hasPendingCodingTest && {
+  title: "Pending Coding Tests",
+  description:
+    "You have been invited to take coding assessments for some jobs. Go to My Applications to start them.",
+  actionLabel: "Go to My Applications",
+  onAction: () => {
+    navigate("/dashboard/jobs#my-applications-section");
+  },
+  highlight: true,
+},
     // Only show Validate Skills card if at least one source is missing
     validateSkillsCard,
   ].filter(Boolean);
@@ -275,17 +319,7 @@ export default function Dashboard() {
             view your achievements.
           </p>
         </div>
-{
-  /* Add a button for coding environment */
-}
-<div className="mt-6">
-  <button
-    onClick={() => navigate("/dashboard/coding-test")}
-    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
-  >
-    Open Coding Environment
-  </button>
-</div>
+
         {/* Announcements Section */}
         {announcements.length > 0 && (
           <div className="mt-8">
@@ -295,12 +329,12 @@ export default function Dashboard() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {announcements.map((ann) => (
                 <AnnouncementCard
-  key={ann._id}
-  title={ann.title}
-  message={ann.message}
-  category={ann.category}
-  createdAt={ann.createdAt}
-/>
+                  key={ann._id}
+                  title={ann.title}
+                  message={ann.message}
+                  category={ann.category}
+                  createdAt={ann.createdAt}
+                />
 
               ))}
             </div>

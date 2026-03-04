@@ -1,6 +1,8 @@
 import axios from "axios";
+import { BACKEND_URL } from "../../config";
 
-const API_BASE = import.meta.env.VITE_API_URL || "https://devsta-backend.onrender.com";
+// const API_BASE = "https://devsta-backend.onrender.com";
+const API_BASE = BACKEND_URL;
 
 // export async function fetchRecommendedJobs(k = 10) {
 //   const token = localStorage.getItem("token"); // adjust if you store it differently

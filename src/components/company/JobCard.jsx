@@ -186,12 +186,12 @@ export default function JobCard({ job, onToggle, onEdit, onDelete }) {
             View Applicants
           </button>
 
-          <button
+          {/* <button
             onClick={() => navigate(`/company/jobs/${job._id}/challenges`)}
             className="px-4 py-2 bg-primary text-white rounded hover:bg-primary/90"
           >
             Manage Challenges
-          </button>
+          </button> */}
 
 
           <div>

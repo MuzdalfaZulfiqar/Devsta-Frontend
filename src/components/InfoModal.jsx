@@ -1,6 +1,17 @@
 import { Info } from "lucide-react";
+import { useEffect } from "react";
+export default function InfoModal({ open, title, message, onClose, duration = 300 }) {
+  // if (!open) return null;
+  useEffect(() => {
+    if (!open) return;
 
-export default function InfoModal({ open, title, message, onClose }) {
+    const timer = setTimeout(() => {
+      onClose();
+    }, duration);
+
+    return () => clearTimeout(timer);
+  }, [open, duration, onClose]);
+
   if (!open) return null;
 
   return (
