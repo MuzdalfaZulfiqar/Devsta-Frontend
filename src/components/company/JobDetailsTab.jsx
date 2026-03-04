@@ -1,3 +1,4 @@
+// src/components/company/JobDetailsTab.jsx
 import { useEffect, useState } from "react";
 import { getJobById } from "../../api/company/publicJobs";
 

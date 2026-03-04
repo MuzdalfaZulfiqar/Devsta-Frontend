@@ -7,7 +7,7 @@ import ErrorModal from "../../../components/ErrorModal";
 import { BACKEND_URL } from "../../../../config";
 import { Eye, Download, Upload } from "lucide-react";
 
-export default function Resume({ user, editable = false }) {
+export default function Resume({ user, editable = false, onUploaded}) {
   const { token, setUser } = useAuth();
 
   const [showResumeModal, setShowResumeModal] = useState(false);

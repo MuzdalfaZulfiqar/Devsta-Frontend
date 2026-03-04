@@ -1,3 +1,4 @@
+// src/pages/company/CompanyDashboardPage.jsx
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import CompanyDashboardLayout from "../../components/company/CompanyDashboardLayout";
