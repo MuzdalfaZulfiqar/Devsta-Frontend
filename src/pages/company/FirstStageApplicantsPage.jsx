@@ -1,6 +1,7 @@
 // src/pages/company/FirstStageApplicantsPage.jsx
 import { useEffect, useMemo, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { FileText } from "lucide-react";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import CompanyDashboardLayout from "../../components/company/CompanyDashboardLayout";
 import {
   getFirstStageApplicants,
@@ -217,7 +218,7 @@ function TestStatusBadge({ assessment }) {
 
 export default function FirstStageApplicantsPage() {
   const { jobId } = useParams();
-
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("applied");
   const [job, setJob] = useState(null);
   const [applicants, setApplicants] = useState([]);
@@ -257,6 +258,10 @@ export default function FirstStageApplicantsPage() {
 
   const [showInterviewStatusConfirm, setShowInterviewStatusConfirm] = useState(false);
   const [pendingInterviewStatus, setPendingInterviewStatus] = useState(null);
+
+  const [interviewOpen, setInterviewOpen] = useState(false);
+  const [selectedApp, setSelectedApp] = useState(null);
+  const [interviewScore, setInterviewScore] = useState("");
 
   const [rubricOpen, setRubricOpen] = useState(false);
   const [scorecardOpen, setScorecardOpen] = useState(false);
@@ -511,50 +516,19 @@ export default function FirstStageApplicantsPage() {
   // ─────────────────────────────────────────────
   // Table headers per tab  (✅ SINGLE definition)
   // ─────────────────────────────────────────────
+  // const tableHead = useMemo(() => {
+  //   if (activeTab === "applied") return ["", "Name", "Email", "Phone", "Test Status", "Applied", "ML Scores", "Resume", "GitHub", "Action"];
+  //   if (activeTab === "assessment") return ["", "Name", "Email", "Phone", "Assessment", "Coding Score", "Applied", "Resume", "GitHub"];
+  //   if (activeTab === "shortlisted") return ["", "Name", "Email", "Phone", "Test", "Interview Score", "Applied", "Resume", "GitHub", "Actions", "Coding", "Interview"];
+  //   return [];
+  // }, [activeTab]);
+
+
   const tableHead = useMemo(() => {
-    if (activeTab === "applied")
-      return [
-        "",
-        "Name",
-        "Email",
-        "Phone",
-        "Test Status",
-        "Applied",
-        "ML Scores",
-        "Resume",
-        "GitHub",
-        "Action",
-      ];
-
-    if (activeTab === "assessment")
-      return [
-        "",
-        "Name",
-        "Email",
-        "Phone",
-        "Assessment",
-        "Coding Score",
-        "Applied",
-        "Resume",
-        "GitHub",
-      ];
-
-    if (activeTab === "shortlisted")
-      return [
-        "",
-        "Name",
-        "Email",
-        "Phone",
-        "Test",
-        "Interview Score",
-        "Applied",
-        "Resume",
-        "GitHub",
-        "Actions",
-        "Coding",
-        "Interview",
-      ];
-
+    if (activeTab === "applied") return ["", "Name", "Email", "Phone", "Test Status", "Applied", "ML Scores", "Resume", "GitHub", "Action", "Report"]; // ← Added "Report"
+    if (activeTab === "assessment") return ["", "Name", "Email", "Phone", "Assessment", "Coding Score", "Applied", "Resume", "GitHub", "Report"]; // ← Added "Report"
+    if (activeTab === "shortlisted") return ["", "Name", "Email", "Phone", "Test", "Interview Score", "Applied", "Resume", "GitHub", "Actions", "Coding", "Interview", "Report"]; // ← Added "Report"
+    // if (activeTab === "final") return ["Name", "Email", "Test Score", "Interview Score", "Actions", "Report"]; // ← Added "Report"
     return [];
   }, [activeTab]);
 
@@ -808,10 +782,9 @@ export default function FirstStageApplicantsPage() {
               <Link
                 to={`/company/jobs/${jobId}/challenges`}
                 className={`inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium rounded-lg shadow-sm transition
-                  ${
-                    eligibleDraftCount === 0
-                      ? "bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed pointer-events-none"
-                      : "bg-indigo-600 hover:bg-indigo-700 text-white"
+                  ${eligibleDraftCount === 0
+                    ? "bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed pointer-events-none"
+                    : "bg-indigo-600 hover:bg-indigo-700 text-white"
                   }`}
               >
                 <Code size={15} />
@@ -840,10 +813,9 @@ export default function FirstStageApplicantsPage() {
                 key={t.key}
                 onClick={() => setActiveTab(t.key)}
                 className={`px-4 py-2 rounded-full text-sm font-semibold border transition
-                  ${
-                    isActive
-                      ? "bg-primary text-white border-primary"
-                      : "bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-200 border-gray-200 dark:border-gray-700 hover:bg-primary/5"
+                  ${isActive
+                    ? "bg-primary text-white border-primary"
+                    : "bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-200 border-gray-200 dark:border-gray-700 hover:bg-primary/5"
                   }`}
               >
                 {t.label}{" "}
@@ -861,10 +833,9 @@ export default function FirstStageApplicantsPage() {
                 onClick={handleEvaluateAll}
                 disabled={evaluating || loading}
                 className={`ml-1 inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg shadow-sm transition
-                  ${
-                    evaluating
-                      ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                      : "bg-indigo-600 hover:bg-indigo-700 text-white"
+                  ${evaluating
+                    ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                    : "bg-indigo-600 hover:bg-indigo-700 text-white"
                   }`}
               >
                 {evaluating ? (
@@ -880,10 +851,9 @@ export default function FirstStageApplicantsPage() {
                 onClick={handleShortlistSelected}
                 disabled={shortlisting || draftCount === 0}
                 className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg shadow-sm transition
-                  ${
-                    shortlisting || draftCount === 0
-                      ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                      : "bg-green-600 hover:bg-green-700 text-white"
+                  ${shortlisting || draftCount === 0
+                    ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                    : "bg-green-600 hover:bg-green-700 text-white"
                   }`}
               >
                 {shortlisting ? (
@@ -903,10 +873,9 @@ export default function FirstStageApplicantsPage() {
               onClick={handleMoveToFinal}
               disabled={shortlisting || draftCount === 0}
               className={`ml-1 inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg shadow-sm transition
-                ${
-                  shortlisting || draftCount === 0
-                    ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                    : "bg-purple-600 hover:bg-purple-700 text-white"
+                ${shortlisting || draftCount === 0
+                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  : "bg-purple-600 hover:bg-purple-700 text-white"
                 }`}
             >
               {shortlisting ? (
@@ -923,11 +892,10 @@ export default function FirstStageApplicantsPage() {
         {/* Eval result message */}
         {evalMessage && activeTab === "assessment" && (
           <div
-            className={`mb-4 px-4 py-2.5 rounded-lg text-sm ${
-              evalMessage.type === "success"
+            className={`mb-4 px-4 py-2.5 rounded-lg text-sm ${evalMessage.type === "success"
                 ? "bg-green-50 text-green-700 border border-green-200"
                 : "bg-red-50 text-red-700 border border-red-200"
-            }`}
+              }`}
           >
             {evalMessage.text}
           </div>
@@ -1211,6 +1179,15 @@ export default function FirstStageApplicantsPage() {
                                 </button>
                               )}
                             </td>
+                            <td className="px-5 py-3.5 whitespace-nowrap">
+                              <button
+                                onClick={() => navigate(`/company/jobs/${jobId}/applications/${app._id}/report`)}
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:hover:bg-emerald-900/50 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 transition"
+                                title="View comprehensive candidate report">
+                                <FileText size={12} />
+                                Report
+                              </button>
+                            </td>
                           </>
                         )}
 
@@ -1280,6 +1257,15 @@ export default function FirstStageApplicantsPage() {
                               ) : (
                                 "—"
                               )}
+                            </td>
+
+                            <td className="px-5 py-3.5 whitespace-nowrap">
+                              <button
+                                onClick={() => navigate(`/company/jobs/${jobId}/applications/${app._id}/report`)}
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:hover:bg-emerald-900/50 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 transition">
+                                <FileText size={12} />
+                                Report
+                              </button>
                             </td>
                           </>
                         )}
@@ -1352,10 +1338,9 @@ export default function FirstStageApplicantsPage() {
                                     : "Fill scorecard"
                                 }
                                 className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border transition
-                                  ${
-                                    app.interview?.status === "completed"
-                                      ? "bg-primary/10 text-primary hover:bg-primary/20 border-primary/30"
-                                      : "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
+                                  ${app.interview?.status === "completed"
+                                    ? "bg-primary/10 text-primary hover:bg-primary/20 border-primary/30"
+                                    : "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
                                   }`}
                               >
                                 <Star size={12} />
@@ -1428,6 +1413,14 @@ export default function FirstStageApplicantsPage() {
                                 </button>
                               )}
                             </td>
+                            <td className="px-5 py-3.5 whitespace-nowrap">
+                              <button
+                                onClick={() => navigate(`/company/jobs/${jobId}/applications/${app._id}/report`)}
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:hover:bg-emerald-900/50 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 transition">
+                                <FileText size={12} />
+                                Report
+                              </button>
+                            </td>
                           </>
                         )}
                       </tr>
@@ -1486,9 +1479,8 @@ export default function FirstStageApplicantsPage() {
       <ConfirmModal
         open={showFinalDecisionConfirm}
         title={`Confirm ${pendingDecision?.decision === "hired" ? "Hiring" : "Rejecting"}?`}
-        message={`Are you sure you want to ${
-          pendingDecision?.decision === "hired" ? "hire" : "reject"
-        } this candidate? This cannot be undone.`}
+        message={`Are you sure you want to ${pendingDecision?.decision === "hired" ? "hire" : "reject"
+          } this candidate? This cannot be undone.`}
         confirmLabel={pendingDecision?.decision === "hired" ? "Yes, Hire" : "Yes, Reject"}
         cancelLabel="Cancel"
         onConfirm={confirmFinalDecision}
@@ -1674,6 +1666,102 @@ export default function FirstStageApplicantsPage() {
             setJob((prev) => (prev ? { ...prev, interviewRubric: rubric } : prev))
           }
         />
+      )}
+
+
+      {/* ── Interview Score Modal ──────────────────────────────────────────── */}
+      {interviewOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-white dark:bg-gray-900 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden">
+            <div className="px-6 py-4 border-b flex items-center justify-between">
+              <div>
+                <h2 className="text-base font-semibold text-gray-900 dark:text-white">Interview Score</h2>
+                <p className="text-sm text-gray-500">{selectedApp?.developerSnapshot?.name}</p>
+              </div>
+              <button onClick={() => { setInterviewOpen(false); setSelectedApp(null); setInterviewScore(""); }}
+                className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition">
+                <X size={16} />
+              </button>
+            </div>
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Score (0–100)</label>
+                <input type="number" min="0" max="100" value={interviewScore} onChange={e => setInterviewScore(e.target.value)}
+                  className="w-full border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:border-transparent" />
+                <p className="mt-1.5 text-xs text-gray-400">Ensure interview is marked Completed before scoring.</p>
+              </div>
+              <div className="flex gap-3">
+                <button onClick={() => { setInterviewOpen(false); setSelectedApp(null); setInterviewScore(""); }}
+                  className="flex-1 py-2.5 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition">
+                  Cancel
+                </button>
+                <button onClick={onSaveInterview}
+                  className="flex-1 py-2.5 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary/90 transition">
+                  Save Score
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Schedule Interview Modal ───────────────────────────────────────── */}
+      {scheduleOpen && selectedAppForInterview && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-white dark:bg-gray-900 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden">
+            <div className="px-6 py-4 border-b flex items-center justify-between">
+              <div>
+                <h2 className="text-base font-semibold text-gray-900 dark:text-white">Schedule Interview</h2>
+                <p className="text-sm text-gray-500">For {selectedAppForInterview.developerSnapshot?.name}</p>
+              </div>
+              <button onClick={() => setScheduleOpen(false)} disabled={scheduling}
+                className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition">
+                <X size={16} />
+              </button>
+            </div>
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Date & Time</label>
+                <input type="datetime-local" value={scheduledAt} onChange={e => setScheduledAt(e.target.value)} disabled={scheduling}
+                  className="w-full border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Notes <span className="font-normal text-gray-400">(optional)</span></label>
+                <textarea value={interviewNotes} onChange={e => setInterviewNotes(e.target.value)} rows={3} disabled={scheduling}
+                  placeholder="e.g., Focus on React skills"
+                  className="w-full border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary resize-none" />
+              </div>
+              <div className="flex gap-3 pt-1">
+                <button onClick={() => setScheduleOpen(false)} disabled={scheduling}
+                  className="flex-1 py-2.5 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 transition">
+                  Cancel
+                </button>
+                <button disabled={scheduling}
+                  onClick={async () => {
+                    if (!scheduledAt) { showToast("Please select a date and time", 5000); return; }
+                    setScheduling(true);
+                    try {
+                      const token = localStorage.getItem("companyToken");
+                      const response = await fetch(
+                        `${BACKEND_URL}/api/interview/jobs/${jobId}/applications/${selectedAppForInterview._id}/schedule-interview`,
+                        { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` }, body: JSON.stringify({ scheduledAt, notes: interviewNotes }) }
+                      );
+                      const data = await response.json();
+                      if (!response.ok) throw new Error(data.message || "Failed to schedule");
+                      showToast("Interview scheduled and notified!", 5000);
+                      setScheduleOpen(false); setScheduledAt(""); setInterviewNotes("");
+                      fetchApplicants();
+                    } catch (err) { showToast(err.message || "Failed to schedule", 5000); }
+                    finally { setScheduling(false); }
+                  }}
+                  className={`flex-1 py-2.5 rounded-lg text-sm font-medium text-white flex items-center justify-center gap-2 transition
+                    ${scheduling ? "bg-blue-400 cursor-not-allowed" : "bg-primary hover:bg-primary/90"}`}>
+                  {scheduling ? <><Loader2 size={14} className="animate-spin" /> Scheduling…</> : "Schedule & Notify"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
       {scorecardOpen && scorecardApp && (
