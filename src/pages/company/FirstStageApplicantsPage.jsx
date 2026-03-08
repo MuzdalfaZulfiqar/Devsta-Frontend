@@ -272,10 +272,36 @@ export default function FirstStageApplicantsPage() {
   const [sendTestTarget, setSendTestTarget] = useState(null);
   const [sendingTest, setSendingTest] = useState(false);
 
+  const [codingSessions, setCodingSessions] = useState({});
+
+  const [filters, setFilters] = useState({
+    minCodingScore: "",
+    minCorrectness: "",
+    minPerformance: "",
+    minCodeQuality: "",
+  });
+
   const openSendTestModal = (app) => {
     setSendTestTarget(app);
     setSendTestModalOpen(true);
   };
+
+  const fetchCodingSession = async (appId) => {
+  if (codingSessions[appId]) return; // already fetched
+
+  try {
+    const token = localStorage.getItem("companyToken");
+    const res = await fetch(
+      `${BACKEND_URL}/api/company/jobs/challenges/job/${jobId}/applicant/${appId}/coding-session`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    if (!res.ok) throw new Error();
+    const data = await res.json();
+    setCodingSessions(prev => ({ ...prev, [appId]: data.session }));
+  } catch (err) {
+    console.warn("Failed to prefetch session", appId);
+  }
+};
 
   const confirmSendTestToOne = async ({ availableFrom, availableUntil }) => {
     const now = new Date();
@@ -441,7 +467,7 @@ export default function FirstStageApplicantsPage() {
 
   useEffect(() => {
     if (!jobId) return;
-
+setCodingSessions({}); 
     const loadData = async () => {
       setLoading(true);
       try {
@@ -516,21 +542,65 @@ export default function FirstStageApplicantsPage() {
   // ─────────────────────────────────────────────
   // Table headers per tab  (✅ SINGLE definition)
   // ─────────────────────────────────────────────
+
+
+
   // const tableHead = useMemo(() => {
-  //   if (activeTab === "applied") return ["", "Name", "Email", "Phone", "Test Status", "Applied", "ML Scores", "Resume", "GitHub", "Action"];
-  //   if (activeTab === "assessment") return ["", "Name", "Email", "Phone", "Assessment", "Coding Score", "Applied", "Resume", "GitHub"];
-  //   if (activeTab === "shortlisted") return ["", "Name", "Email", "Phone", "Test", "Interview Score", "Applied", "Resume", "GitHub", "Actions", "Coding", "Interview"];
+  //   if (activeTab === "applied") return ["", "Name", "Email", "Phone", "Test Status", "Applied", "ML Scores", "Resume", "GitHub", "Action", "Report"]; // ← Added "Report"
+  //   if (activeTab === "assessment") return ["", "Name", "Email", "Phone", "Assessment", "Correctness", "Perf", "Code Q.", "Completed", "Coding Score", "Applied", "Resume", "GitHub", "Report"]; // ← Added "Report"
+  //   // if (activeTab === "shortlisted") return ["", "Name", "Email", "Phone", "Test", "Interview Score", "Applied", "Resume", "GitHub", "Actions", "Coding", "Interview", "Report"]; // ← Added "Report"
+  //    if (activeTab === "shortlisted") return ["", "Name", "Email", "Phone", "Test", "Correctness", "Perf", "Code Q.", "Completed", "Coding Score", "Interview Score", "Applied", "Resume", "GitHub", "Actions", "Report"];
+  //   // if (activeTab === "final") return ["Name", "Email", "Test Score", "Interview Score", "Actions", "Report"]; // ← Added "Report"
   //   return [];
   // }, [activeTab]);
 
-
   const tableHead = useMemo(() => {
-    if (activeTab === "applied") return ["", "Name", "Email", "Phone", "Test Status", "Applied", "ML Scores", "Resume", "GitHub", "Action", "Report"]; // ← Added "Report"
-    if (activeTab === "assessment") return ["", "Name", "Email", "Phone", "Assessment", "Coding Score", "Applied", "Resume", "GitHub", "Report"]; // ← Added "Report"
-    if (activeTab === "shortlisted") return ["", "Name", "Email", "Phone", "Test", "Interview Score", "Applied", "Resume", "GitHub", "Actions", "Coding", "Interview", "Report"]; // ← Added "Report"
-    // if (activeTab === "final") return ["Name", "Email", "Test Score", "Interview Score", "Actions", "Report"]; // ← Added "Report"
+    if (activeTab === "applied") {
+      return ["", "Name", "Email", "Phone", "Test Status", "Applied", "ML Scores", "Resume", "GitHub", "Action", "Report"];
+    }
+    if (activeTab === "assessment") {
+      return ["", "Name", "Email", "Phone", "Assessment", "Correctness", "Perf", "Code Q.",  "Coding Score", "Applied", "Resume", "GitHub", "Report"];
+    }
+    if (activeTab === "shortlisted") {
+      return [
+        "",                     // Checkbox
+        "Name",
+        "Email",
+        "Phone",                // codingChallengeScore
+        "Correctness",
+        "Perf",
+        "Code Q.",
+        "Coding Score",         // ← add this (was missing in body)
+        "Interview Score",
+        "Applied",
+        "Resume",
+        "GitHub", 
+        "Actions",   
+         "Interview", 
+                // scorecard + coding details + schedule
+        "Report"
+      ];
+    }
     return [];
   }, [activeTab]);
+
+  const filteredApplicants = useMemo(() => {
+    if (!["assessment", "shortlisted"].includes(activeTab)) return applicants;
+
+    return applicants.filter(app => {
+      const score = Number(app.codingChallengeScore) || 0;
+
+      if (filters.minCodingScore && score < Number(filters.minCodingScore)) return false;
+
+      const stats = getCodingStats(app);
+
+      if (filters.minCorrectness && (stats.correctness ?? 0) < Number(filters.minCorrectness)) return false;
+      if (filters.minPerformance && (stats.performance ?? 0) < Number(filters.minPerformance)) return false;
+      if (filters.minCodeQuality && (stats.codeQuality ?? 0) < Number(filters.minCodeQuality)) return false;
+
+      return true;
+    });
+  }, [applicants, activeTab, filters, job]);
 
   // ✅ SINGLE definition (uses draftApplicants)
   const allVisibleSelected = useMemo(() => {
@@ -561,7 +631,7 @@ export default function FirstStageApplicantsPage() {
         type: "success",
         text: data.message || `Evaluated ${data.evaluatedSubmissions || 0} submissions`,
       });
-
+   setCodingSessions({});
       await fetchApplicants();
       await fetchCounts();
     } catch (err) {
@@ -570,6 +640,25 @@ export default function FirstStageApplicantsPage() {
       setEvaluating(false);
     }
   };
+
+//   useEffect(() => {
+//   if (["assessment", "shortlisted"].includes(activeTab) && applicants.length) {
+//     applicants.forEach(app => fetchCodingSession(app._id));
+//   }
+// }, [applicants, activeTab, jobId]);
+
+useEffect(() => {
+  if (!["assessment", "shortlisted"].includes(activeTab) || !applicants.length) return;
+
+  applicants.forEach(app => {
+    // Skip: already have fresh data from the list API
+    if (app.codingSession) return;
+    // Skip: already cached from a previous modal open
+    if (codingSessions[app._id]) return;
+    // Only fetch if truly missing
+    fetchCodingSession(app._id);
+  });
+}, [applicants, activeTab, jobId]);
 
   const openCodingModal = async (app) => {
     setSelectedApplicant(app);
@@ -695,6 +784,69 @@ export default function FirstStageApplicantsPage() {
       showToast(err.message || "Could not update status", 5000);
     }
   };
+
+
+  // Helper – put near ScorePill
+// function getCodingStats(app) {
+//   const cached = codingSessions[app._id];
+//   const subs = cached?.submissions || app.assessment?.submissions || [];
+
+//   if (!subs.length) {
+//     return { correctness: null, performance: null, codeQuality: null, completed: 0, totalChallenges: 0 };
+//   }
+
+//   const evaluated = subs.filter(s => s.evaluation && s.score != null);
+
+//   const avg = (key) => {
+//     if (!evaluated.length) return null;
+//     const sum = evaluated.reduce((acc, s) => acc + (s.evaluation?.[key] || 0), 0);
+//     return (sum / evaluated.length) * 100;
+//   };
+
+//   return {
+//     correctness: avg("correctness"),
+//     performance: avg("performance"),
+//     codeQuality: avg("codeQuality"),
+//     completed: evaluated.length,
+//     totalChallenges: subs.length || job?.selectedChallenges?.length || "?"
+//   };
+// }
+function getCodingStats(app) {
+  // Prefer the data coming directly from the list endpoint (fresh after evaluation)
+  let subs = app.codingSession?.submissions || [];
+
+  // Fallback to cached modal data only if list didn't provide it yet
+  if (!subs.length && codingSessions[app._id]) {
+    subs = codingSessions[app._id].submissions || [];
+  }
+
+  // If still nothing → no data
+  if (!subs.length) {
+    return {
+      correctness: null,
+      performance: null,
+      codeQuality: null,
+      completed: 0,
+      totalChallenges: 0
+    };
+  }
+
+  const evaluated = subs.filter(s => s.evaluation && s.score != null);
+
+  const avg = (key) => {
+    if (!evaluated.length) return null;
+    const sum = evaluated.reduce((acc, s) => acc + (s.evaluation?.[key] || 0), 0);
+    return (sum / evaluated.length) * 100;
+  };
+
+  return {
+    correctness: avg("correctness"),
+    performance: avg("performance"),
+    codeQuality: avg("codeQuality"),
+    completed: evaluated.length,
+    totalChallenges: subs.length || job?.selectedChallenges?.length || "?"
+  };
+}
 
   return (
     <CompanyDashboardLayout>
@@ -893,11 +1045,89 @@ export default function FirstStageApplicantsPage() {
         {evalMessage && activeTab === "assessment" && (
           <div
             className={`mb-4 px-4 py-2.5 rounded-lg text-sm ${evalMessage.type === "success"
-                ? "bg-green-50 text-green-700 border border-green-200"
-                : "bg-red-50 text-red-700 border border-red-200"
+              ? "bg-green-50 text-green-700 border border-green-200"
+              : "bg-red-50 text-red-700 border border-red-200"
               }`}
           >
             {evalMessage.text}
+          </div>
+        )}
+
+        {/* ── Filters for assessment & shortlisted ─────────────────────────────── */}
+        {["assessment", "shortlisted"].includes(activeTab) && applicants.length > 0 && (
+          <div className="mb-6 bg-gray-50 dark:bg-gray-800/40 p-4 rounded-xl border border-gray-200 dark:border-gray-700">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+              <div>
+                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                  Min Coding Score
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  placeholder="e.g. 65"
+                  value={filters.minCodingScore}
+                  onChange={(e) => setFilters(prev => ({ ...prev, minCodingScore: e.target.value }))}
+                  className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                  Min Correctness %
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  placeholder="e.g. 70"
+                  value={filters.minCorrectness}
+                  onChange={(e) => setFilters(prev => ({ ...prev, minCorrectness: e.target.value }))}
+                  className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                  Min Performance %
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  placeholder="e.g. 60"
+                  value={filters.minPerformance}
+                  onChange={(e) => setFilters(prev => ({ ...prev, minPerformance: e.target.value }))}
+                  className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                  Min Code Quality %
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  placeholder="e.g. 75"
+                  value={filters.minCodeQuality}
+                  onChange={(e) => setFilters(prev => ({ ...prev, minCodeQuality: e.target.value }))}
+                  className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                />
+              </div>
+
+              <div className="flex items-end gap-3">
+                <button
+                  onClick={() => setFilters({
+                    minCodingScore: "", minCorrectness: "", minPerformance: "", minCodeQuality: ""
+                  })}
+                  className="px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400 transition"
+                >
+                  Clear
+                </button>
+              </div>
+            </div>
           </div>
         )}
 
@@ -1049,7 +1279,7 @@ export default function FirstStageApplicantsPage() {
                 </thead>
 
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                  {applicants.map((app) => {
+                  {filteredApplicants.map((app) => {
                     const dev = app.developerSnapshot || app.developer || {};
                     const appliedDate = app.appliedAt
                       ? new Date(app.appliedAt).toLocaleDateString()
@@ -1209,6 +1439,37 @@ export default function FirstStageApplicantsPage() {
                               </div>
                             </td>
 
+                            {/* ← New columns */}
+                            {(() => {
+                              const stats = getCodingStats(app);
+                              return (
+                                <>
+                                  <td className="px-5 py-3.5 whitespace-nowrap">
+                                    {stats.correctness != null ? (
+                                      <ScorePill label="Correct" value={stats.correctness} />
+                                    ) : (
+                                      <span className="text-xs text-gray-400">—</span>
+                                    )}
+                                  </td>
+                                  <td className="px-5 py-3.5 whitespace-nowrap">
+                                    {stats.performance != null ? (
+                                      <ScorePill label="Perf" value={stats.performance} />
+                                    ) : (
+                                      <span className="text-xs text-gray-400">—</span>
+                                    )}
+                                  </td>
+                                  <td className="px-5 py-3.5 whitespace-nowrap">
+                                    {stats.codeQuality != null ? (
+                                      <ScorePill label="Code Q." value={stats.codeQuality} />
+                                    ) : (
+                                      <span className="text-xs text-gray-400">—</span>
+                                    )}
+                                  </td>
+                                  
+                                </>
+                              );
+                            })()}
+
                             <td className="px-5 py-3.5 whitespace-nowrap">
                               {app.codingChallengeScore != null ? (
                                 <button onClick={() => openCodingModal(app)}>
@@ -1271,12 +1532,43 @@ export default function FirstStageApplicantsPage() {
                         )}
 
                         {/* Shortlisted tab */}
-                        {activeTab === "shortlisted" && (
+                        {/* {activeTab === "shortlisted" && (
                           <>
                             <td className="px-5 py-3.5 whitespace-nowrap">
                               <ScorePill label="Test" value={app.codingChallengeScore ?? 0} strong />
                             </td>
 
+{(() => {
+  const stats = getCodingStats(app);
+  return (
+    <>
+      <td className="px-5 py-3.5 whitespace-nowrap">
+        {stats.correctness != null ? (
+          <ScorePill label="Correct" value={stats.correctness} />
+        ) : (
+          <span className="text-xs text-gray-400">—</span>
+        )}
+      </td>
+      <td className="px-5 py-3.5 whitespace-nowrap">
+        {stats.performance != null ? (
+          <ScorePill label="Perf" value={stats.performance} />
+        ) : (
+          <span className="text-xs text-gray-400">—</span>
+        )}
+      </td>
+      <td className="px-5 py-3.5 whitespace-nowrap">
+        {stats.codeQuality != null ? (
+          <ScorePill label="Code Q." value={stats.codeQuality} />
+        ) : (
+          <span className="text-xs text-gray-400">—</span>
+        )}
+      </td>
+      <td className="px-5 py-3.5 whitespace-nowrap text-sm text-center font-medium">
+        {stats.completed} / {stats.totalChallenges}
+      </td>
+    </>
+  );
+})()}
                             <td className="px-5 py-3.5 whitespace-nowrap">
                               {app.interviewScore != null ? (
                                 <ScorePill label="Int." value={app.interviewScore} />
@@ -1417,6 +1709,204 @@ export default function FirstStageApplicantsPage() {
                               <button
                                 onClick={() => navigate(`/company/jobs/${jobId}/applications/${app._id}/report`)}
                                 className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:hover:bg-emerald-900/50 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 transition">
+                                <FileText size={12} />
+                                Report
+                              </button>
+                            </td>
+                          </>
+                        )} */}
+                        {activeTab === "shortlisted" && (
+                          <>
+                         
+
+                            {/* New coding stats columns */}
+                            {(() => {
+                              const stats = getCodingStats(app);
+                              return (
+                                <>
+                                  <td className="px-5 py-3.5 whitespace-nowrap">
+                                    {stats.correctness != null ? (
+                                      <ScorePill label="Correct" value={stats.correctness} />
+                                    ) : (
+                                      <span className="text-xs text-gray-400">—</span>
+                                    )}
+                                  </td>
+                                  <td className="px-5 py-3.5 whitespace-nowrap">
+                                    {stats.performance != null ? (
+                                      <ScorePill label="Perf" value={stats.performance} />
+                                    ) : (
+                                      <span className="text-xs text-gray-400">—</span>
+                                    )}
+                                  </td>
+                                  <td className="px-5 py-3.5 whitespace-nowrap">
+                                    {stats.codeQuality != null ? (
+                                      <ScorePill label="Code Q." value={stats.codeQuality} />
+                                    ) : (
+                                      <span className="text-xs text-gray-400">—</span>
+                                    )}
+                                  </td>
+                                 
+                                </>
+                              );
+                            })()}
+
+                            {/* ← Missing: Coding Score column (same as Test but can be styled differently if needed) */}
+                            <td className="px-5 py-3.5 whitespace-nowrap">
+                              {app.codingChallengeScore != null ? (
+                                <button onClick={() => openCodingModal(app)}>
+                                  <ScorePill label="Score" value={app.codingChallengeScore} strong />
+                                </button>
+                              ) : (
+                                <span className="text-xs text-gray-400">—</span>
+                              )}
+                            </td>
+
+                            {/* Interview Score */}
+                            <td className="px-5 py-3.5 whitespace-nowrap">
+                              {app.interviewScore != null ? (
+                                <ScorePill label="Int." value={app.interviewScore} />
+                              ) : (
+                                <span className="text-xs text-gray-400">—</span>
+                              )}
+                            </td>
+
+                            <td className="px-5 py-3.5 whitespace-nowrap text-sm text-gray-500">
+                              {appliedDate}
+                            </td>
+
+                            <td className="px-5 py-3.5 whitespace-nowrap">
+                              {dev.resumeUrl ? (
+                                <div className="flex gap-2">
+                                  <button
+                                    onClick={() => handleViewResume(dev._id)}
+                                    className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium rounded-lg bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20 transition"
+                                  >
+                                    <Eye size={12} /> View
+                                  </button>
+                                  <button
+                                    onClick={() => handleDownloadResume(dev._id)}
+                                    className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 transition"
+                                  >
+                                    <Download size={12} /> DL
+                                  </button>
+                                </div>
+                              ) : (
+                                "—"
+                              )}
+                            </td>
+
+                            <td className="px-5 py-3.5 whitespace-nowrap">
+                              {dev.githubProfile?.html_url ? (
+                                <a
+                                  href={dev.githubProfile.html_url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1.5 text-sm text-primary hover:text-primary/80 font-medium transition"
+                                >
+                                  <Github size={14} /> GitHub
+                                </a>
+                              ) : (
+                                "—"
+                              )}
+                            </td>
+
+                            {/* Actions column – scorecard + coding details */}
+                            <td className="px-5 py-3.5 whitespace-nowrap">
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={() => {
+                                    setScorecardApp(app);
+                                    setScorecardOpen(true);
+                                  }}
+                                  disabled={app.interview?.status !== "completed"}
+                                  title={
+                                    app.interview?.status !== "completed"
+                                      ? "Mark interview as Completed first"
+                                      : "Fill scorecard"
+                                  }
+                                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border transition
+            ${app.interview?.status === "completed"
+                                      ? "bg-primary/10 text-primary hover:bg-primary/20 border-primary/30"
+                                      : "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
+                                    }`}
+                                >
+                                  <Star size={12} />
+                                  {app.interviewScore != null ? "Update Score" : "Score"}
+                                </button>
+
+                                {app.codingChallengeScore != null && (
+                                  <button
+                                    onClick={() => openCodingModal(app)}
+                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-600 border border-indigo-200 transition"
+                                  >
+                                    <Code size={12} /> Details
+                                  </button>
+                                )}
+                              </div>
+                            </td>
+
+                            {/* Interview scheduling/status column */}
+                            <td className="px-5 py-3.5 whitespace-nowrap">
+                              {app.interview?.status === "scheduled" ? (
+                                <div className="flex flex-col gap-1.5 text-xs">
+                                  <span className="font-medium text-blue-600">
+                                    {new Date(app.interview.scheduledAt).toLocaleString("en-PK", {
+                                      dateStyle: "short",
+                                      timeStyle: "short",
+                                    })}
+                                  </span>
+                                  <a
+                                    href={app.interview.videoLink}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-blue-500 hover:underline"
+                                  >
+                                    Join Room
+                                  </a>
+                                  <div className="flex gap-1 mt-0.5">
+                                    <button
+                                      onClick={() => handleUpdateInterview("completed", app._id)}
+                                      className="px-2 py-1 bg-green-600 text-white rounded hover:bg-green-700 transition"
+                                    >
+                                      Done
+                                    </button>
+                                    <button
+                                      onClick={() => handleUpdateInterview("no_show", app._id)}
+                                      className="px-2 py-1 bg-amber-500 text-white rounded hover:bg-amber-600 transition"
+                                    >
+                                      No-show
+                                    </button>
+                                    <button
+                                      onClick={() => handleUpdateInterview("cancelled", app._id)}
+                                      className="px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition"
+                                    >
+                                      Cancel
+                                    </button>
+                                  </div>
+                                </div>
+                              ) : app.interview?.status === "completed" ? (
+                                <span className="text-xs font-medium text-green-600">Completed</span>
+                              ) : (
+                                <button
+                                  onClick={() => {
+                                    setSelectedAppForInterview(app);
+                                    setScheduleOpen(true);
+                                    setScheduledAt("");
+                                    setInterviewNotes("");
+                                  }}
+                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition"
+                                >
+                                  Schedule
+                                </button>
+                              )}
+                            </td>
+
+                            {/* Report */}
+                            <td className="px-5 py-3.5 whitespace-nowrap">
+                              <button
+                                onClick={() => navigate(`/company/jobs/${jobId}/applications/${app._id}/report`)}
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:hover:bg-emerald-900/50 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 transition"
+                              >
                                 <FileText size={12} />
                                 Report
                               </button>
@@ -1572,14 +2062,11 @@ export default function FirstStageApplicantsPage() {
                 <h2 className="text-xl font-bold">Coding Assessment Results</h2>
                 <p className="text-sm text-gray-500">{selectedApplicant.developerSnapshot?.name}</p>
               </div>
-              <button
-                onClick={() => setCodingModalOpen(false)}
-                className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition"
-              >
+              <button onClick={() => setCodingModalOpen(false)}
+                className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition">
                 <X size={18} />
               </button>
             </div>
-
             <div className="flex-1 overflow-y-auto p-6 space-y-8">
               {loadingSession ? (
                 <div className="flex items-center justify-center py-20 text-gray-400 gap-2">
@@ -1599,63 +2086,70 @@ export default function FirstStageApplicantsPage() {
                       <p className="text-sm font-medium capitalize">{sessionData.session.status}</p>
                     </div>
                   </div>
-
                   <div className="space-y-6">
                     {sessionData.session.submissions.map((sub, index) => (
-                      <div
-                        key={index}
-                        className="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden"
-                      >
+                      <div key={index} className="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
                         <div className="bg-gray-50 dark:bg-gray-800 px-6 py-3 flex justify-between items-center">
-                          <span className="font-medium text-sm">
-                            Challenge {index + 1}: {sub.title}
-                          </span>
+                          <span className="font-medium text-sm">Challenge {index + 1}: {sub.title}</span>
                           {sub.score !== null && (
-                            <span className="text-indigo-600 font-bold text-sm">
-                              Score: {sub.score.toFixed(2)}
-                            </span>
+                            <span className="text-indigo-600 font-bold text-sm">Score: {sub.score.toFixed(2)}</span>
                           )}
                         </div>
-
                         <div className="p-6 space-y-6">
                           <div className="grid md:grid-cols-2 gap-6">
                             <div>
                               <h5 className="text-sm font-medium mb-2">Problem Statement</h5>
-                              <p className="text-sm text-gray-600 dark:text-gray-300 whitespace-pre-line">
-                                {sub.problemStatement || "No description"}
-                              </p>
+                              <p className="text-sm text-gray-600 dark:text-gray-300 whitespace-pre-line">{sub.problemStatement || "No description"}</p>
                             </div>
-
                             <div>
-                              <h5 className="text-sm font-medium mb-2">
-                                Submitted Code ({sub.language})
-                              </h5>
-                              <pre className="bg-gray-900 text-green-400 p-4 rounded-xl overflow-auto max-h-72 text-xs font-mono">
-                                {sub.code || "// No code submitted"}
-                              </pre>
+                              <h5 className="text-sm font-medium mb-2">Submitted Code ({sub.language})</h5>
+                              <pre className="bg-gray-900 text-green-400 p-4 rounded-xl overflow-auto max-h-72 text-xs font-mono">{sub.code || "// No code submitted"}</pre>
                             </div>
                           </div>
+                          {sub.evaluation && (
+                            <div className="border rounded-xl p-5">
+                              <div className="grid grid-cols-3 gap-4 mb-5 text-center">
+                                {[["Correctness", sub.evaluation.correctness], ["Performance", sub.evaluation.performance], ["Code Quality", sub.evaluation.codeQuality]].map(([label, val]) => (
+                                  <div key={label}>
+                                    <p className="text-xs text-gray-500 mb-1">{label}</p>
+                                    <p className="text-2xl font-bold">{(val * 100).toFixed(0)}%</p>
+                                  </div>
+                                ))}
+                              </div>
+                              {sub.evaluation.aiReview && (
+                                <div className="space-y-3">
+                                  <p className="text-sm text-gray-600 dark:text-gray-300">{sub.evaluation.aiReview.feedback}</p>
+                                  <div className="grid md:grid-cols-2 gap-4">
+                                    <div>
+                                      <h6 className="text-xs font-semibold text-green-600 mb-2 uppercase tracking-wide">Strengths</h6>
+                                      <ul className="space-y-1">{sub.evaluation.aiReview.strengths?.map((s, i) => <li key={i} className="text-xs text-gray-600 dark:text-gray-300 flex gap-1.5"><span className="text-green-500 mt-0.5">•</span>{s}</li>)}</ul>
+                                    </div>
+                                    <div>
+                                      <h6 className="text-xs font-semibold text-amber-600 mb-2 uppercase tracking-wide">Suggestions</h6>
+                                      <ul className="space-y-1">{sub.evaluation.aiReview.improvements?.map((s, i) => <li key={i} className="text-xs text-gray-600 dark:text-gray-300 flex gap-1.5"><span className="text-amber-500 mt-0.5">•</span>{s}</li>)}</ul>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          )}
                         </div>
                       </div>
                     ))}
                   </div>
                 </>
-              ) : (
-                <div className="text-center py-20 text-gray-400 text-sm">No data available</div>
-              )}
+              ) : <div className="text-center py-20 text-gray-400 text-sm">No data available</div>}
             </div>
-
             <div className="p-4 border-t flex justify-end">
-              <button
-                onClick={() => setCodingModalOpen(false)}
-                className="px-6 py-2 text-sm font-medium bg-gray-100 dark:bg-gray-700 rounded-xl hover:bg-gray-200 transition"
-              >
+              <button onClick={() => setCodingModalOpen(false)}
+                className="px-6 py-2 text-sm font-medium bg-gray-100 dark:bg-gray-700 rounded-xl hover:bg-gray-200 transition">
                 Close
               </button>
             </div>
           </div>
         </div>
       )}
+
 
       {/* ── Rubric + Scorecard ─────────────────────────────────────────────── */}
       {rubricOpen && (
@@ -1781,6 +2275,8 @@ export default function FirstStageApplicantsPage() {
       )}
     </CompanyDashboardLayout>
   );
+
+
 }
 
 // ─── Score Pill ───────────────────────────────────────────────────────────────
@@ -1816,3 +2312,4 @@ function titleCase(s) {
       .toUpperCase() + String(s || "").slice(1).replaceAll("_", " ")
   );
 }
+

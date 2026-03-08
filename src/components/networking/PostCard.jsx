@@ -23,12 +23,64 @@ import ErrorModal from "../ErrorModal";
 import { Link } from "react-router-dom";
 import ConfirmModal from "../ConfirmModal";
 import { showToast } from "../../utils/toast";
+import { useLocation } from "react-router-dom";
+import { useMemo } from "react";
+import { FiAlertTriangle, FiX } from "react-icons/fi";
+
+// export default function PostCard({
+//   post,
+//   currentUserId,
+//   onDeletePost,
+//   onEditPost,
+// }) {
+//   const {
+//     author,
+//     text,
+//     mediaUrls = [],
+//     createdAt,
+//     likesCount = 0,
+//     likedByCurrentUser = false,
+//     commentsCount = 0,
+//   } = post;
+//   const { formatRole } = useRoleMap();
+
+//   const formattedTime = new Date(createdAt).toLocaleString();
+
+//   /* ---------- UI state ---------- */
+//   const [showComments, setShowComments] = useState(false);
+//   const [likes, setLikes] = useState(likesCount);
+//   const [liked, setLiked] = useState(likedByCurrentUser);
+//   const [animating, setAnimating] = useState(false);
+//   const [loadingLike, setLoadingLike] = useState(false);
+//   // const [commentsCountState, setCommentsCountState] = useState(commentsCount);
+//   const [commentsCountState, setCommentsCountState] = useState(0); // start at 0
+
+//   const [successModalOpen, setSuccessModalOpen] = useState(false);
+//   const [errorModalOpen, setErrorModalOpen] = useState(false);
+//   const [errorMessage, setErrorMessage] = useState("");
+//   const [menuOpen, setMenuOpen] = useState(false);
+
+//   /* ---------- Edit state ---------- */
+//   const [isEditing, setIsEditing] = useState(false);
+//   const [editedText, setEditedText] = useState(text);
+//   const [editedMediaFiles, setEditedMediaFiles] = useState([]);
+//   const [visibleMedia, setVisibleMedia] = useState(mediaUrls);
+//   const [savingEdit, setSavingEdit] = useState(false);
+//   const [deletedMediaUrls, setDeletedMediaUrls] = useState([]);
+//   const [confirmOpen, setConfirmOpen] = useState(false);
+
+//   const photoInputRef = useRef(null);
+
+//   /* ---------- Lightbox state ---------- */
+//   const [lightboxOpen, setLightboxOpen] = useState(false);
+//   const [lightboxIndex, setLightboxIndex] = useState(0);
 
 export default function PostCard({
   post,
   currentUserId,
   onDeletePost,
   onEditPost,
+  isFlaggedBySystem = false,
 }) {
   const {
     author,
@@ -41,23 +93,23 @@ export default function PostCard({
   } = post;
   const { formatRole } = useRoleMap();
 
+  const location = useLocation();
+
   const formattedTime = new Date(createdAt).toLocaleString();
 
-  /* ---------- UI state ---------- */
   const [showComments, setShowComments] = useState(false);
   const [likes, setLikes] = useState(likesCount);
   const [liked, setLiked] = useState(likedByCurrentUser);
   const [animating, setAnimating] = useState(false);
   const [loadingLike, setLoadingLike] = useState(false);
-  // const [commentsCountState, setCommentsCountState] = useState(commentsCount);
-  const [commentsCountState, setCommentsCountState] = useState(0); // start at 0
+  const [commentsCountState, setCommentsCountState] = useState(0);
+  const [flaggedCount, setFlaggedCount] = useState(0);
 
   const [successModalOpen, setSuccessModalOpen] = useState(false);
   const [errorModalOpen, setErrorModalOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
 
-  /* ---------- Edit state ---------- */
   const [isEditing, setIsEditing] = useState(false);
   const [editedText, setEditedText] = useState(text);
   const [editedMediaFiles, setEditedMediaFiles] = useState([]);
@@ -68,9 +120,46 @@ export default function PostCard({
 
   const photoInputRef = useRef(null);
 
-  /* ---------- Lightbox state ---------- */
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
+
+
+  // ✅ NEW: Track if user dismissed the flagged styling
+    const [dismissedFlaggedStyle, setDismissedFlaggedStyle] = useState(false);
+ const isHighlightedFromUrl = useMemo(() => {
+    const params = new URLSearchParams(location.search);
+    return params.get('post') === post._id && params.get('highlight') === 'flagged';
+  }, [location, post._id]);
+
+  // Now flagged posts are highlighted EVEN without URL params
+  // ✅ Only show highlight if not dismissed
+  const shouldBeHighlighted = !dismissedFlaggedStyle && (isHighlightedFromUrl || isFlaggedBySystem);
+
+
+  // Auto-open comments when coming from moderation link
+// Existing useEffect for auto-open, but make per-post
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const targetPost = params.get('post');
+
+    if (targetPost === post._id && params.get("showComments") === "true") {
+      setShowComments(true);
+      // Scroll to comments
+      setTimeout(() => {
+        document.querySelector(`[data-comments-section="${post._id}"]`)?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+        // NEW: Scroll to first flagged comment (after comments load)
+        setTimeout(() => {
+          const firstFlagged = document.querySelector(`[data-comment-id].flagged-comment`);
+          if (firstFlagged) {
+            firstFlagged.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        }, 600);  // Delay for comments to render
+      }, 300);
+    }
+  }, [location, post._id]);
 
   const handleLikeToggle = async () => {
     if (loadingLike) return;
@@ -261,7 +350,42 @@ export default function PostCard({
 
   /* ---------- Render ---------- */
   return (
-    <div className="bg-white shadow-md rounded-2xl p-5 mb-6 transition-all hover:shadow-lg">
+ <div 
+      className={`
+        bg-white shadow-md rounded-2xl p-5 mb-6 transition-all duration-300 hover:shadow-lg relative
+        ${shouldBeHighlighted
+          ? 'border-2 border-amber-400 bg-amber-50/30 ring-1 ring-amber-300/50 shadow-amber-200/40'
+          : ''
+        }
+      `}
+      data-post-id={post._id}
+    >
+
+      {/* ✅ Flagged indicator with dismiss button */}
+      {isFlaggedBySystem && !dismissedFlaggedStyle && (
+        <div 
+          className={`
+            absolute -top-2 -right-2 px-3 py-1.5 rounded-full text-xs font-medium shadow-md z-20 flex items-center gap-1.5
+            ${shouldBeHighlighted
+              ? 'bg-amber-600 text-white ring-2 ring-amber-300/70' 
+              : 'bg-amber-100 text-amber-800 border border-amber-300'
+            }
+          `}
+        >
+          <FiAlertTriangle size={13} />
+          <span>{shouldBeHighlighted ? 'Review Comments' : 'Flagged'}</span>
+          
+          {/* ✅ NEW: Dismiss button */}
+          <button
+            onClick={() => setDismissedFlaggedStyle(true)}
+            className="ml-1 p-0 hover:opacity-80 transition-opacity"
+            title="Dismiss flagged indicator"
+          >
+            <FiX size={14} />
+          </button>
+        </div>
+      )}
+  
       {/* ---------- Header ---------- */}
       <div className="flex items-start justify-between">
         <div className="flex items-start gap-3">
@@ -335,6 +459,7 @@ export default function PostCard({
           </div>
         )}
       </div>
+
 
       {/* ---------- Content & Media ---------- */}
       {isEditing ? (
@@ -522,7 +647,7 @@ export default function PostCard({
         </div>
       </div>
 
-      {showComments && <hr className="border-t border-gray-300 mt-4" />}
+      {/* {showComments && <hr className="border-t border-gray-300 mt-4" />}
       {showComments && (
         <CommentSection
           postId={post._id}
@@ -530,6 +655,38 @@ export default function PostCard({
           postAuthorId={author._id}
           setCommentsCount={setCommentsCountState}
         />
+      )} */}
+
+      {/* Comments Section with Auto-Open + Red Banner */}
+      {showComments && (
+        <div data-comments-section={post._id} className="mt-6">
+          {/* Strong red banner when flagged comments exist */}
+          {/* {flaggedCount > 0 && currentUserId === author._id && (
+            <div className="bg-red-50 border-l-4 border-red-600 p-5 mb-6 rounded-lg shadow-sm animate-pulse">
+              <div className="flex items-start gap-4">
+                <FiAlertTriangle className="text-red-600 text-2xl mt-1 flex-shrink-0" />
+                <div>
+                  <p className="font-bold text-red-800 text-lg mb-1">
+                    {flaggedCount} Flagged Comment{flaggedCount > 1 ? "s" : ""} – Action Required
+                  </p>
+                  <p className="text-red-700">
+                    These comments were flagged by our system. Please review and hide any that violate guidelines using the menu (⋯).
+                  </p>
+                </div>
+              </div>
+            </div>
+          )} */}
+
+          <hr className="border-t border-gray-300 mb-4" />
+
+          <CommentSection
+            postId={post._id}
+            currentUserId={currentUserId}
+            postAuthorId={author._id}
+            setCommentsCount={setCommentsCountState}
+            onFlaggedCountChange={setFlaggedCount}
+          />
+        </div>
       )}
 
 
