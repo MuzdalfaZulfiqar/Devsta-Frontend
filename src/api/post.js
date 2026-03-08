@@ -178,7 +178,8 @@ export async function deleteComment(postId, commentId) {
   );
 
   if (!res.ok) throw new Error("Failed to delete comment");
-  return await res.json();
+  return await
+   res.json();
 }
 
 
@@ -194,4 +195,36 @@ export async function toggleHideComment(postId, commentId, hidden) {
 
   if (!res.ok) throw new Error("Failed to update comment visibility");
   return await res.json();
+}
+
+
+// api/post.js
+export const getFlaggedPostIdsForUser = async () => {
+  try {
+    const res = await fetch(`${BACKEND_URL}/api/posts/flagged`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('devsta_token')}`,
+      },
+    });
+    if (!res.ok) throw new Error("Failed");
+    const data = await res.json();
+    return data.flaggedPostIds || []; // e.g. ["postId1", "postId2"]
+  } catch (err) {
+    console.error("Failed to fetch flagged posts:", err);
+    return [];
+  }
+};
+
+export async function getFlaggedCommentsForPost(postId) {
+  try {
+    const res = await fetch(`${BACKEND_URL}/api/posts/${postId}/flagged-comments`, {
+      headers: { Authorization:`Bearer ${localStorage.getItem('devsta_token')}` },
+    });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return data.flaggedComments || [];
+  } catch (err) {
+    console.warn(`getFlaggedCommentsForPost(${postId}) failed:`, err);
+    return [];
+  }
 }

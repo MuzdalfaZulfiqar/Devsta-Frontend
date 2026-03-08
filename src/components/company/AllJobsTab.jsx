@@ -1,3 +1,177 @@
+// // src/components/company/AllJobsTab.jsx
+// import { useEffect, useMemo, useState } from "react";
+// import DeveloperJobCard from "./DeveloperJobCard";
+// import JobFilters from "./JobFilters";
+// import { useAuth } from "../../context/AuthContext";
+// import { getRecommendedJobs } from "../../api/jobs";
+
+// export default function AllJobsTab({ onSelectJob, onCompanyClick }) {
+//   const { token } = useAuth();
+
+//   const [items, setItems] = useState([]); // ML items: [{score, job}]
+//   const [loading, setLoading] = useState(false);
+
+//   const [page, setPage] = useState(1);
+//   const LIMIT = 6;
+
+//   const [filters, setFilters] = useState({
+//     search: "",
+//     jobMode: "",
+//     employmentType: "",
+//     experienceLevel: "",
+//     location: "",
+//   });
+
+//   // ✅ Fetch recommended jobs from ML (no filters here; we filter locally)
+//   useEffect(() => {
+//     const timeout = setTimeout(async () => {
+//       try {
+//         setLoading(true);
+
+//         // Increase k so filters still have results after filtering
+//         const data = await getRecommendedJobs({ k: 80 }, token);
+
+//         setItems(Array.isArray(data.items) ? data.items : []);
+//       } catch (err) {
+//         console.error("Failed to fetch recommended jobs", err);
+//         setItems([]);
+//       } finally {
+//         setLoading(false);
+//       }
+//     }, 300);
+
+//     return () => clearTimeout(timeout);
+//   }, [token]);
+
+//   // 🔁 Reset page when filters change
+//   useEffect(() => {
+//     setPage(1);
+//   }, [filters]);
+
+//   // ✅ Client-side filtering on recommended jobs
+//   const filteredItems = useMemo(() => {
+//     const f = cleanFilters(filters);
+
+//     return items.filter((x) => {
+//       const job = x.job || {};
+//       const title = (job.title || "").toLowerCase();
+//       const desc = (job.description || "").toLowerCase();
+//       const loc = (job.location || "").toLowerCase();
+
+//       const jobMode = (job.jobMode || "").toLowerCase();
+//       const employmentType = (job.employmentType || "").toLowerCase();
+//       const experienceLevel = (job.experienceLevel || "").toLowerCase();
+
+//       const requiredSkills = Array.isArray(job.requiredSkills)
+//         ? job.requiredSkills.map((s) => String(s).toLowerCase())
+//         : [];
+
+//       // Search: title + description + skills + location
+//       if (f.search) {
+//         const q = String(f.search).toLowerCase();
+//         const inSkills = requiredSkills.some((s) => s.includes(q));
+//         const inText = title.includes(q) || desc.includes(q) || loc.includes(q);
+//         if (!inSkills && !inText) return false;
+//       }
+
+//       if (f.location) {
+//         const q = String(f.location).toLowerCase();
+//         if (!loc.includes(q)) return false;
+//       }
+
+//       if (f.jobMode) {
+//         if (jobMode !== String(f.jobMode).toLowerCase()) return false;
+//       }
+
+//       if (f.employmentType) {
+//         if (employmentType !== String(f.employmentType).toLowerCase()) return false;
+//       }
+
+//       if (f.experienceLevel) {
+//         if (experienceLevel !== String(f.experienceLevel).toLowerCase()) return false;
+//       }
+
+//       return true;
+//     });
+//   }, [items, filters]);
+
+//   // ✅ Client-side pagination
+//   const totalPages = Math.max(1, Math.ceil(filteredItems.length / LIMIT));
+//   const pagedItems = useMemo(() => {
+//     const start = (page - 1) * LIMIT;
+//     return filteredItems.slice(start, start + LIMIT);
+//   }, [filteredItems, page]);
+
+//   return (
+//     <div className="flex flex-col gap-6 font-fragment">
+//       {/* 🔍 Filters */}
+//       <JobFilters filters={filters} setFilters={setFilters} />
+
+//       {/* ⏳ Loading */}
+//       {loading && <p className="text-gray-400 text-sm">Updating results…</p>}
+
+//       {/* Results */}
+//       {!loading && pagedItems.length === 0 ? (
+//         <p className="text-gray-500 text-sm">No recommended jobs match your filters</p>
+//       ) : (
+//         <div className="flex flex-col gap-4">
+//           {pagedItems.map((x) => (
+//             <DeveloperJobCard
+//               key={x.job?._id}
+//               job={x.job}
+//               onClick={() => onSelectJob(x.job._id)}
+//             />
+//           ))}
+//         </div>
+//       )}
+
+//       {/* 📄 Pagination */}
+//       {!loading && totalPages > 1 && (
+//         <div className="flex justify-center items-center gap-2 pt-4">
+//           <button
+//             disabled={page === 1}
+//             onClick={() => setPage((p) => p - 1)}
+//             className="px-3 py-1 rounded bg-gray-200 disabled:opacity-50"
+//           >
+//             Prev
+//           </button>
+
+//           {Array.from({ length: totalPages }).map((_, i) => (
+//             <button
+//               key={i}
+//               onClick={() => setPage(i + 1)}
+//               className={`px-3 py-1 rounded ${
+//                 page === i + 1 ? "bg-primary text-white" : "bg-gray-200"
+//               }`}
+//             >
+//               {i + 1}
+//             </button>
+//           ))}
+
+//           <button
+//             disabled={page === totalPages}
+//             onClick={() => setPage((p) => p + 1)}
+//             className="px-3 py-1 rounded bg-gray-200 disabled:opacity-50"
+//           >
+//             Next
+//           </button>
+//         </div>
+//       )}
+//     </div>
+//   );
+// }
+
+// function cleanFilters(filters) {
+//   const cleaned = {};
+//   Object.entries(filters).forEach(([key, value]) => {
+//     if (value !== "" && value !== null && value !== undefined) {
+//       cleaned[key] = value;
+//     }
+//   });
+//   return cleaned;
+// }
+
+
 // src/components/company/AllJobsTab.jsx
 import { useEffect, useMemo, useState } from "react";
 import DeveloperJobCard from "./DeveloperJobCard";
@@ -5,10 +179,15 @@ import JobFilters from "./JobFilters";
 import { useAuth } from "../../context/AuthContext";
 import { getRecommendedJobs } from "../../api/jobs";
 
-export default function AllJobsTab({ onSelectJob, onCompanyClick }) {
+export default function AllJobsTab({
+  onSelectJob,
+  onCompanyClick,
+  appliedJobIds = new Set(),  // ← lifted up from JobsPage
+  onJobApplied,               // ← (jobId) => void, called when user applies
+}) {
   const { token } = useAuth();
 
-  const [items, setItems] = useState([]); // ML items: [{score, job}]
+  const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
 
   const [page, setPage] = useState(1);
@@ -22,16 +201,20 @@ export default function AllJobsTab({ onSelectJob, onCompanyClick }) {
     location: "",
   });
 
-  // ✅ Fetch recommended jobs from ML (no filters here; we filter locally)
+  // ── Seed appliedJobIds from API on first load ────────────────
+  // We only seed — from then on JobsPage owns the set
   useEffect(() => {
     const timeout = setTimeout(async () => {
       try {
         setLoading(true);
-
-        // Increase k so filters still have results after filtering
         const data = await getRecommendedJobs({ k: 80 }, token);
+        const fetched = Array.isArray(data.items) ? data.items : [];
+        setItems(fetched);
 
-        setItems(Array.isArray(data.items) ? data.items : []);
+        // Tell JobsPage about any jobs the API says we've already applied to
+        fetched
+          .filter((x) => x.job?.hasApplied)
+          .forEach((x) => onJobApplied?.(x.job._id));
       } catch (err) {
         console.error("Failed to fetch recommended jobs", err);
         setItems([]);
@@ -41,14 +224,12 @@ export default function AllJobsTab({ onSelectJob, onCompanyClick }) {
     }, 300);
 
     return () => clearTimeout(timeout);
-  }, [token]);
+  }, [token]); // intentionally exclude onJobApplied from deps to avoid re-fetch
 
-  // 🔁 Reset page when filters change
   useEffect(() => {
     setPage(1);
   }, [filters]);
 
-  // ✅ Client-side filtering on recommended jobs
   const filteredItems = useMemo(() => {
     const f = cleanFilters(filters);
 
@@ -57,16 +238,13 @@ export default function AllJobsTab({ onSelectJob, onCompanyClick }) {
       const title = (job.title || "").toLowerCase();
       const desc = (job.description || "").toLowerCase();
       const loc = (job.location || "").toLowerCase();
-
       const jobMode = (job.jobMode || "").toLowerCase();
       const employmentType = (job.employmentType || "").toLowerCase();
       const experienceLevel = (job.experienceLevel || "").toLowerCase();
-
       const requiredSkills = Array.isArray(job.requiredSkills)
         ? job.requiredSkills.map((s) => String(s).toLowerCase())
         : [];
 
-      // Search: title + description + skills + location
       if (f.search) {
         const q = String(f.search).toLowerCase();
         const inSkills = requiredSkills.some((s) => s.includes(q));
@@ -79,23 +257,14 @@ export default function AllJobsTab({ onSelectJob, onCompanyClick }) {
         if (!loc.includes(q)) return false;
       }
 
-      if (f.jobMode) {
-        if (jobMode !== String(f.jobMode).toLowerCase()) return false;
-      }
-
-      if (f.employmentType) {
-        if (employmentType !== String(f.employmentType).toLowerCase()) return false;
-      }
-
-      if (f.experienceLevel) {
-        if (experienceLevel !== String(f.experienceLevel).toLowerCase()) return false;
-      }
+      if (f.jobMode && jobMode !== String(f.jobMode).toLowerCase()) return false;
+      if (f.employmentType && employmentType !== String(f.employmentType).toLowerCase()) return false;
+      if (f.experienceLevel && experienceLevel !== String(f.experienceLevel).toLowerCase()) return false;
 
       return true;
     });
   }, [items, filters]);
 
-  // ✅ Client-side pagination
   const totalPages = Math.max(1, Math.ceil(filteredItems.length / LIMIT));
   const pagedItems = useMemo(() => {
     const start = (page - 1) * LIMIT;
@@ -104,13 +273,10 @@ export default function AllJobsTab({ onSelectJob, onCompanyClick }) {
 
   return (
     <div className="flex flex-col gap-6 font-fragment">
-      {/* 🔍 Filters */}
       <JobFilters filters={filters} setFilters={setFilters} />
 
-      {/* ⏳ Loading */}
       {loading && <p className="text-gray-400 text-sm">Updating results…</p>}
 
-      {/* Results */}
       {!loading && pagedItems.length === 0 ? (
         <p className="text-gray-500 text-sm">No recommended jobs match your filters</p>
       ) : (
@@ -118,14 +284,17 @@ export default function AllJobsTab({ onSelectJob, onCompanyClick }) {
           {pagedItems.map((x) => (
             <DeveloperJobCard
               key={x.job?._id}
-              job={x.job}
+              job={{
+                ...x.job,
+                // Override hasApplied with the live set owned by JobsPage
+                hasApplied: appliedJobIds.has(String(x.job?._id)),
+              }}
               onClick={() => onSelectJob(x.job._id)}
             />
           ))}
         </div>
       )}
 
-      {/* 📄 Pagination */}
       {!loading && totalPages > 1 && (
         <div className="flex justify-center items-center gap-2 pt-4">
           <button

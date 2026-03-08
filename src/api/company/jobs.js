@@ -8,21 +8,21 @@ const getAuthHeaders = () => ({
 });
 
 // CREATE JOB
-export const createJob = async (data) => {
-  const res = await fetch(`${BASE_URL}`, {
-    method: "POST",
-    headers: getAuthHeaders(),
-    body: JSON.stringify(data),
-  });
+// export const createJob = async (data) => {
+//   const res = await fetch(`${BASE_URL}`, {
+//     method: "POST",
+//     headers: getAuthHeaders(),
+//     body: JSON.stringify(data),
+//   });
 
-  const json = await res.json();
+//   const json = await res.json();
 
-  if (!res.ok) {
-    throw new Error(json.message || "Failed to create job");
-  }
+//   if (!res.ok) {
+//     throw new Error(json.message || "Failed to create job");
+//   }
 
-  return json;
-};
+//   return json;
+// };
 
 // GET COMPANY JOBS
 // export const getMyJobs = async () => {
@@ -93,6 +93,46 @@ export const deleteJob = async (jobId) => {
 };
 
 // api/company/jobs.js
+// export const updateJob = async (jobId, data) => {
+//   const res = await fetch(`${BASE_URL}/${jobId}`, {
+//     method: "PATCH",
+//     headers: getAuthHeaders(),
+//     body: JSON.stringify(data),
+//   });
+
+//   const json = await res.json();
+
+//   if (!res.ok) throw new Error(json.message || "Failed to update job");
+
+//   return json;
+// };
+
+
+// ─────────────────────────────────────────────
+// CREATE JOB
+// ─────────────────────────────────────────────
+export const createJob = async (data) => {
+  const res = await fetch(`${BASE_URL}`, {
+    method: "POST",
+    headers: getAuthHeaders(),
+    body: JSON.stringify(data),
+  });
+
+  const json = await res.json();
+
+  if (!res.ok) {
+    const error = new Error(json.message || "Failed to create job");
+    error.status = res.status;
+    error.validationErrors = json.errors || [];   // ← key change
+    throw error;
+  }
+
+  return json;
+};
+
+// ─────────────────────────────────────────────
+// UPDATE JOB
+// ─────────────────────────────────────────────
 export const updateJob = async (jobId, data) => {
   const res = await fetch(`${BASE_URL}/${jobId}`, {
     method: "PATCH",
@@ -102,7 +142,12 @@ export const updateJob = async (jobId, data) => {
 
   const json = await res.json();
 
-  if (!res.ok) throw new Error(json.message || "Failed to update job");
+  if (!res.ok) {
+    const error = new Error(json.message || "Failed to update job");
+    error.status = res.status;
+    error.validationErrors = json.errors || [];   // ← key change
+    throw error;
+  }
 
   return json;
 };

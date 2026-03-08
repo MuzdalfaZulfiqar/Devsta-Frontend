@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { getFeed } from "../../api/post";
 import PostCard from "./PostCard";
+import { useLocation, useParams } from 'react-router-dom';
+import { getFlaggedPostIdsForUser } from "../../api/post";
 
 export default function PostsList({ newPost, currentUserId }) {
     const [posts, setPosts] = useState([]);
@@ -8,6 +10,36 @@ export default function PostsList({ newPost, currentUserId }) {
     const [page, setPage] = useState(1);          // Current page
     const [hasMore, setHasMore] = useState(true); // Whether more posts are available
     const limit = 10; // Number of posts per page (adjust if needed)
+    const [flaggedPostIds, setFlaggedPostIds] = useState(new Set());
+
+    const { postId } = useParams(); // if route is /post/:postId
+    const location = useLocation();
+
+    const [showComments, setShowComments] = useState(false);
+
+    // Fetch flagged posts once on mount
+  useEffect(() => {
+    const fetchFlagged = async () => {
+      const ids = await getFlaggedPostIdsForUser();
+      setFlaggedPostIds(new Set(ids));
+    };
+    fetchFlagged();
+  }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const targetPostId = params.get('post');
+
+    if (targetPostId) {
+      setTimeout(() => {
+        const postEl = document.querySelector(`[data-post-id="${targetPostId}"]`);
+        if (postEl) {
+          postEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 500);  // Delay for feed to load
+    }
+  }, [location, posts]);
+
     // Load feed
     const loadFeed = async (pageNumber = 1) => {
         try {
@@ -65,6 +97,9 @@ export default function PostsList({ newPost, currentUserId }) {
                             onEditPost={(updatedPost) => {
                                 setPosts(prev => prev.map(p => p._id === updatedPost._id ? updatedPost : p));
                             }}
+
+                            data-post-id={post._id}
+                            isFlaggedBySystem={flaggedPostIds.has(post._id)}
                         />
                     ))}
 
