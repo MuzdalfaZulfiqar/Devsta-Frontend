@@ -13,7 +13,7 @@
     "@heroicons/react": "^2.2.0",
     "@monaco-editor/react": "^4.7.0",
     "@react-three/drei": "^9.122.0",
-    "@react-three/fiber": "^9.6.0",
+    "@react-three/fiber": "^8.18.0",
     "@react-three/rapier": "^2.2.0",
     "@readyplayerme/visage": "^6.16.0",
     "@types/three": "^0.184.0",
