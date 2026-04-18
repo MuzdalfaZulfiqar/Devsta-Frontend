@@ -36,6 +36,7 @@ import MyApplicationsPage from "./pages/company/MyApplicationsPage";
 import FirstStageApplicantsPage from "./pages/company/FirstStageApplicantsPage";
 import ResumePage from "./pages/User/ResumePage";
 import CodingTestPage from "./pages/User/CodingTestPage";
+import InterviewAssistant from "./pages/User/InterviewAssistant";
 
 function App() {
   const { user, showWelcome, setShowWelcome } = useAuth();
@@ -127,6 +128,15 @@ function App() {
           />
 
           <Route
+  path="/dashboard/interview"
+  element={
+    <ProtectedRoute requireOnboarding={true}>
+      <InterviewAssistant />
+    </ProtectedRoute>
+  }
+/>
+
+          <Route
             path="/dashboard/my-applications"
             element={
               <ProtectedRoute requireOnboarding={true}>
@@ -143,7 +153,7 @@ function App() {
               </ProtectedRoute>
             }
           />
-           {/* <Route
+          {/* <Route
             path="/dashboard/coding-test"
             element={
               <ProtectedRoute requireOnboarding={true}>
@@ -153,13 +163,13 @@ function App() {
           /> */}
 
           <Route
-  path="/dashboard/coding-test/:jobId"
-  element={
-    <ProtectedRoute requireOnboarding={true}>
-      <CodingTestPage />
-    </ProtectedRoute>
-  }
-/>
+            path="/dashboard/coding-test/:jobId"
+            element={
+              <ProtectedRoute requireOnboarding={true}>
+                <CodingTestPage />
+              </ProtectedRoute>
+            }
+          />
 
           {/* <Route path="/coding-test" element={<CodingTestPage />} /> */}
 
@@ -170,15 +180,15 @@ function App() {
           {/* Admin routes */}
           <Route path="/admin/*" element={<AdminLayout />} />
 
-{/* // Company routes wrapped in CompanyAuthProvider */}
-        <Route path="/company/*" element={
+          {/* // Company routes wrapped in CompanyAuthProvider */}
+          <Route path="/company/*" element={
             <CompanyAuthProvider>
               <CompanyLayout />
             </CompanyAuthProvider>
           } />
 
 
-           <Route
+          <Route
             path="/company/login"
             element={
               <CompanyAuthProvider>
