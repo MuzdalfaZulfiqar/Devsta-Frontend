@@ -786,547 +786,549 @@
 //   );
 // }
 
-import { useState, useRef, useCallback } from "react";
-import axios from "axios";
-import { Mic, MicOff, LogOut } from "lucide-react";
-// import TalkingAvatar from "../avatar/TalkingAvatar";
-import { useSpeech } from "../../../hooks/useSpeech";
-// import TalkingAvatar2D from "../avatar/TalkingAvatar";
-import ThreeAvatar from "../avatar/ThreeAvatar";
 
-const TalkingAvatar = ThreeAvatar; // ← switch to 2D avatar if needed
+// working----
+// import { useState, useRef, useCallback } from "react";
+// import axios from "axios";
+// import { Mic, MicOff, LogOut } from "lucide-react";
+// // import TalkingAvatar from "../avatar/TalkingAvatar";
+// import { useSpeech } from "../../../hooks/useSpeech";
+// // import TalkingAvatar2D from "../avatar/TalkingAvatar";
+// import ThreeAvatar from "../avatar/ThreeAvatar";
 
-const API = import.meta.env.VITE_API_URL || "http://localhost:5000";
+// const TalkingAvatar = ThreeAvatar; // ← switch to 2D avatar if needed
 
-const PHASES = [
-  { key: "General", label: "General" },
-  { key: "Technical", label: "Technical" },
-  { key: "Behavioral", label: "Behavioral" },
-  { key: "System Design", label: "System Design" },
-];
+// const API = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
-export default function MockInterview({ userProfile, roadmapData }) {
-  const [sessionId, setSessionId] = useState(null);
-  const [currentQuestion, setCurrentQuestion] = useState("");
-  const [currentType, setCurrentType] = useState("technical");
-  const [sessionStatus, setSessionStatus] = useState("idle");
-  const [feedback, setFeedback] = useState(null);
-  const [score, setScore] = useState(null);
-  const [history, setHistory] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [selectedPhase, setSelectedPhase] = useState("Technical");
-  const [isMuted, setIsMuted] = useState(false);
-  const [error, setError] = useState(null);
-  const [turnCount, setTurnCount] = useState(0);
-  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+// const PHASES = [
+//   { key: "General", label: "General" },
+//   { key: "Technical", label: "Technical" },
+//   { key: "Behavioral", label: "Behavioral" },
+//   { key: "System Design", label: "System Design" },
+// ];
 
-  const avatarRef = useRef(null);
-  const timerRef = useRef(null);
-  const token = localStorage.getItem("devsta_token") || localStorage.getItem("token");
+// export default function MockInterview({ userProfile, roadmapData }) {
+//   const [sessionId, setSessionId] = useState(null);
+//   const [currentQuestion, setCurrentQuestion] = useState("");
+//   const [currentType, setCurrentType] = useState("technical");
+//   const [sessionStatus, setSessionStatus] = useState("idle");
+//   const [feedback, setFeedback] = useState(null);
+//   const [score, setScore] = useState(null);
+//   const [history, setHistory] = useState([]);
+//   const [loading, setLoading] = useState(false);
+//   const [selectedPhase, setSelectedPhase] = useState("Technical");
+//   const [isMuted, setIsMuted] = useState(false);
+//   const [error, setError] = useState(null);
+//   const [turnCount, setTurnCount] = useState(0);
+//   const [elapsedSeconds, setElapsedSeconds] = useState(0);
 
-  const {
-    isListening, isSpeaking, transcript, setTranscript,micError,
-    sttSupported, startListening, stopListening, speak, cancelSpeech, sttMode, setTypedTranscript,
-  } = useSpeech();
+//   const avatarRef = useRef(null);
+//   const timerRef = useRef(null);
+//   const token = localStorage.getItem("devsta_token") || localStorage.getItem("token");
+
+//   const {
+//     isListening, isSpeaking, transcript, setTranscript,micError,
+//     sttSupported, startListening, stopListening, speak, cancelSpeech, sttMode, setTypedTranscript,
+//   } = useSpeech();
 
  
-  const formatTime = (s) => {
-    const m = Math.floor(s / 60).toString().padStart(2, "0");
-    const sec = (s % 60).toString().padStart(2, "0");
-    return `${m}:${sec}`;
-  };
+//   const formatTime = (s) => {
+//     const m = Math.floor(s / 60).toString().padStart(2, "0");
+//     const sec = (s % 60).toString().padStart(2, "0");
+//     return `${m}:${sec}`;
+//   };
 
-  const startTimer = () => {
-    timerRef.current = setInterval(() => setElapsedSeconds((p) => p + 1), 1000);
-  };
-  const stopTimer = () => clearInterval(timerRef.current);
+//   const startTimer = () => {
+//     timerRef.current = setInterval(() => setElapsedSeconds((p) => p + 1), 1000);
+//   };
+//   const stopTimer = () => clearInterval(timerRef.current);
 
-  // const handleSpeak = useCallback(
-  //   (text) => {
-  //     if (isMuted) return;
-  //     if (avatarRef.current?.speakText) {
-  //       try { avatarRef.current.speakText(text); return; } catch (e) {}
-  //     }
-  //     speak(text);
-  //   },
-  //   [isMuted, speak]
-  // );
+//   // const handleSpeak = useCallback(
+//   //   (text) => {
+//   //     if (isMuted) return;
+//   //     if (avatarRef.current?.speakText) {
+//   //       try { avatarRef.current.speakText(text); return; } catch (e) {}
+//   //     }
+//   //     speak(text);
+//   //   },
+//   //   [isMuted, speak]
+//   // );
 
-  // Replace handleSpeak with this:
-const handleSpeak = useCallback((text, onEnd) => {
-  if (isMuted) { onEnd?.(); return; }
-  if (avatarRef.current?.speakText) {
-    avatarRef.current.speakText(text, onEnd);
-    return;
-  }
-  speak(text, { onEnd });
-}, [isMuted, speak]);
+//   // Replace handleSpeak with this:
+// const handleSpeak = useCallback((text, onEnd) => {
+//   if (isMuted) { onEnd?.(); return; }
+//   if (avatarRef.current?.speakText) {
+//     avatarRef.current.speakText(text, onEnd);
+//     return;
+//   }
+//   speak(text, { onEnd });
+// }, [isMuted, speak]);
 
-const startSession = async () => {
-  setLoading(true);
-  setError(null);
-  try {
-    const res = await axios.post(
-      `${API}/api/interview-session/start`,
-      {
-        roadmapId: roadmapData?._id || null,
-        targetRole: roadmapData?.role || "Software Engineer",
-        targetCompany: roadmapData?.company || "",
-        experience: roadmapData?.experience || "mid",
-        phase: selectedPhase,
-      },
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-    setSessionId(res.data.sessionId);
-    setCurrentQuestion(res.data.question);
-    setCurrentType(res.data.type || "technical");
-    setSessionStatus("active");
-    setTurnCount(0);
-    setHistory([]);
-    setElapsedSeconds(0);
-    startTimer();
-    // speak first question → auto-open mic when done
-    setTimeout(() => {
-      handleSpeak(res.data.question, () => startListening());
-    }, 800);
-  } catch (err) {
-    setError(err.response?.data?.message || "Failed to connect. Is n8n running?");
-  } finally {
-    setLoading(false);
-  }
-};
-const submitAnswer = async () => {
-  // grab BOTH sources immediately before any state changes
-  const refAnswer = stopListening();
-  const stateAnswer = transcript;
-  const finalAnswer = (refAnswer || stateAnswer).trim();
+// const startSession = async () => {
+//   setLoading(true);
+//   setError(null);
+//   try {
+//     const res = await axios.post(
+//       `${API}/api/interview-session/start`,
+//       {
+//         roadmapId: roadmapData?._id || null,
+//         targetRole: roadmapData?.role || "Software Engineer",
+//         targetCompany: roadmapData?.company || "",
+//         experience: roadmapData?.experience || "mid",
+//         phase: selectedPhase,
+//       },
+//       { headers: { Authorization: `Bearer ${token}` } }
+//     );
+//     setSessionId(res.data.sessionId);
+//     setCurrentQuestion(res.data.question);
+//     setCurrentType(res.data.type || "technical");
+//     setSessionStatus("active");
+//     setTurnCount(0);
+//     setHistory([]);
+//     setElapsedSeconds(0);
+//     startTimer();
+//     // speak first question → auto-open mic when done
+//     setTimeout(() => {
+//       handleSpeak(res.data.question, () => startListening());
+//     }, 800);
+//   } catch (err) {
+//     setError(err.response?.data?.message || "Failed to connect. Is n8n running?");
+//   } finally {
+//     setLoading(false);
+//   }
+// };
+// const submitAnswer = async () => {
+//   // grab BOTH sources immediately before any state changes
+//   const refAnswer = stopListening();
+//   const stateAnswer = transcript;
+//   const finalAnswer = (refAnswer || stateAnswer).trim();
 
-  if (!finalAnswer) {
-    setError("No answer recorded. Press the mic button and speak first.");
-    return;
-  }
-  if (!sessionId) return;
+//   if (!finalAnswer) {
+//     setError("No answer recorded. Press the mic button and speak first.");
+//     return;
+//   }
+//   if (!sessionId) return;
 
-  cancelSpeech();
-  setError(null);
-  setLoading(true);
+//   cancelSpeech();
+//   setError(null);
+//   setLoading(true);
 
-  // save to history BEFORE clearing transcript
-  const questionSnapshot = currentQuestion;
-  setHistory(p => [
-    ...p,
-    { role: "interviewer", content: questionSnapshot },
-    { role: "candidate", content: finalAnswer },
-  ]);
+//   // save to history BEFORE clearing transcript
+//   const questionSnapshot = currentQuestion;
+//   setHistory(p => [
+//     ...p,
+//     { role: "interviewer", content: questionSnapshot },
+//     { role: "candidate", content: finalAnswer },
+//   ]);
 
-  // clear transcript AFTER saving
-  setTranscript("");
+//   // clear transcript AFTER saving
+//   setTranscript("");
 
-  avatarRef.current?.setThinking(true);
+//   avatarRef.current?.setThinking(true);
 
-  try {
-    const res = await axios.post(
-      `${API}/api/interview-session/continue`,
-      { sessionId, userAnswer: finalAnswer },
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
+//   try {
+//     const res = await axios.post(
+//       `${API}/api/interview-session/continue`,
+//       { sessionId, userAnswer: finalAnswer },
+//       { headers: { Authorization: `Bearer ${token}` } }
+//     );
 
-    avatarRef.current?.setThinking(false);
-    setTurnCount(res.data.turnCount || turnCount + 1);
+//     avatarRef.current?.setThinking(false);
+//     setTurnCount(res.data.turnCount || turnCount + 1);
 
-    if (res.data.done) {
-      stopTimer();
-      setSessionStatus("done");
-      setFeedback(res.data.feedback);
-      setScore(res.data.score);
-    } else {
-      setCurrentQuestion(res.data.question);
-      setCurrentType(res.data.type || "technical");
-      handleSpeak(res.data.question, () => startListening());
-    }
-  } catch (err) {
-    avatarRef.current?.setThinking(false);
-    setError("Failed to submit answer. Please try again.");
-    console.error(err);
-  } finally {
-    setLoading(false);
-  }
-};
+//     if (res.data.done) {
+//       stopTimer();
+//       setSessionStatus("done");
+//       setFeedback(res.data.feedback);
+//       setScore(res.data.score);
+//     } else {
+//       setCurrentQuestion(res.data.question);
+//       setCurrentType(res.data.type || "technical");
+//       handleSpeak(res.data.question, () => startListening());
+//     }
+//   } catch (err) {
+//     avatarRef.current?.setThinking(false);
+//     setError("Failed to submit answer. Please try again.");
+//     console.error(err);
+//   } finally {
+//     setLoading(false);
+//   }
+// };
 
-  const reset = async () => {
-    cancelSpeech();
-    stopTimer();
-    if (sessionId && sessionStatus === "active") {
-      try {
-        await axios.patch(
-          `${API}/api/interview-session/abandon/${sessionId}`,
-          {},
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-      } catch (e) {}
-    }
-    setSessionId(null); setCurrentQuestion(""); setTranscript("");
-    setSessionStatus("idle"); setFeedback(null); setScore(null);
-    setHistory([]); setError(null); setTurnCount(0); setElapsedSeconds(0);
-  };
+//   const reset = async () => {
+//     cancelSpeech();
+//     stopTimer();
+//     if (sessionId && sessionStatus === "active") {
+//       try {
+//         await axios.patch(
+//           `${API}/api/interview-session/abandon/${sessionId}`,
+//           {},
+//           { headers: { Authorization: `Bearer ${token}` } }
+//         );
+//       } catch (e) {}
+//     }
+//     setSessionId(null); setCurrentQuestion(""); setTranscript("");
+//     setSessionStatus("idle"); setFeedback(null); setScore(null);
+//     setHistory([]); setError(null); setTurnCount(0); setElapsedSeconds(0);
+//   };
 
-  // ── IDLE ──────────────────────────────────────────────────────
-  if (sessionStatus === "idle") {
-    return (
-      <div className="flex items-center justify-center min-h-[600px]">
-        <div className="w-full max-w-md space-y-5">
-          <div>
-            <h2 className="text-xl font-black text-gray-900 dark:text-white mb-1">
-              AI Mock Interview
-            </h2>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              Realistic interviewer — follow-up questions, live feedback, score at the end.
-            </p>
-          </div>
-          <div className="p-5 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 space-y-4">
-            <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl flex gap-4 text-sm">
-              <div>
-                <span className="text-xs text-gray-400 block mb-0.5">Role</span>
-                <span className="font-bold text-gray-800 dark:text-white">
-                  {roadmapData?.role || "Software Engineer"}
-                </span>
-              </div>
-              <div className="w-px bg-gray-200 dark:bg-gray-700" />
-              <div>
-                <span className="text-xs text-gray-400 block mb-0.5">Level</span>
-                <span className="font-bold text-gray-800 dark:text-white capitalize">
-                  {roadmapData?.experience || "Mid"}
-                </span>
-              </div>
-              {roadmapData?.company && (
-                <>
-                  <div className="w-px bg-gray-200 dark:bg-gray-700" />
-                  <div>
-                    <span className="text-xs text-gray-400 block mb-0.5">Company</span>
-                    <span className="font-bold text-gray-800 dark:text-white">
-                      {roadmapData.company}
-                    </span>
-                  </div>
-                </>
-              )}
-            </div>
-            <div>
-              <label className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 block">
-                Focus area
-              </label>
-              <div className="grid grid-cols-2 gap-2">
-                {PHASES.map((p) => (
-                  <button
-                    key={p.key}
-                    onClick={() => setSelectedPhase(p.key)}
-                    className={`py-2.5 rounded-xl text-sm font-bold border transition ${
-                      selectedPhase === p.key
-                        ? "bg-primary text-white border-primary"
-                        : "border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-primary/40"
-                    }`}
-                  >
-                    {p.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-            {error && (
-              <div className="p-3 rounded-xl bg-red-50 dark:bg-red-900/20 text-sm text-red-600 dark:text-red-400">
-                {error}
-              </div>
-            )}
-            <button
-              onClick={startSession}
-              disabled={loading}
-              className="w-full py-3 rounded-2xl bg-primary text-white font-black text-sm hover:opacity-90 transition disabled:opacity-50 flex items-center justify-center gap-2"
-            >
-              {loading ? (
-                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              ) : "Start interview"}
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
+//   // ── IDLE ──────────────────────────────────────────────────────
+//   if (sessionStatus === "idle") {
+//     return (
+//       <div className="flex items-center justify-center min-h-[600px]">
+//         <div className="w-full max-w-md space-y-5">
+//           <div>
+//             <h2 className="text-xl font-black text-gray-900 dark:text-white mb-1">
+//               AI Mock Interview
+//             </h2>
+//             <p className="text-sm text-gray-500 dark:text-gray-400">
+//               Realistic interviewer — follow-up questions, live feedback, score at the end.
+//             </p>
+//           </div>
+//           <div className="p-5 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 space-y-4">
+//             <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl flex gap-4 text-sm">
+//               <div>
+//                 <span className="text-xs text-gray-400 block mb-0.5">Role</span>
+//                 <span className="font-bold text-gray-800 dark:text-white">
+//                   {roadmapData?.role || "Software Engineer"}
+//                 </span>
+//               </div>
+//               <div className="w-px bg-gray-200 dark:bg-gray-700" />
+//               <div>
+//                 <span className="text-xs text-gray-400 block mb-0.5">Level</span>
+//                 <span className="font-bold text-gray-800 dark:text-white capitalize">
+//                   {roadmapData?.experience || "Mid"}
+//                 </span>
+//               </div>
+//               {roadmapData?.company && (
+//                 <>
+//                   <div className="w-px bg-gray-200 dark:bg-gray-700" />
+//                   <div>
+//                     <span className="text-xs text-gray-400 block mb-0.5">Company</span>
+//                     <span className="font-bold text-gray-800 dark:text-white">
+//                       {roadmapData.company}
+//                     </span>
+//                   </div>
+//                 </>
+//               )}
+//             </div>
+//             <div>
+//               <label className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 block">
+//                 Focus area
+//               </label>
+//               <div className="grid grid-cols-2 gap-2">
+//                 {PHASES.map((p) => (
+//                   <button
+//                     key={p.key}
+//                     onClick={() => setSelectedPhase(p.key)}
+//                     className={`py-2.5 rounded-xl text-sm font-bold border transition ${
+//                       selectedPhase === p.key
+//                         ? "bg-primary text-white border-primary"
+//                         : "border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-primary/40"
+//                     }`}
+//                   >
+//                     {p.label}
+//                   </button>
+//                 ))}
+//               </div>
+//             </div>
+//             {error && (
+//               <div className="p-3 rounded-xl bg-red-50 dark:bg-red-900/20 text-sm text-red-600 dark:text-red-400">
+//                 {error}
+//               </div>
+//             )}
+//             <button
+//               onClick={startSession}
+//               disabled={loading}
+//               className="w-full py-3 rounded-2xl bg-primary text-white font-black text-sm hover:opacity-90 transition disabled:opacity-50 flex items-center justify-center gap-2"
+//             >
+//               {loading ? (
+//                 <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+//               ) : "Start interview"}
+//             </button>
+//           </div>
+//         </div>
+//       </div>
+//     );
+//   }
 
-  // ── DONE ──────────────────────────────────────────────────────
-  if (sessionStatus === "done") {
-    const scoreColor =
-      score >= 80 ? "text-emerald-500" : score >= 60 ? "text-amber-500" : "text-rose-500";
-    return (
-      <div className="flex items-center justify-center min-h-[600px]">
-        <div className="w-full max-w-lg space-y-4">
-          <div className="p-8 rounded-[2rem] bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 text-center">
-            <p className="text-4xl mb-3">
-              {score >= 80 ? "🎉" : score >= 60 ? "👍" : "💪"}
-            </p>
-            <h2 className="text-2xl font-black text-gray-900 dark:text-white mb-1">
-              Interview Complete
-            </h2>
-            {score !== null && (
-              <p className={`text-5xl font-black mt-3 ${scoreColor}`}>
-                {score}
-                <span className="text-base text-gray-400 font-normal">/100</span>
-              </p>
-            )}
-          </div>
-          {feedback && (
-            <div className="p-6 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800">
-              <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-3">
-                Feedback
-              </p>
-              <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-line">
-                {feedback}
-              </p>
-            </div>
-          )}
-          <button
-            onClick={reset}
-            className="w-full py-3 rounded-2xl bg-primary text-white font-black text-sm hover:opacity-90 transition"
-          >
-            New session
-          </button>
-        </div>
-      </div>
-    );
-  }
+//   // ── DONE ──────────────────────────────────────────────────────
+//   if (sessionStatus === "done") {
+//     const scoreColor =
+//       score >= 80 ? "text-emerald-500" : score >= 60 ? "text-amber-500" : "text-rose-500";
+//     return (
+//       <div className="flex items-center justify-center min-h-[600px]">
+//         <div className="w-full max-w-lg space-y-4">
+//           <div className="p-8 rounded-[2rem] bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 text-center">
+//             <p className="text-4xl mb-3">
+//               {score >= 80 ? "🎉" : score >= 60 ? "👍" : "💪"}
+//             </p>
+//             <h2 className="text-2xl font-black text-gray-900 dark:text-white mb-1">
+//               Interview Complete
+//             </h2>
+//             {score !== null && (
+//               <p className={`text-5xl font-black mt-3 ${scoreColor}`}>
+//                 {score}
+//                 <span className="text-base text-gray-400 font-normal">/100</span>
+//               </p>
+//             )}
+//           </div>
+//           {feedback && (
+//             <div className="p-6 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800">
+//               <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-3">
+//                 Feedback
+//               </p>
+//               <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-line">
+//                 {feedback}
+//               </p>
+//             </div>
+//           )}
+//           <button
+//             onClick={reset}
+//             className="w-full py-3 rounded-2xl bg-primary text-white font-black text-sm hover:opacity-90 transition"
+//           >
+//             New session
+//           </button>
+//         </div>
+//       </div>
+//     );
+//   }
 
-  // ── ACTIVE — 35% LEFT / 65% RIGHT ────────────────────────────
-  return (
-    <div
-      className="flex rounded-[2rem] overflow-hidden border border-gray-200 dark:border-gray-800"
-      style={{ minHeight: "700px" }}
-    >
-      {/* ── LEFT PANEL: 35% ──────────────────────────────────── */}
-      <div
-        className="flex flex-col p-6 gap-5 border-r border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900"
-        style={{ width: "35%" }}
-      >
-        {/* Status */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 text-[10px] font-bold text-gray-500 uppercase tracking-widest border border-gray-200 dark:border-gray-700 rounded-full px-3 py-1.5">
-            <span
-              className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
-                isSpeaking
-                  ? "bg-orange-500 animate-pulse"
-                  : isListening
-                  ? "bg-purple-500 animate-pulse"
-                  : "bg-emerald-500"
-              }`}
-            />
-            {isSpeaking ? "Speaking" : isListening ? "Listening..." : "Active"}
-          </div>
-          <span className="text-xs text-gray-400 tabular-nums font-medium">
-            {formatTime(elapsedSeconds)}
-          </span>
-        </div>
+//   // ── ACTIVE — 35% LEFT / 65% RIGHT ────────────────────────────
+//   return (
+//     <div
+//       className="flex rounded-[2rem] overflow-hidden border border-gray-200 dark:border-gray-800"
+//       style={{ minHeight: "700px" }}
+//     >
+//       {/* ── LEFT PANEL: 35% ──────────────────────────────────── */}
+//       <div
+//         className="flex flex-col p-6 gap-5 border-r border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900"
+//         style={{ width: "35%" }}
+//       >
+//         {/* Status */}
+//         <div className="flex items-center justify-between">
+//           <div className="flex items-center gap-2 text-[10px] font-bold text-gray-500 uppercase tracking-widest border border-gray-200 dark:border-gray-700 rounded-full px-3 py-1.5">
+//             <span
+//               className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
+//                 isSpeaking
+//                   ? "bg-orange-500 animate-pulse"
+//                   : isListening
+//                   ? "bg-purple-500 animate-pulse"
+//                   : "bg-emerald-500"
+//               }`}
+//             />
+//             {isSpeaking ? "Speaking" : isListening ? "Listening..." : "Active"}
+//           </div>
+//           <span className="text-xs text-gray-400 tabular-nums font-medium">
+//             {formatTime(elapsedSeconds)}
+//           </span>
+//         </div>
 
-        {/* Question card */}
-        <div className="flex-1 flex flex-col bg-gray-50 dark:bg-gray-800/60 rounded-2xl border border-gray-200 dark:border-gray-700 p-5 gap-3">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 capitalize">
-              {currentType}
-            </span>
-            <span className="text-[10px] text-gray-400">
-              Q{turnCount + 1} / 6
-            </span>
-          </div>
-          <p className="text-sm font-bold text-gray-800 dark:text-white leading-relaxed flex-1">
-            {loading && !currentQuestion ? (
-              <span className="flex items-center gap-2 text-gray-400 text-sm font-normal">
-                <span className="w-3.5 h-3.5 border-2 border-gray-200 border-t-gray-500 rounded-full animate-spin inline-block" />
-                Thinking...
-              </span>
-            ) : (
-              currentQuestion
-            )}
-          </p>
-        </div>
+//         {/* Question card */}
+//         <div className="flex-1 flex flex-col bg-gray-50 dark:bg-gray-800/60 rounded-2xl border border-gray-200 dark:border-gray-700 p-5 gap-3">
+//           <div className="flex items-center gap-2 flex-wrap">
+//             <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 capitalize">
+//               {currentType}
+//             </span>
+//             <span className="text-[10px] text-gray-400">
+//               Q{turnCount + 1} / 6
+//             </span>
+//           </div>
+//           <p className="text-sm font-bold text-gray-800 dark:text-white leading-relaxed flex-1">
+//             {loading && !currentQuestion ? (
+//               <span className="flex items-center gap-2 text-gray-400 text-sm font-normal">
+//                 <span className="w-3.5 h-3.5 border-2 border-gray-200 border-t-gray-500 rounded-full animate-spin inline-block" />
+//                 Thinking...
+//               </span>
+//             ) : (
+//               currentQuestion
+//             )}
+//           </p>
+//         </div>
 
-        {/* Chat history */}
-        {history.length > 0 && (
-          <div className="flex flex-col gap-2 max-h-40 overflow-y-auto">
-            {history.map((msg, i) => (
-              <div
-                key={i}
-                className={`flex ${msg.role === "candidate" ? "justify-end" : "justify-start"}`}
-              >
-                <div
-                  className={`max-w-[88%] px-3 py-2 rounded-2xl text-xs leading-relaxed ${
-                    msg.role === "candidate"
-                      ? "bg-primary text-white"
-                      : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400"
-                  }`}
-                >
-                  {msg.content}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+//         {/* Chat history */}
+//         {history.length > 0 && (
+//           <div className="flex flex-col gap-2 max-h-40 overflow-y-auto">
+//             {history.map((msg, i) => (
+//               <div
+//                 key={i}
+//                 className={`flex ${msg.role === "candidate" ? "justify-end" : "justify-start"}`}
+//               >
+//                 <div
+//                   className={`max-w-[88%] px-3 py-2 rounded-2xl text-xs leading-relaxed ${
+//                     msg.role === "candidate"
+//                       ? "bg-primary text-white"
+//                       : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400"
+//                   }`}
+//                 >
+//                   {msg.content}
+//                 </div>
+//               </div>
+//             ))}
+//           </div>
+//         )}
 
-        {/* Session meta */}
-        <div className="flex items-center gap-3 pt-3 border-t border-gray-200 dark:border-gray-700 flex-wrap">
-          {[
-            { label: "Role", value: roadmapData?.role || "Engineer" },
-            { label: "Level", value: roadmapData?.experience || "Mid" },
-            { label: "Focus", value: selectedPhase },
-          ].map((m, i) => (
-            <div key={i} className="flex flex-col gap-0.5">
-              <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">
-                {m.label}
-              </span>
-              <span className="text-xs font-bold text-gray-700 dark:text-gray-300">
-                {m.value}
-              </span>
-            </div>
-          ))}
-        </div>
+//         {/* Session meta */}
+//         <div className="flex items-center gap-3 pt-3 border-t border-gray-200 dark:border-gray-700 flex-wrap">
+//           {[
+//             { label: "Role", value: roadmapData?.role || "Engineer" },
+//             { label: "Level", value: roadmapData?.experience || "Mid" },
+//             { label: "Focus", value: selectedPhase },
+//           ].map((m, i) => (
+//             <div key={i} className="flex flex-col gap-0.5">
+//               <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">
+//                 {m.label}
+//               </span>
+//               <span className="text-xs font-bold text-gray-700 dark:text-gray-300">
+//                 {m.value}
+//               </span>
+//             </div>
+//           ))}
+//         </div>
 
-        {error && (
-          <div className="p-3 rounded-xl bg-red-50 dark:bg-red-900/20 text-xs text-red-600 dark:text-red-400">
-            {error}
-          </div>
-        )}
-      </div>
+//         {error && (
+//           <div className="p-3 rounded-xl bg-red-50 dark:bg-red-900/20 text-xs text-red-600 dark:text-red-400">
+//             {error}
+//           </div>
+//         )}
+//       </div>
 
-      {/* ── RIGHT PANEL: 65% — Avatar ─────────────────────────── */}
-      <div className="flex flex-col" style={{ width: "65%" }}>
+//       {/* ── RIGHT PANEL: 65% — Avatar ─────────────────────────── */}
+//       <div className="flex flex-col" style={{ width: "65%" }}>
 
-        {/* Avatar — fills all space */}
-        <div className="flex-1 relative" style={{ minHeight: "580px" }}>
-          <TalkingAvatar
-            ref={avatarRef}
-            isSpeaking={isSpeaking}
-            isMuted={isMuted}
-            onToggleMute={() => {
-              setIsMuted((m) => !m);
-              if (!isMuted) cancelSpeech();
-            }}
-          />
-        </div>
+//         {/* Avatar — fills all space */}
+//         <div className="flex-1 relative" style={{ minHeight: "580px" }}>
+//           <TalkingAvatar
+//             ref={avatarRef}
+//             isSpeaking={isSpeaking}
+//             isMuted={isMuted}
+//             onToggleMute={() => {
+//               setIsMuted((m) => !m);
+//               if (!isMuted) cancelSpeech();
+//             }}
+//           />
+//         </div>
 
-        {/* Controls bar — sits below avatar inside the dark panel */}
-       {/* Controls bar */}
-<div
-  className="flex flex-col gap-3 px-6 py-5 border-t border-white/[0.06]"
-  style={{ background: "#0d0d12" }}
->
-  {/* Network error warning */}
-  {sttMode === "typing" && (
-    <div className="px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs">
-      Voice unavailable (network issue) — type your answer below instead
-    </div>
-  )}
+//         {/* Controls bar — sits below avatar inside the dark panel */}
+//        {/* Controls bar */}
+// <div
+//   className="flex flex-col gap-3 px-6 py-5 border-t border-white/[0.06]"
+//   style={{ background: "#0d0d12" }}
+// >
+//   {/* Network error warning */}
+//   {sttMode === "typing" && (
+//     <div className="px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs">
+//       Voice unavailable (network issue) — type your answer below instead
+//     </div>
+//   )}
 
-  {/* Transcript / input area */}
-  {sttMode === "typing" ? (
-    // Typing mode — show a real textarea
-    <textarea
-      value={transcript}
-      onChange={(e) => setTypedTranscript(e.target.value)}
-      placeholder="Type your answer here..."
-      rows={3}
-      className="w-full rounded-xl px-4 py-3 text-sm text-white/90 resize-none outline-none"
-      style={{
-        background: "rgba(127,119,221,0.08)",
-        border: "1px solid rgba(127,119,221,0.4)",
-        minHeight: 80,
-      }}
-    />
-  ) : (
-    // Speech mode — show transcript
-    <div
-      className={`rounded-xl px-4 py-3 text-sm leading-relaxed transition-all ${
-        isListening
-          ? "border border-purple-500/50 text-white/90"
-          : "border border-white/[0.07] text-white/40"
-      }`}
-      style={{
-        minHeight: 48,
-        background: isListening ? "rgba(127,119,221,0.08)" : "rgba(255,255,255,0.03)",
-      }}
-    >
-      {transcript || (
-        <span className="italic text-sm">
-          {isListening ? "Listening — speak your answer..." : "Press mic to start answering"}
-        </span>
-      )}
-    </div>
-  )}
+//   {/* Transcript / input area */}
+//   {sttMode === "typing" ? (
+//     // Typing mode — show a real textarea
+//     <textarea
+//       value={transcript}
+//       onChange={(e) => setTypedTranscript(e.target.value)}
+//       placeholder="Type your answer here..."
+//       rows={3}
+//       className="w-full rounded-xl px-4 py-3 text-sm text-white/90 resize-none outline-none"
+//       style={{
+//         background: "rgba(127,119,221,0.08)",
+//         border: "1px solid rgba(127,119,221,0.4)",
+//         minHeight: 80,
+//       }}
+//     />
+//   ) : (
+//     // Speech mode — show transcript
+//     <div
+//       className={`rounded-xl px-4 py-3 text-sm leading-relaxed transition-all ${
+//         isListening
+//           ? "border border-purple-500/50 text-white/90"
+//           : "border border-white/[0.07] text-white/40"
+//       }`}
+//       style={{
+//         minHeight: 48,
+//         background: isListening ? "rgba(127,119,221,0.08)" : "rgba(255,255,255,0.03)",
+//       }}
+//     >
+//       {transcript || (
+//         <span className="italic text-sm">
+//           {isListening ? "Listening — speak your answer..." : "Press mic to start answering"}
+//         </span>
+//       )}
+//     </div>
+//   )}
 
-  {/* Buttons */}
-  <div className="flex items-center gap-3">
-    {/* Mic — hidden in typing mode */}
-    {sttMode === "speech" && (
-      <button
-        onClick={isListening ? stopListening : startListening}
-        disabled={isSpeaking || loading}
-        className={`w-14 h-14 rounded-full flex items-center justify-center transition-all disabled:opacity-40 flex-shrink-0 ${
-          isListening ? "bg-orange-600 scale-105" : "bg-purple-600 hover:bg-purple-500"
-        }`}
-        style={isListening ? {
-          animation: "mic-pulse 1.5s ease-in-out infinite"
-        } : {}}
-      >
-        {isListening
-          ? <MicOff style={{ width: 22, height: 22, color: "white" }} />
-          : <Mic style={{ width: 22, height: 22, color: "white" }} />
-        }
-      </button>
-    )}
+//   {/* Buttons */}
+//   <div className="flex items-center gap-3">
+//     {/* Mic — hidden in typing mode */}
+//     {sttMode === "speech" && (
+//       <button
+//         onClick={isListening ? stopListening : startListening}
+//         disabled={isSpeaking || loading}
+//         className={`w-14 h-14 rounded-full flex items-center justify-center transition-all disabled:opacity-40 flex-shrink-0 ${
+//           isListening ? "bg-orange-600 scale-105" : "bg-purple-600 hover:bg-purple-500"
+//         }`}
+//         style={isListening ? {
+//           animation: "mic-pulse 1.5s ease-in-out infinite"
+//         } : {}}
+//       >
+//         {isListening
+//           ? <MicOff style={{ width: 22, height: 22, color: "white" }} />
+//           : <Mic style={{ width: 22, height: 22, color: "white" }} />
+//         }
+//       </button>
+//     )}
 
-    {/* Submit */}
-    <button
-      onClick={submitAnswer}
-      disabled={loading || !transcript.trim()}
-      className="flex-1 h-12 rounded-xl text-sm font-bold transition disabled:opacity-30"
-      style={{
-        border: "0.5px solid rgba(255,255,255,0.14)",
-        background: "rgba(255,255,255,0.07)",
-        color: "rgba(255,255,255,0.8)",
-      }}
-    >
-      {loading ? (
-        <span className="flex items-center justify-center gap-2">
-          <span className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-        </span>
-      ) : (
-        sttMode === "typing" ? "Send answer" : "Submit answer"
-      )}
-    </button>
+//     {/* Submit */}
+//     <button
+//       onClick={submitAnswer}
+//       disabled={loading || !transcript.trim()}
+//       className="flex-1 h-12 rounded-xl text-sm font-bold transition disabled:opacity-30"
+//       style={{
+//         border: "0.5px solid rgba(255,255,255,0.14)",
+//         background: "rgba(255,255,255,0.07)",
+//         color: "rgba(255,255,255,0.8)",
+//       }}
+//     >
+//       {loading ? (
+//         <span className="flex items-center justify-center gap-2">
+//           <span className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+//         </span>
+//       ) : (
+//         sttMode === "typing" ? "Send answer" : "Submit answer"
+//       )}
+//     </button>
 
-    {/* End session */}
-    <button
-      onClick={reset}
-      className="w-12 h-12 rounded-xl flex items-center justify-center transition"
-      style={{
-        border: "0.5px solid rgba(255,255,255,0.08)",
-        background: "rgba(255,255,255,0.03)",
-        color: "rgba(255,255,255,0.25)",
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.background = "rgba(239,68,68,0.12)";
-        e.currentTarget.style.color = "#f87171";
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.background = "rgba(255,255,255,0.03)";
-        e.currentTarget.style.color = "rgba(255,255,255,0.25)";
-      }}
-    >
-      <LogOut style={{ width: 16, height: 16 }} />
-    </button>
-  </div>
-</div>
-      </div>
+//     {/* End session */}
+//     <button
+//       onClick={reset}
+//       className="w-12 h-12 rounded-xl flex items-center justify-center transition"
+//       style={{
+//         border: "0.5px solid rgba(255,255,255,0.08)",
+//         background: "rgba(255,255,255,0.03)",
+//         color: "rgba(255,255,255,0.25)",
+//       }}
+//       onMouseEnter={(e) => {
+//         e.currentTarget.style.background = "rgba(239,68,68,0.12)";
+//         e.currentTarget.style.color = "#f87171";
+//       }}
+//       onMouseLeave={(e) => {
+//         e.currentTarget.style.background = "rgba(255,255,255,0.03)";
+//         e.currentTarget.style.color = "rgba(255,255,255,0.25)";
+//       }}
+//     >
+//       <LogOut style={{ width: 16, height: 16 }} />
+//     </button>
+//   </div>
+// </div>
+//       </div>
 
-      <style>{`
-        @keyframes mic-pulse {
-          0%, 100% { box-shadow: 0 0 0 0 rgba(234,88,12,0.4); }
-          50% { box-shadow: 0 0 0 10px rgba(234,88,12,0); }
-        }
-      `}</style>
-    </div>
-  );
-}
+//       <style>{`
+//         @keyframes mic-pulse {
+//           0%, 100% { box-shadow: 0 0 0 0 rgba(234,88,12,0.4); }
+//           50% { box-shadow: 0 0 0 10px rgba(234,88,12,0); }
+//         }
+//       `}</style>
+//     </div>
+//   );
+// }

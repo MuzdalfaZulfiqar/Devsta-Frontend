@@ -84,7 +84,7 @@ import DefineGoal from "../../components/interview/tabs/DefineGoal";
 import Roadmap from "../../components/interview/tabs/Roadmap";
 import CodingChallenge from "../../components/interview/tabs/CodingChallenge";
 import ProgressDashboard from "../../components/interview/tabs/ProgressDashboard";
-import MockInterview from "../../components/interview/tabs/MockInterview";
+// import MockInterview from "../../components/interview/tabs/MockInterview";
 
 export default function InterviewAssistant() {
   const { user } = useAuth();
@@ -141,13 +141,13 @@ export default function InterviewAssistant() {
       }}
     />
   );
-  case "mock":
-  return (
-    <MockInterview 
-      userProfile={user} 
-      roadmapData={latestRoadmap} 
-    />
-  );
+  // case "mock":
+  // return (
+  //   <MockInterview 
+  //     userProfile={user} 
+  //     roadmapData={latestRoadmap} 
+  //   />
+  // );
       case "progress":
         return <ProgressDashboard />;
       default:
