@@ -850,338 +850,636 @@
 //   );
 // });
 
-// export default TalkingAvatar2D;
+
+// // components/avatar/TalkingAvatar.jsx
+// import {
+//   useRef, useState, useEffect, useCallback,
+//   forwardRef, useImperativeHandle,
+// } from "react";
+// import { Volume2, VolumeX } from "lucide-react";
+
+// const TalkingAvatar = forwardRef(function TalkingAvatar(
+//   { isSpeaking, isMuted, onToggleMute,
+//     userName = "Alex Chen", userTitle = "Senior Engineer · Interviewer" },
+//   ref
+// ) {
+//   const canvasRef = useRef(null);
+//   const mouthOpenRef = useRef(0);       // use ref not state — avoids re-render on every frame
+//   const isThinkingRef = useRef(false);
+//   const [statusLabel, setStatusLabel] = useState("Ready");
+//   const [showWave, setShowWave] = useState(false);
+//   const synthRef = useRef(window.speechSynthesis);
+//   const speakIntervalRef = useRef(null);
+//   const animFrameRef = useRef(null);
+//   const blinkRef = useRef(false);
+//   const blinkTimerRef = useRef(null);
+//   const tickRef = useRef(0);
+
+//   // ── Auto blink ─────────────────────────────────────────────
+//   useEffect(() => {
+//     const scheduleBlink = () => {
+//       blinkTimerRef.current = setTimeout(() => {
+//         blinkRef.current = true;
+//         setTimeout(() => {
+//           blinkRef.current = false;
+//           scheduleBlink();
+//         }, 140);
+//       }, 2800 + Math.random() * 2200);
+//     };
+//     scheduleBlink();
+//     return () => clearTimeout(blinkTimerRef.current);
+//   }, []);
+
+//   // ── Canvas draw loop ────────────────────────────────────────
+//   useEffect(() => {
+//     const canvas = canvasRef.current;
+//     if (!canvas) return;
+//     const ctx = canvas.getContext("2d");
+
+//     const draw = () => {
+//       tickRef.current += 0.016;
+//       const t = tickRef.current;
+//       const W = canvas.width;
+//       const H = canvas.height;
+//       const cx = W / 2;
+//       const cy = H / 2 - 10;
+
+//       ctx.clearRect(0, 0, W, H);
+
+//       // Background
+//       const bg = ctx.createLinearGradient(0, 0, 0, H);
+//       bg.addColorStop(0, "#13131f");
+//       bg.addColorStop(1, "#0b0b14");
+//       ctx.fillStyle = bg;
+//       ctx.fillRect(0, 0, W, H);
+
+//       // Subtle dot grid
+//       ctx.fillStyle = "rgba(255,255,255,0.025)";
+//       for (let gx = 20; gx < W; gx += 30) {
+//         for (let gy = 20; gy < H; gy += 30) {
+//           ctx.beginPath();
+//           ctx.arc(gx, gy, 1, 0, Math.PI * 2);
+//           ctx.fill();
+//         }
+//       }
+
+//       // Subtle breathing bob
+//       const bob = Math.sin(t * 1.4) * 3;
+
+//       // ── Shoulders / suit ─────────────────────────────────
+//       ctx.fillStyle = "#1e1e30";
+//       ctx.beginPath();
+//       ctx.ellipse(cx, cy + 190 + bob, 130, 70, 0, 0, Math.PI * 2);
+//       ctx.fill();
+
+//       // Suit jacket shape
+//       ctx.fillStyle = "#252538";
+//       ctx.beginPath();
+//       ctx.moveTo(cx - 90, cy + 260 + bob);
+//       ctx.quadraticCurveTo(cx - 100, cy + 190 + bob, cx - 55, cy + 155 + bob);
+//       ctx.lineTo(cx - 25, cy + 145 + bob);
+//       ctx.lineTo(cx, cy + 165 + bob);
+//       ctx.lineTo(cx + 25, cy + 145 + bob);
+//       ctx.lineTo(cx + 55, cy + 155 + bob);
+//       ctx.quadraticCurveTo(cx + 100, cy + 190 + bob, cx + 90, cy + 260 + bob);
+//       ctx.closePath();
+//       ctx.fill();
+
+//       // Shirt / tie
+//       ctx.fillStyle = "#f0eeff";
+//       ctx.beginPath();
+//       ctx.moveTo(cx - 20, cy + 150 + bob);
+//       ctx.lineTo(cx + 20, cy + 150 + bob);
+//       ctx.lineTo(cx + 14, cy + 210 + bob);
+//       ctx.lineTo(cx - 14, cy + 210 + bob);
+//       ctx.closePath();
+//       ctx.fill();
+
+//       ctx.fillStyle = "#7F77DD";
+//       ctx.beginPath();
+//       ctx.moveTo(cx - 7, cy + 152 + bob);
+//       ctx.lineTo(cx + 7, cy + 152 + bob);
+//       ctx.lineTo(cx + 4, cy + 205 + bob);
+//       ctx.lineTo(cx - 4, cy + 205 + bob);
+//       ctx.closePath();
+//       ctx.fill();
+
+//       // Tie knot
+//       ctx.fillStyle = "#534AB7";
+//       ctx.beginPath();
+//       ctx.ellipse(cx, cy + 156 + bob, 8, 6, 0, 0, Math.PI * 2);
+//       ctx.fill();
+
+//       // ── Neck ──────────────────────────────────────────────
+//       ctx.fillStyle = "#c8956e";
+//       ctx.beginPath();
+//       ctx.ellipse(cx, cy + 132 + bob, 22, 24, 0, 0, Math.PI * 2);
+//       ctx.fill();
+
+//       // ── Head ──────────────────────────────────────────────
+//       const headY = cy + bob;
+//       // Shadow under head
+//       ctx.fillStyle = "rgba(0,0,0,0.25)";
+//       ctx.beginPath();
+//       ctx.ellipse(cx + 4, headY + 6, 76, 82, 0, 0, Math.PI * 2);
+//       ctx.fill();
+
+//       // Skin
+//       const skinG = ctx.createRadialGradient(cx - 15, headY - 20, 10, cx, headY, 80);
+//       skinG.addColorStop(0, "#e8b898");
+//       skinG.addColorStop(0.5, "#d4956a");
+//       skinG.addColorStop(1, "#b87a4a");
+//       ctx.fillStyle = skinG;
+//       ctx.beginPath();
+//       ctx.ellipse(cx, headY, 74, 84, 0, 0, Math.PI * 2);
+//       ctx.fill();
+
+//       // Ears
+//       ctx.fillStyle = "#c8854a";
+//       ctx.beginPath(); ctx.ellipse(cx - 74, headY + 10, 10, 14, 0, 0, Math.PI * 2); ctx.fill();
+//       ctx.beginPath(); ctx.ellipse(cx + 74, headY + 10, 10, 14, 0, 0, Math.PI * 2); ctx.fill();
+//       ctx.strokeStyle = "#a86838"; ctx.lineWidth = 1;
+//       ctx.beginPath(); ctx.ellipse(cx - 74, headY + 10, 5, 8, 0, 0, Math.PI * 2); ctx.stroke();
+//       ctx.beginPath(); ctx.ellipse(cx + 74, headY + 10, 5, 8, 0, 0, Math.PI * 2); ctx.stroke();
+
+//       // Hair
+//       ctx.fillStyle = "#1a1020";
+//       ctx.beginPath();
+//       ctx.ellipse(cx, headY - 52, 74, 44, 0, Math.PI, Math.PI * 2);
+//       ctx.fill();
+//       ctx.beginPath();
+//       ctx.ellipse(cx, headY - 30, 78, 30, 0, Math.PI, Math.PI * 2);
+//       ctx.fill();
+//       // Side hair fade
+//       ctx.fillStyle = "#251830";
+//       ctx.beginPath(); ctx.ellipse(cx - 68, headY - 10, 12, 30, -0.2, 0, Math.PI * 2); ctx.fill();
+//       ctx.beginPath(); ctx.ellipse(cx + 68, headY - 10, 12, 30, 0.2, 0, Math.PI * 2); ctx.fill();
+
+//       // ── Eyebrows ─────────────────────────────────────────
+//       const browRaise = isThinkingRef.current ? -4 : 0;
+//       ctx.strokeStyle = "#3a2010";
+//       ctx.lineWidth = 4;
+//       ctx.lineCap = "round";
+//       ctx.beginPath();
+//       ctx.moveTo(cx - 48, headY - 32 + browRaise);
+//       ctx.quadraticCurveTo(cx - 30, headY - 40 + browRaise, cx - 14, headY - 34 + browRaise);
+//       ctx.stroke();
+//       ctx.beginPath();
+//       ctx.moveTo(cx + 48, headY - 32 + browRaise);
+//       ctx.quadraticCurveTo(cx + 30, headY - 40 + browRaise, cx + 14, headY - 34 + browRaise);
+//       ctx.stroke();
+
+//       // ── Eyes ─────────────────────────────────────────────
+//       const eyeY = headY - 16;
+//       const eyeOffsets = [-30, 30];
+
+//       eyeOffsets.forEach((ex) => {
+//         // White
+//         ctx.fillStyle = "#ffffff";
+//         ctx.beginPath();
+//         ctx.ellipse(cx + ex, eyeY, 14, blinkRef.current ? 1 : 12, 0, 0, Math.PI * 2);
+//         ctx.fill();
+
+//         if (!blinkRef.current) {
+//           // Iris
+//           const irisG = ctx.createRadialGradient(cx + ex - 2, eyeY - 2, 1, cx + ex, eyeY, 9);
+//           irisG.addColorStop(0, "#6b4c2a");
+//           irisG.addColorStop(0.5, "#3d2a10");
+//           irisG.addColorStop(1, "#1a0e05");
+//           ctx.fillStyle = irisG;
+//           ctx.beginPath();
+//           ctx.ellipse(cx + ex, eyeY, 9, 9, 0, 0, Math.PI * 2);
+//           ctx.fill();
+
+//           // Pupil
+//           ctx.fillStyle = "#050200";
+//           ctx.beginPath();
+//           ctx.ellipse(cx + ex, eyeY, 5, 5, 0, 0, Math.PI * 2);
+//           ctx.fill();
+
+//           // Highlight
+//           ctx.fillStyle = "rgba(255,255,255,0.9)";
+//           ctx.beginPath();
+//           ctx.ellipse(cx + ex + 4, eyeY - 4, 2.5, 2, 0, 0, Math.PI * 2);
+//           ctx.fill();
+//           ctx.fillStyle = "rgba(255,255,255,0.4)";
+//           ctx.beginPath();
+//           ctx.ellipse(cx + ex - 3, eyeY + 3, 1.2, 1, 0, 0, Math.PI * 2);
+//           ctx.fill();
+//         }
+//       });
+
+//       // ── Glasses ──────────────────────────────────────────
+//       ctx.strokeStyle = "#7F77DD";
+//       ctx.lineWidth = 2;
+//       // Left frame
+//       ctx.beginPath();
+//       ctx.roundRect(cx - 52, eyeY - 16, 40, 28, 7);
+//       ctx.stroke();
+//       // Right frame
+//       ctx.beginPath();
+//       ctx.roundRect(cx + 12, eyeY - 16, 40, 28, 7);
+//       ctx.stroke();
+//       // Bridge
+//       ctx.beginPath();
+//       ctx.moveTo(cx - 12, eyeY - 4);
+//       ctx.lineTo(cx + 12, eyeY - 4);
+//       ctx.stroke();
+//       // Temples
+//       ctx.beginPath();
+//       ctx.moveTo(cx - 52, eyeY - 4);
+//       ctx.lineTo(cx - 68, eyeY);
+//       ctx.stroke();
+//       ctx.beginPath();
+//       ctx.moveTo(cx + 52, eyeY - 4);
+//       ctx.lineTo(cx + 68, eyeY);
+//       ctx.stroke();
+//       // Lens tint
+//       ctx.fillStyle = "rgba(127,119,221,0.07)";
+//       ctx.beginPath(); ctx.roundRect(cx - 51, eyeY - 15, 38, 26, 6); ctx.fill();
+//       ctx.beginPath(); ctx.roundRect(cx + 13, eyeY - 15, 38, 26, 6); ctx.fill();
+
+//       // ── Nose ─────────────────────────────────────────────
+//       ctx.strokeStyle = "#a06840";
+//       ctx.lineWidth = 1.5;
+//       ctx.fillStyle = "rgba(0,0,0,0)";
+//       ctx.beginPath();
+//       ctx.moveTo(cx, headY - 5);
+//       ctx.quadraticCurveTo(cx + 12, headY + 10, cx + 8, headY + 18);
+//       ctx.quadraticCurveTo(cx, headY + 20, cx - 8, headY + 18);
+//       ctx.quadraticCurveTo(cx - 12, headY + 10, cx, headY - 5);
+//       ctx.stroke();
+//       // Nostrils
+//       ctx.fillStyle = "#8a5030";
+//       ctx.beginPath(); ctx.ellipse(cx - 10, headY + 20, 5, 3, -0.3, 0, Math.PI * 2); ctx.fill();
+//       ctx.beginPath(); ctx.ellipse(cx + 10, headY + 20, 5, 3, 0.3, 0, Math.PI * 2); ctx.fill();
+
+//       // ── Mouth ─────────────────────────────────────────────
+//       const mo = mouthOpenRef.current;
+//       const mouthY = headY + 35;
+
+//       // Lips outline
+//       ctx.fillStyle = "#c06050";
+//       ctx.beginPath();
+//       ctx.ellipse(cx, mouthY, 26 + mo * 2, 8 + mo * 6, 0, 0, Math.PI * 2);
+//       ctx.fill();
+
+//       // Inner mouth / teeth when open
+//       if (mo > 0.15) {
+//         ctx.fillStyle = "#2a0a0a";
+//         ctx.beginPath();
+//         ctx.ellipse(cx, mouthY + 2, 20 + mo * 2, 4 + mo * 8, 0, 0, Math.PI * 2);
+//         ctx.fill();
+
+//         // Teeth
+//         if (mo > 0.3) {
+//           ctx.fillStyle = "#f5f0e8";
+//           ctx.beginPath();
+//           ctx.ellipse(cx, mouthY - 1, 16 + mo, 3 + mo * 2, 0, 0, Math.PI);
+//           ctx.fill();
+//         }
+//       }
+
+//       // Upper lip highlight
+//       ctx.fillStyle = "rgba(255,255,255,0.15)";
+//       ctx.beginPath();
+//       ctx.ellipse(cx, mouthY - 3, 18, 3, 0, 0, Math.PI * 2);
+//       ctx.fill();
+
+//       // ── Thinking dots ─────────────────────────────────────
+//       if (isThinkingRef.current) {
+//         for (let d = 0; d < 3; d++) {
+//           const dotPhase = Math.sin(t * 4 + d * 1.2);
+//           const dotY = headY - 100 + dotPhase * 5;
+//           const alpha = 0.4 + dotPhase * 0.3;
+//           ctx.fillStyle = `rgba(127,119,221,${alpha})`;
+//           ctx.beginPath();
+//           ctx.arc(cx - 16 + d * 16, dotY, 5, 0, Math.PI * 2);
+//           ctx.fill();
+//         }
+//       }
+
+//       animFrameRef.current = requestAnimationFrame(draw);
+//     };
+
+//     animFrameRef.current = requestAnimationFrame(draw);
+//     return () => cancelAnimationFrame(animFrameRef.current);
+//   }, []);
+
+//   // ── speakText ───────────────────────────────────────────────
+//   const speakText = useCallback((text, onEnd) => {
+//     if (isMuted) { onEnd?.(); return; }
+//     if (!text) { onEnd?.(); return; }
+
+//     synthRef.current.cancel();
+//     clearInterval(speakIntervalRef.current);
+//     isThinkingRef.current = false;
+//     setStatusLabel("Speaking");
+//     setShowWave(true);
+
+//     const utterance = new SpeechSynthesisUtterance(text);
+//     utterance.rate = 0.9;
+//     utterance.pitch = 1.0;
+//     utterance.volume = 1.0;
+
+//     // Pick a good voice — wait for voices to load
+//     const assignVoice = () => {
+//       const voices = synthRef.current.getVoices();
+//       const v =
+//         voices.find((v) => v.name.includes("Google") && v.lang.startsWith("en-US")) ||
+//         voices.find((v) => v.lang.startsWith("en-US")) ||
+//         voices[0];
+//       if (v) utterance.voice = v;
+//     };
+
+//     if (synthRef.current.getVoices().length > 0) {
+//       assignVoice();
+//     } else {
+//       synthRef.current.addEventListener("voiceschanged", assignVoice, { once: true });
+//     }
+
+//     utterance.onstart = () => {
+//       // Animate mouth while speaking
+//       speakIntervalRef.current = setInterval(() => {
+//         // Natural speech pattern — syllable bursts
+//         const burst = Math.random();
+//         mouthOpenRef.current = burst > 0.3
+//           ? 0.3 + Math.random() * 0.7
+//           : Math.random() * 0.2;
+//       }, 70);
+//     };
+
+//     utterance.onend = () => {
+//       clearInterval(speakIntervalRef.current);
+//       mouthOpenRef.current = 0;
+//       setStatusLabel("Ready");
+//       setShowWave(false);
+//       onEnd?.();
+//     };
+
+//     utterance.onerror = () => {
+//       clearInterval(speakIntervalRef.current);
+//       mouthOpenRef.current = 0;
+//       setStatusLabel("Ready");
+//       setShowWave(false);
+//       onEnd?.();
+//     };
+
+//     synthRef.current.speak(utterance);
+//   }, [isMuted]);
+
+//   const stopSpeaking = useCallback(() => {
+//     synthRef.current.cancel();
+//     clearInterval(speakIntervalRef.current);
+//     mouthOpenRef.current = 0;
+//     isThinkingRef.current = false;
+//     setStatusLabel("Ready");
+//     setShowWave(false);
+//   }, []);
+
+//   const setThinking = useCallback((thinking) => {
+//     isThinkingRef.current = thinking;
+//     if (thinking) {
+//       synthRef.current.cancel();
+//       clearInterval(speakIntervalRef.current);
+//       mouthOpenRef.current = 0;
+//       setStatusLabel("Thinking...");
+//       setShowWave(false);
+//     } else {
+//       setStatusLabel("Ready");
+//     }
+//   }, []);
+
+//   useEffect(() => {
+//     return () => {
+//       synthRef.current.cancel();
+//       clearInterval(speakIntervalRef.current);
+//       cancelAnimationFrame(animFrameRef.current);
+//       clearTimeout(blinkTimerRef.current);
+//     };
+//   }, []);
+
+//   useImperativeHandle(ref, () => ({ speakText, stopSpeaking, setThinking }), [speakText, stopSpeaking, setThinking]);
+
+//   return (
+//     <div className="w-full h-full relative flex flex-col" style={{ background: "#0b0b0f" }}>
+//       {/* Top bar */}
+//       <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-5 pt-4">
+//         <div className="flex items-center gap-2">
+//           <span className={`w-2 h-2 rounded-full flex-shrink-0 transition-colors ${
+//             isSpeaking ? "bg-purple-400 animate-pulse" : "bg-emerald-500"
+//           }`} />
+//           <span className="text-[10px] font-bold text-white/35 uppercase tracking-widest">
+//             {statusLabel}
+//           </span>
+//         </div>
+//         <button
+//           onClick={onToggleMute}
+//           className="w-8 h-8 rounded-xl border border-white/10 bg-white/[0.04] flex items-center justify-center text-white/40 hover:bg-white/10 transition"
+//         >
+//           {isMuted ? <VolumeX size={13} /> : <Volume2 size={13} />}
+//         </button>
+//       </div>
+
+//       {/* Canvas */}
+//       <canvas
+//         ref={canvasRef}
+//         width={520}
+//         height={560}
+//         style={{ width: "100%", height: "100%", objectFit: "contain" }}
+//       />
+
+//       {/* Speaking waveform */}
+//       <div
+//         className="absolute left-1/2 -translate-x-1/2 flex items-end gap-1 transition-opacity duration-300"
+//         style={{ bottom: 72, opacity: showWave ? 1 : 0 }}
+//       >
+//         {[4, 7, 12, 17, 12, 7, 4].map((h, i) => (
+//           <div
+//             key={i}
+//             style={{
+//               width: 3,
+//               height: h,
+//               background: "#a78bfa",
+//               borderRadius: 2,
+//               animation: showWave
+//                 ? `tav-wave 0.6s ease-in-out ${i * 0.07}s infinite alternate`
+//                 : "none",
+//             }}
+//           />
+//         ))}
+//       </div>
+
+//       {/* Name plate */}
+//       <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20">
+//         <div
+//           className="flex flex-col items-center gap-0.5 px-5 py-2.5 rounded-2xl text-center"
+//           style={{
+//             background: "rgba(0,0,0,0.6)",
+//             backdropFilter: "blur(12px)",
+//             border: "0.5px solid rgba(255,255,255,0.08)",
+//           }}
+//         >
+//           <p className="text-white/80 text-xs font-bold tracking-wider">{userName}</p>
+//           <p className="text-white/30 text-[10px]">{userTitle}</p>
+//         </div>
+//       </div>
+
+//       <style>{`
+//         @keyframes tav-wave {
+//           from { transform: scaleY(0.3); }
+//           to   { transform: scaleY(1.4); }
+//         }
+//       `}</style>
+//     </div>
+//   );
+// });
+
+// export default TalkingAvatar;
 
 
-// TalkingAvatar.jsx - Complete working replacement
-import { useRef, useImperativeHandle, forwardRef, useState, useEffect, useCallback } from "react";
+// components/avatar/TalkingAvatar.jsx
+import {
+  useRef, useState, useEffect, useCallback,
+  forwardRef, useImperativeHandle,
+} from "react";
+import Lottie from "lottie-react";
 import { Volume2, VolumeX } from "lucide-react";
 
-const TalkingAvatar2D = forwardRef(function TalkingAvatar2D(
-  { isSpeaking, isMuted, onToggleMute, userName = "Alex Chen", userTitle = "Senior Engineer · Interviewer" },
+// ── Import your two Lottie files ──────────────────────────────
+// Adjust these paths to wherever you place the JSON files in your project.
+// e.g. if they live in src/assets/avatars/ :
+import idleAnimation   from "../../../assets/avatars/maya avatar.json";
+import talkingAnimation from "../../../assets/avatars/Talking_maya avatar.json";
+
+// ─────────────────────────────────────────────────────────────
+const TalkingAvatar = forwardRef(function TalkingAvatar(
+  {
+    isSpeaking,
+    isMuted,
+    onToggleMute,
+    userName  = "Maya",
+    userTitle = "AI Interviewer",
+  },
   ref
 ) {
-  const canvasRef = useRef(null);
-  const animationRef = useRef(null);
-  const [mouthOpen, setMouthOpen] = useState(0);
-  const [isThinking, setIsThinking] = useState(false);
-  const synthRef = useRef(window.speechSynthesis);
-  const utteranceRef = useRef(null);
-  const audioContextRef = useRef(null);
-  const sourceRef = useRef(null);
-  const analyserRef = useRef(null);
+  // Which Lottie to show
+  const [mode, setMode]             = useState("idle");   // "idle" | "talking" | "thinking"
+  const [statusLabel, setStatusLabel] = useState("Ready");
+  const [showWave, setShowWave]     = useState(false);
 
-  // Draw avatar on canvas
-  const drawAvatar = useCallback(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    const w = canvas.width;
-    const h = canvas.height;
+  const synthRef          = useRef(window.speechSynthesis);
+  const speakIntervalRef  = useRef(null);
+  const isThinkingRef     = useRef(false);
 
-    // Clear canvas
-    ctx.clearRect(0, 0, w, h);
-
-    // Background gradient (professional dark theme)
-    const grad = ctx.createLinearGradient(0, 0, 0, h);
-    grad.addColorStop(0, '#1a1a2e');
-    grad.addColorStop(1, '#0f0f1a');
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, w, h);
-
-    // Draw subtle grid pattern
-    ctx.strokeStyle = 'rgba(255,255,255,0.03)';
-    ctx.lineWidth = 0.5;
-    for (let i = 0; i < w; i += 40) {
-      ctx.beginPath();
-      ctx.moveTo(i, 0);
-      ctx.lineTo(i, h);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(0, i % h);
-      ctx.lineTo(w, i % h);
-      ctx.stroke();
-    }
-
-    // Draw head (ellipse)
-    const centerX = w / 2;
-    const centerY = h / 2 - 20;
-    const headW = 120;
-    const headH = 140;
-
-    // Head shadow
-    ctx.shadowColor = 'rgba(0,0,0,0.3)';
-    ctx.shadowBlur = 20;
-    
-    // Head fill
-    ctx.fillStyle = '#2d2d3d';
-    ctx.beginPath();
-    ctx.ellipse(centerX, centerY, headW / 2, headH / 2, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Eyes
-    ctx.shadowBlur = 0;
-    ctx.fillStyle = '#ffffff';
-    ctx.beginPath();
-    ctx.ellipse(centerX - 35, centerY - 20, 12, 14, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.ellipse(centerX + 35, centerY - 20, 12, 14, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Pupils (follow mouse? optional)
-    ctx.fillStyle = '#1a1a2e';
-    ctx.beginPath();
-    ctx.ellipse(centerX - 35 + (isThinking ? 2 : 0), centerY - 18, 5, 7, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.ellipse(centerX + 35 + (isThinking ? 2 : 0), centerY - 18, 5, 7, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Eye highlights
-    ctx.fillStyle = 'rgba(255,255,255,0.8)';
-    ctx.beginPath();
-    ctx.ellipse(centerX - 37, centerY - 23, 2, 3, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.ellipse(centerX + 33, centerY - 23, 2, 3, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Eyebrows (animated based on thinking)
-    ctx.strokeStyle = '#5a5a7a';
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.moveTo(centerX - 48, centerY - 38);
-    ctx.quadraticCurveTo(centerX - 35, centerY - 42 - (isThinking ? 3 : 0), centerX - 22, centerY - 38);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(centerX + 48, centerY - 38);
-    ctx.quadraticCurveTo(centerX + 35, centerY - 42 - (isThinking ? 3 : 0), centerX + 22, centerY - 38);
-    ctx.stroke();
-
-    // MOUTH - THIS IS THE KEY PART (opens based on speech volume)
-    const mouthHeight = 8 + (mouthOpen * 18);
-    const mouthY = centerY + 25;
-    
-    ctx.fillStyle = '#4a2a2a';
-    ctx.beginPath();
-    ctx.ellipse(centerX, mouthY, 25, mouthHeight / 2, 0, 0, Math.PI * 2);
-    ctx.fill();
-    
-    // Lips
-    ctx.strokeStyle = '#6a4a4a';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.ellipse(centerX, mouthY - 1, 27, (mouthHeight / 2) + 1, 0, 0, Math.PI * 2);
-    ctx.stroke();
-
-    // Nose
-    ctx.fillStyle = '#3a3a4a';
-    ctx.beginPath();
-    ctx.moveTo(centerX, centerY + 5);
-    ctx.lineTo(centerX - 8, centerY + 15);
-    ctx.lineTo(centerX + 8, centerY + 15);
-    ctx.fill();
-
-    // Glasses (optional - adds personality)
-    ctx.strokeStyle = 'rgba(168, 139, 250, 0.4)';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.ellipse(centerX - 35, centerY - 18, 18, 20, 0, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.ellipse(centerX + 35, centerY - 18, 18, 20, 0, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(centerX - 17, centerY - 18);
-    ctx.lineTo(centerX + 17, centerY - 18);
-    ctx.stroke();
-
-    // Thinking animation dots (when processing)
-    if (isThinking) {
-      const time = Date.now() / 300;
-      for (let i = 0; i < 3; i++) {
-        const offset = Math.sin(time + i * 2) * 5;
-        ctx.fillStyle = `rgba(168, 139, 250, ${0.3 + Math.sin(time + i) * 0.2})`;
-        ctx.beginPath();
-        ctx.ellipse(centerX - 60 + i * 20, centerY - 50 + offset, 4, 4, 0, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    }
-  }, [mouthOpen, isThinking]);
-
-  // Audio analysis for real-time mouth movement
-  const startAudioAnalysis = useCallback(() => {
-    if (!audioContextRef.current) {
-      audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
-      analyserRef.current = audioContextRef.current.createAnalyser();
-      analyserRef.current.fftSize = 256;
-    }
-  }, []);
-
-  const analyzeAudio = useCallback(() => {
-    if (!analyserRef.current || !sourceRef.current) return;
-    
-    const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
-    analyserRef.current.getByteFrequencyData(dataArray);
-    
-    // Calculate average volume
-    let sum = 0;
-    for (let i = 0; i < dataArray.length; i++) {
-      sum += dataArray[i];
-    }
-    const avg = sum / dataArray.length;
-    // Map volume to mouth openness (0-1, with threshold)
-    let openness = Math.min(1, Math.max(0, (avg - 20) / 100));
-    // Add some natural randomness
-    openness = openness * 0.8 + Math.random() * 0.2;
-    
-    setMouthOpen(openness);
-    
-    if (sourceRef.current) {
-      animationRef.current = requestAnimationFrame(analyzeAudio);
-    }
-  }, []);
-
-  // Speak text with real-time lip-sync
+  // ── speakText (called by parent via ref) ───────────────────
   const speakText = useCallback((text, onEnd) => {
-    if (isMuted) {
-      onEnd?.();
-      return;
-    }
-    
-    // Cancel any ongoing speech
-    if (synthRef.current.speaking) {
-      synthRef.current.cancel();
-    }
-    
-    // Stop audio analysis
-    if (sourceRef.current) {
-      try {
-        sourceRef.current.disconnect();
-      } catch (e) {}
-      sourceRef.current = null;
-    }
-    
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = 0.9;
-    utterance.pitch = 1.0;
-    utterance.volume = 1.0;
-    
-    // Get voice
-    const voices = synthRef.current.getVoices();
-    const voice = voices.find(v => v.name.includes("Google") && v.lang.startsWith("en-US"))
-      || voices.find(v => v.lang.startsWith("en-US"))
-      || voices[0];
-    if (voice) utterance.voice = voice;
-    
-    utterance.onstart = () => {
-      setIsThinking(false);
-      startAudioAnalysis();
-      
-      // Connect to audio context for analysis
-      if (audioContextRef.current && analyserRef.current) {
-        // Create a media stream destination? SpeechSynthesis doesn't expose audio directly
-        // Alternative: use volume-based animation with timing
-        const interval = setInterval(() => {
-          if (synthRef.current.speaking) {
-            // Simulate volume based on speaking state
-            const openness = 0.4 + Math.random() * 0.6;
-            setMouthOpen(openness);
-          } else {
-            clearInterval(interval);
-            setMouthOpen(0);
-          }
-        }, 50);
-        
-        utteranceRef.current = { utterance, interval };
-      }
-    };
-    
-    utterance.onend = () => {
-      if (utteranceRef.current?.interval) {
-        clearInterval(utteranceRef.current.interval);
-      }
-      setMouthOpen(0);
-      setIsThinking(false);
-      onEnd?.();
-    };
-    
-    utterance.onerror = () => {
-      if (utteranceRef.current?.interval) {
-        clearInterval(utteranceRef.current.interval);
-      }
-      setMouthOpen(0);
-      setIsThinking(false);
-      onEnd?.();
-    };
-    
-    synthRef.current.speak(utterance);
-    utteranceRef.current = { utterance };
-  }, [isMuted, startAudioAnalysis]);
+    if (isMuted || !text) { onEnd?.(); return; }
 
+    synthRef.current.cancel();
+    clearInterval(speakIntervalRef.current);
+    isThinkingRef.current = false;
+
+    setMode("talking");
+    setStatusLabel("Speaking");
+    setShowWave(true);
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate   = 0.9;
+    utterance.pitch  = 1.0;
+    utterance.volume = 1.0;
+
+    const assignVoice = () => {
+      const voices = synthRef.current.getVoices();
+      const v =
+        voices.find((v) => v.name.includes("Google") && v.lang.startsWith("en-US")) ||
+        voices.find((v) => v.lang.startsWith("en-US")) ||
+        voices[0];
+      if (v) utterance.voice = v;
+    };
+    if (synthRef.current.getVoices().length > 0) assignVoice();
+    else synthRef.current.addEventListener("voiceschanged", assignVoice, { once: true });
+
+    utterance.onend = () => {
+      clearInterval(speakIntervalRef.current);
+      setMode("idle");
+      setStatusLabel("Ready");
+      setShowWave(false);
+      onEnd?.();
+    };
+
+    utterance.onerror = () => {
+      clearInterval(speakIntervalRef.current);
+      setMode("idle");
+      setStatusLabel("Ready");
+      setShowWave(false);
+      onEnd?.();
+    };
+
+    synthRef.current.speak(utterance);
+  }, [isMuted]);
+
+  // ── stopSpeaking ───────────────────────────────────────────
   const stopSpeaking = useCallback(() => {
     synthRef.current.cancel();
-    if (utteranceRef.current?.interval) {
-      clearInterval(utteranceRef.current.interval);
-    }
-    setMouthOpen(0);
-    setIsThinking(false);
+    clearInterval(speakIntervalRef.current);
+    isThinkingRef.current = false;
+    setMode("idle");
+    setStatusLabel("Ready");
+    setShowWave(false);
   }, []);
 
+  // ── setThinking ────────────────────────────────────────────
   const setThinking = useCallback((thinking) => {
-    setIsThinking(thinking);
+    isThinkingRef.current = thinking;
     if (thinking) {
-      stopSpeaking();
-      // Animate thinking dots
-      let thinkingAnimation;
-      const animateThinking = () => {
-        setMouthOpen(Math.sin(Date.now() / 200) * 0.1);
-        thinkingAnimation = requestAnimationFrame(animateThinking);
-      };
-      thinkingAnimation = requestAnimationFrame(animateThinking);
-      return () => cancelAnimationFrame(thinkingAnimation);
+      synthRef.current.cancel();
+      clearInterval(speakIntervalRef.current);
+      setMode("thinking");
+      setStatusLabel("Thinking...");
+      setShowWave(false);
     } else {
-      setMouthOpen(0);
+      setMode("idle");
+      setStatusLabel("Ready");
     }
-  }, [stopSpeaking]);
+  }, []);
 
-  // Animation loop for canvas
-  useEffect(() => {
-    let animationId;
-    const animate = () => {
-      drawAvatar();
-      animationId = requestAnimationFrame(animate);
-    };
-    animate();
-    return () => cancelAnimationFrame(animationId);
-  }, [drawAvatar]);
-
-  // Cleanup on unmount
+  // ── Cleanup on unmount ─────────────────────────────────────
   useEffect(() => {
     return () => {
-      if (synthRef.current) synthRef.current.cancel();
-      if (audioContextRef.current) audioContextRef.current.close();
-      if (utteranceRef.current?.interval) clearInterval(utteranceRef.current.interval);
+      synthRef.current.cancel();
+      clearInterval(speakIntervalRef.current);
     };
   }, []);
 
-  useImperativeHandle(ref, () => ({
-    speakText,
-    stopSpeaking,
-    setThinking,
-  }));
+  // ── Expose imperative API ──────────────────────────────────
+  useImperativeHandle(ref, () => ({ speakText, stopSpeaking, setThinking }), [
+    speakText, stopSpeaking, setThinking,
+  ]);
+
+  // Which animation data to hand to Lottie
+  const animationData = mode === "talking" ? talkingAnimation : idleAnimation;
 
   return (
-    <div className="w-full h-full relative flex flex-col items-center justify-center" style={{ background: "#0b0b0f" }}>
-      {/* Top bar */}
+    <div
+      className="w-full h-full relative flex flex-col items-center justify-center"
+      style={{ background: "#0b0b0f" }}
+    >
+      {/* ── Top status bar ── */}
       <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-5 pt-4">
         <div className="flex items-center gap-2">
-          <span className={`w-2 h-2 rounded-full transition-colors ${isSpeaking ? "bg-purple-400 animate-pulse" : "bg-emerald-500"}`} />
+          <span
+            className={`w-2 h-2 rounded-full flex-shrink-0 transition-colors ${
+              mode === "talking"  ? "bg-purple-400 animate-pulse"
+              : mode === "thinking" ? "bg-amber-400 animate-pulse"
+              : "bg-emerald-500"
+            }`}
+          />
           <span className="text-[10px] font-bold text-white/35 uppercase tracking-widest">
-            {isSpeaking ? "Speaking" : isThinking ? "Thinking..." : "Ready"}
+            {statusLabel}
           </span>
         </div>
+
         <button
           onClick={onToggleMute}
           className="w-8 h-8 rounded-xl border border-white/10 bg-white/[0.04] flex items-center justify-center text-white/40 hover:bg-white/10 transition"
@@ -1190,63 +1488,83 @@ const TalkingAvatar2D = forwardRef(function TalkingAvatar2D(
         </button>
       </div>
 
-      {/* Canvas Avatar */}
-      <canvas
-        ref={canvasRef}
-        width={400}
-        height={450}
-        className="w-full h-full object-contain"
-        style={{ maxWidth: "100%", maxHeight: "calc(100% - 100px)" }}
-      />
+      {/* ── Lottie avatar ── */}
+      <div className="w-full h-full flex items-center justify-center">
+        <Lottie
+          key={mode === "talking" ? "talking" : "idle"}   // remount when switching
+          animationData={animationData}
+          loop={true}
+          autoplay={true}
+          style={{ width: "100%", height: "100%", objectFit: "contain" }}
+        />
+      </div>
 
-      {/* Name plate */}
+      {/* ── Thinking dots overlay ── */}
+      {mode === "thinking" && (
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <div className="flex gap-2 mb-[30%]">
+            {[0, 1, 2].map((i) => (
+              <div
+                key={i}
+                style={{
+                  width: 10, height: 10,
+                  borderRadius: "50%",
+                  background: "#7F77DD",
+                  animation: `thinking-bounce 0.8s ease-in-out ${i * 0.15}s infinite alternate`,
+                }}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── Speaking waveform ── */}
+      <div
+        className="absolute left-1/2 -translate-x-1/2 flex items-end gap-1 transition-opacity duration-300"
+        style={{ bottom: 72, opacity: showWave ? 1 : 0 }}
+      >
+        {[4, 7, 12, 17, 12, 7, 4].map((h, i) => (
+          <div
+            key={i}
+            style={{
+              width: 3, height: h,
+              background: "#a78bfa",
+              borderRadius: 2,
+              animation: showWave
+                ? `tav-wave 0.6s ease-in-out ${i * 0.07}s infinite alternate`
+                : "none",
+            }}
+          />
+        ))}
+      </div>
+
+      {/* ── Name plate ── */}
       <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20">
         <div
           className="flex flex-col items-center gap-0.5 px-5 py-2.5 rounded-2xl text-center"
-          style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(12px)", border: "0.5px solid rgba(255,255,255,0.08)" }}
+          style={{
+            background: "rgba(0,0,0,0.6)",
+            backdropFilter: "blur(12px)",
+            border: "0.5px solid rgba(255,255,255,0.08)",
+          }}
         >
           <p className="text-white/80 text-xs font-bold tracking-wider">{userName}</p>
           <p className="text-white/30 text-[10px]">{userTitle}</p>
         </div>
       </div>
 
-      {/* Speaking waveform overlay */}
-      <div
-        style={{
-          position: "absolute",
-          bottom: 80,
-          left: "50%",
-          transform: "translateX(-50%)",
-          display: "flex",
-          alignItems: "flex-end",
-          gap: 3,
-          height: 20,
-          opacity: isSpeaking ? 1 : 0,
-          transition: "opacity 0.3s",
-        }}
-      >
-        {[4, 8, 13, 18, 13, 8, 4].map((h, i) => (
-          <div
-            key={i}
-            style={{
-              width: 3,
-              height: h,
-              background: "#a78bfa",
-              borderRadius: 2,
-              animation: isSpeaking ? `wave-bar 0.5s ease-in-out ${i * 0.07}s infinite alternate` : "none",
-            }}
-          />
-        ))}
-      </div>
-
       <style>{`
-        @keyframes wave-bar {
-          from { transform: scaleY(0.4); }
-          to { transform: scaleY(1.6); }
+        @keyframes tav-wave {
+          from { transform: scaleY(0.3); }
+          to   { transform: scaleY(1.4); }
+        }
+        @keyframes thinking-bounce {
+          from { transform: translateY(0); opacity: 0.4; }
+          to   { transform: translateY(-10px); opacity: 1; }
         }
       `}</style>
     </div>
   );
 });
 
-export default TalkingAvatar2D;
+export default TalkingAvatar;

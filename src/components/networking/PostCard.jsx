@@ -1,3 +1,753 @@
+// import { useState, useRef, useEffect } from "react";
+// import DevstaAvatar from "../dashboard/DevstaAvatar";
+// import {
+//   FiMessageCircle,
+//   FiMoreVertical,
+//   FiThumbsUp,
+//   FiImage
+// } from "react-icons/fi";
+// import { AiFillLike } from "react-icons/ai";
+// import { IoClose } from "react-icons/io5";
+// import { ChevronLeft, ChevronRight } from "lucide-react";
+// import CommentSection from "./CommentSection";
+// import { useRoleMap } from "../../hooks/useRoleMap";
+// import {
+//   likePost,
+//   unlikePost,
+//   updatePost,
+//   deletePost,
+//    listComments,
+// } from "../../api/post";
+// import SuccessModal from "../SuccessModal";
+// import ErrorModal from "../ErrorModal";
+// import { Link } from "react-router-dom";
+// import ConfirmModal from "../ConfirmModal";
+// import { showToast } from "../../utils/toast";
+// import { useLocation } from "react-router-dom";
+// import { useMemo } from "react";
+// import { FiAlertTriangle, FiX } from "react-icons/fi";
+
+// export default function PostCard({
+//   post,
+//   currentUserId,
+//   onDeletePost,
+//   onEditPost,
+//   isFlaggedBySystem = false,
+// }) {
+//   const {
+//     author,
+//     text,
+//     mediaUrls = [],
+//     createdAt,
+//     likesCount = 0,
+//     likedByCurrentUser = false,
+//     commentsCount = 0,
+//   } = post;
+//   const { formatRole } = useRoleMap();
+
+//   const location = useLocation();
+
+//   const formattedTime = new Date(createdAt).toLocaleString();
+
+//   const [showComments, setShowComments] = useState(false);
+//   const [likes, setLikes] = useState(likesCount);
+//   const [liked, setLiked] = useState(likedByCurrentUser);
+//   const [animating, setAnimating] = useState(false);
+//   const [loadingLike, setLoadingLike] = useState(false);
+//   const [commentsCountState, setCommentsCountState] = useState(0);
+//   const [flaggedCount, setFlaggedCount] = useState(0);
+
+//   const [successModalOpen, setSuccessModalOpen] = useState(false);
+//   const [errorModalOpen, setErrorModalOpen] = useState(false);
+//   const [errorMessage, setErrorMessage] = useState("");
+//   const [menuOpen, setMenuOpen] = useState(false);
+
+//   const [isEditing, setIsEditing] = useState(false);
+//   const [editedText, setEditedText] = useState(text);
+//   const [editedMediaFiles, setEditedMediaFiles] = useState([]);
+//   const [visibleMedia, setVisibleMedia] = useState(mediaUrls);
+//   const [savingEdit, setSavingEdit] = useState(false);
+//   const [deletedMediaUrls, setDeletedMediaUrls] = useState([]);
+//   const [confirmOpen, setConfirmOpen] = useState(false);
+
+//   const photoInputRef = useRef(null);
+
+//   const [lightboxOpen, setLightboxOpen] = useState(false);
+//   const [lightboxIndex, setLightboxIndex] = useState(0);
+
+
+//   // ✅ NEW: Track if user dismissed the flagged styling
+//     const [dismissedFlaggedStyle, setDismissedFlaggedStyle] = useState(false);
+//  const isHighlightedFromUrl = useMemo(() => {
+//     const params = new URLSearchParams(location.search);
+//     return params.get('post') === post._id && params.get('highlight') === 'flagged';
+//   }, [location, post._id]);
+
+//   // Now flagged posts are highlighted EVEN without URL params
+//   // ✅ Only show highlight if not dismissed
+//   const shouldBeHighlighted = !dismissedFlaggedStyle && (isHighlightedFromUrl || isFlaggedBySystem);
+
+
+//   // Auto-open comments when coming from moderation link
+// // Existing useEffect for auto-open, but make per-post
+//   useEffect(() => {
+//     const params = new URLSearchParams(location.search);
+//     const targetPost = params.get('post');
+
+//     if (targetPost === post._id && params.get("showComments") === "true") {
+//       setShowComments(true);
+//       // Scroll to comments
+//       setTimeout(() => {
+//         document.querySelector(`[data-comments-section="${post._id}"]`)?.scrollIntoView({
+//           behavior: "smooth",
+//           block: "start",
+//         });
+//         // NEW: Scroll to first flagged comment (after comments load)
+//         setTimeout(() => {
+//           const firstFlagged = document.querySelector(`[data-comment-id].flagged-comment`);
+//           if (firstFlagged) {
+//             firstFlagged.scrollIntoView({ behavior: 'smooth', block: 'center' });
+//           }
+//         }, 600);  // Delay for comments to render
+//       }, 300);
+//     }
+//   }, [location, post._id]);
+
+//   const handleLikeToggle = async () => {
+//     if (loadingLike) return;
+
+//     const willLike = !liked;
+//     const previousLiked = liked;
+//     const previousLikes = likes;
+
+//     // Optimistic update
+//     setLiked(willLike);
+//     setLikes(willLike ? likes + 1 : likes - 1);
+//     setAnimating(true);
+//     setLoadingLike(true);
+
+//     try {
+//       let response;
+//       if (willLike) {
+//         response = await likePost(post._id);
+//       } else {
+//         response = await unlikePost(post._id);
+//       }
+
+//       // If backend says "already liked", revert
+//       if (willLike && response.alreadyLiked) {
+//         setLiked(false);
+//         setLikes(previousLikes);
+//         return;
+//       }
+
+//       // Success: keep optimistic state
+//     } catch (err) {
+//       console.error("Like/unlike failed:", err);
+//       // Revert on error
+//       setLiked(previousLiked);
+//       setLikes(previousLikes);
+//     } finally {
+//       setLoadingLike(false);
+//       setTimeout(() => setAnimating(false), 300);
+//     }
+//   };
+
+//   useEffect(() => {
+//   const fetchCommentsCount = async () => {
+//     try {
+//       const res = await listComments(post._id, 1, 1); // fetch 1 comment, total count is in res.total
+//       setCommentsCountState(res.total || 0);           // total visible comments
+//     } catch (err) {
+//       console.error("Failed to fetch comments count", err);
+//     }
+//   };
+
+//   fetchCommentsCount();
+// }, [post._id]);
+
+//   /* ---------- Edit handling ---------- */
+//   const handleFileSelect = (e) => {
+//     const files = Array.from(e.target.files);
+//     setEditedMediaFiles((prev) => [...prev, ...files]);
+//     setVisibleMedia((prev) => [...prev, ...files]);
+//   };
+
+//   const removeMedia = (index) => {
+//     const item = visibleMedia[index];
+
+//     // If it's an existing media URL, track it for deletion
+//     if (typeof item === "string") {
+//       setDeletedMediaUrls(prev => [...prev, item]);
+//     }
+
+//     setEditedMediaFiles(prev => prev.filter((_, i) => i !== index));
+//     setVisibleMedia(prev => prev.filter((_, i) => i !== index));
+//   };
+//   const handleSaveEdit = async () => {
+//     if (!editedText.trim() && editedMediaFiles.length === 0 && deletedMediaUrls.length === 0) return;
+
+//     try {
+//       setSavingEdit(true);
+//       const formData = new FormData();
+//       formData.append("text", editedText);
+
+//       // Add new files
+//       editedMediaFiles.forEach((f) => formData.append("media", f));
+
+//       // Add URLs to delete — BUT send as `removePublicIds` and extract public_id
+//       // === DELETE MEDIA ===
+//       deletedMediaUrls.forEach((url) => {
+//         const publicId = (() => {
+//           try {
+//             const afterUpload = url.split('/upload/')[1];
+//             if (!afterUpload) return null;
+//             const parts = afterUpload.split('/');
+//             return parts.slice(1).join('/').split('.')[0]; // skip v123, take folder/file
+//           } catch {
+//             return null;
+//           }
+//         })();
+
+//         if (publicId) {
+//           formData.append("removePublicIds", publicId);
+//         }
+//       });
+
+//       const updatedPostRes = await updatePost(post._id, formData);
+//       const updatedPost = updatedPostRes?.post || updatedPostRes;
+
+//       // Use updated mediaUrls from backend
+//       const backendMediaUrls = Array.isArray(updatedPost.mediaUrls)
+//         ? updatedPost.mediaUrls
+//         : [];
+
+//       setVisibleMedia(backendMediaUrls);
+//       setEditedText(updatedPost.text || editedText);
+//       setEditedMediaFiles([]);
+//       setDeletedMediaUrls([]);
+//       setIsEditing(false);
+
+//       if (typeof onEditPost === "function") {
+//         onEditPost({
+//           ...updatedPost,
+//           mediaUrls: backendMediaUrls,
+//           text: editedText,  // ← Use your local editedText
+//         });
+//       }
+//     } catch (err) {
+//       console.error("Failed to update post:", err);
+//       setErrorMessage(err?.message || "Failed to update post.");
+//       setErrorModalOpen(true);
+//     } finally {
+//       setSavingEdit(false);
+//     }
+//   };
+
+
+//   const handleDelete = async () => {
+//     setConfirmOpen(false);
+//     try {
+//       await deletePost(post._id);
+//       if (onDeletePost) onDeletePost(post._id);
+
+//       // Show success toast
+//       showToast("Post deleted successfully!", 3000);
+//     } catch (err) {
+//       // Show error toast
+//       showToast(err?.message || "Failed to delete post.", 3000);
+//       console.error("Delete error:", err);
+//     }
+//   };
+
+
+
+//   /* ---------- Lightbox helpers ---------- */
+//   const openLightbox = (idx) => {
+//     setLightboxIndex(idx);
+//     setLightboxOpen(true);
+//   };
+//   const closeLightbox = () => setLightboxOpen(false);
+//   const goPrev = () =>
+//     setLightboxIndex((i) => (i - 1 + mediaUrls.length) % mediaUrls.length);
+//   const goNext = () =>
+//     setLightboxIndex((i) => (i + 1) % mediaUrls.length);
+
+//   // keyboard navigation
+//   useEffect(() => {
+//     if (!lightboxOpen) return;
+//     const handler = (e) => {
+//       if (e.key === "ArrowLeft") goPrev();
+//       if (e.key === "ArrowRight") goNext();
+//       if (e.key === "Escape") closeLightbox();
+//     };
+//     window.addEventListener("keydown", handler);
+//     return () => window.removeEventListener("keydown", handler);
+//   }, [lightboxOpen]);
+
+
+//   const toggleComments = async () => {
+//   setShowComments(prev => !prev);
+
+//   if (!showComments) { // only fetch when opening
+//     try {
+//       const res = await listComments(post._id, 1, 20); // fetch first 20 visible comments
+//       setCommentsCountState(res.total || 0);          // update count
+//     } catch (err) {
+//       console.error("Failed to fetch comments:", err);
+//     }
+//   }
+// };
+
+
+//   /* ---------- Render ---------- */
+//   return (
+//  <div 
+//       className={`
+//         bg-white shadow-md rounded-2xl p-5 mb-6 transition-all duration-300 hover:shadow-lg relative
+//         ${shouldBeHighlighted
+//           ? 'border-2 border-amber-400 bg-amber-50/30 ring-1 ring-amber-300/50 shadow-amber-200/40'
+//           : ''
+//         }
+//       `}
+//       data-post-id={post._id}
+//     >
+
+//       {/* ✅ Flagged indicator with dismiss button */}
+//       {isFlaggedBySystem && !dismissedFlaggedStyle && (
+//         <div 
+//           className={`
+//             absolute -top-2 -right-2 px-3 py-1.5 rounded-full text-xs font-medium shadow-md z-20 flex items-center gap-1.5
+//             ${shouldBeHighlighted
+//               ? 'bg-amber-600 text-white ring-2 ring-amber-300/70' 
+//               : 'bg-amber-100 text-amber-800 border border-amber-300'
+//             }
+//           `}
+//         >
+//           <FiAlertTriangle size={13} />
+//           <span>{shouldBeHighlighted ? 'Review Comments' : 'Flagged'}</span>
+          
+//           {/* ✅ NEW: Dismiss button */}
+//           <button
+//             onClick={() => setDismissedFlaggedStyle(true)}
+//             className="ml-1 p-0 hover:opacity-80 transition-opacity"
+//             title="Dismiss flagged indicator"
+//           >
+//             <FiX size={14} />
+//           </button>
+//         </div>
+//       )}
+  
+//       {/* ---------- Header ---------- */}
+//       <div className="flex items-start justify-between">
+//         <div className="flex items-start gap-3">
+//           {/* Clickable Avatar */}
+//           <Link to={`/dashboard/community/${author?._id}`}>
+//             <DevstaAvatar user={author} size={45} className="cursor-pointer transition-opacity hover:opacity-80" />
+//           </Link>
+
+//           <div className="flex flex-col">
+//             <div className="flex items-center gap-2">
+//               {/* Clickable Name */}
+//               <Link
+//                 to={`/dashboard/community/${author?._id}`}
+//                 className="font-bold text-[15px] text-gray-900 hover:text-primary transition-colors duration-200"
+//               >
+//                 {author?.name}
+//               </Link>
+//               <span className="text-gray-500 text-[11px] font-semibold">
+//                 • {formattedTime}
+//               </span>
+//             </div>
+
+//             {author?.primaryRole && (
+//               <p className="font-semibold text-gray-400 text-[14px] capitalize">
+//                 {formatRole(author.primaryRole)}
+//               </p>
+//             )}
+//           </div>
+//         </div>
+
+//         {/* Edit/Delete Menu — Prevent Navigation */}
+//         {currentUserId === author._id && (
+//           <div className="relative" onClick={(e) => e.stopPropagation()}>
+//             <FiMoreVertical
+//               className="cursor-pointer text-gray-500 hover:text-gray-700 transition-colors"
+//               size={20}
+//               onClick={(e) => {
+//                 e.stopPropagation();
+//                 setMenuOpen((v) => !v);
+//               }}
+//             />
+//             {menuOpen && (
+//               <div className="absolute right-0 mt-2 w-32 bg-white shadow-lg rounded-lg border border-gray-200 z-20">
+//                 <button
+//                   className="w-full text-left px-4 py-2 hover:bg-gray-100 transition-colors"
+//                   onClick={(e) => {
+//                     e.stopPropagation();
+//                     setIsEditing(true);
+//                     setEditedText(post.text || "");
+//                     setVisibleMedia(post.mediaUrls || []);
+//                     setEditedMediaFiles([]);
+//                     setDeletedMediaUrls([]);
+//                     setMenuOpen(false);
+//                   }}
+//                 >
+//                   Edit
+//                 </button>
+//                 <button
+//                   className="w-full text-left px-4 py-2 hover:bg-gray-100 text-red-500 transition-colors"
+//                   onClick={(e) => {
+//                     e.stopPropagation();
+//                     setConfirmOpen(true);
+//                     setMenuOpen(false);
+//                   }}
+//                 >
+//                   Delete
+//                 </button>
+
+//               </div>
+//             )}
+//           </div>
+//         )}
+//       </div>
+
+
+//       {/* ---------- Content & Media ---------- */}
+//       {isEditing ? (
+//         /* ---------- EDIT MODE ---------- */
+//         <div className="mt-3 flex flex-col gap-2">
+//           <textarea
+//             className="w-full border border-gray-300 rounded-lg p-2 resize-none"
+//             rows={3}
+//             value={editedText}
+//             onChange={(e) => setEditedText(e.target.value)}
+//           />
+//           {/* hidden file inputs */}
+//           <input
+//             type="file"
+//             accept="image/*"
+//             ref={photoInputRef}
+//             className="hidden"
+//             multiple
+//             onChange={handleFileSelect}
+//           />
+
+//           <div className="flex gap-2 mt-2">
+//             <button
+//               type="button"
+//               onClick={() => photoInputRef.current.click()}
+//               className="flex items-center gap-1 px-2 py-1 rounded-full hover:bg-primary/10"
+//             >
+//               <FiImage /> Add Photo
+//             </button>
+
+//           </div>
+
+//           <div className="flex gap-2 justify-end mt-2">
+//             <button
+//               className="px-4 py-2 rounded-full bg-gray-300 text-gray-800 hover:bg-gray-400"
+//               onClick={() => {
+//                 setIsEditing(false);
+//                 setEditedText(post.text || "");           // Reset to current
+//                 setEditedMediaFiles([]);
+//                 setVisibleMedia(post.mediaUrls || []);
+//               }}
+//               disabled={savingEdit}
+//             >
+//               Cancel
+//             </button>
+//             <button
+//               className="px-4 py-2 rounded-full bg-primary text-white hover:bg-primary-dark"
+//               onClick={handleSaveEdit}
+//               disabled={savingEdit}
+//             >
+//               {savingEdit ? "Saving..." : "Save"}
+//             </button>
+//           </div>
+
+//           {/* preview of current + newly added files */}
+//           {visibleMedia.length > 0 && (
+//             <div className="mt-3 grid grid-cols-3 gap-2">
+//               {visibleMedia.map((item, i) => {
+//                 const isFile = item instanceof File;
+//                 const url = isFile ? URL.createObjectURL(item) : item;
+//                 const isVideo = isFile
+//                   ? item.type.startsWith("video")
+//                   : url.match(/\.(mp4|webm|mov|ogg)$/i);
+
+//                 return (
+//                   <div key={i} className="relative group">
+//                     <button
+//                       onClick={() => removeMedia(i)}
+//                       className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition z-10"
+//                     >
+//                       <IoClose size={14} />
+//                     </button>
+//                     {isVideo ? (
+//                       <video
+//                         src={url}
+//                         controls
+//                         className="w-full h-32 object-cover rounded-lg"
+//                       />
+//                     ) : (
+//                       <img
+//                         src={url}
+//                         alt=""
+//                         className="w-full h-32 object-cover rounded-lg"
+//                       />
+//                     )}
+//                   </div>
+//                 );
+//               })}
+//             </div>
+//           )}
+//         </div>
+//       ) : (
+//         /* ---------- VIEW MODE ---------- */
+//         <>
+//           {text && (
+//             <p className="mt-3 text-[14px] text-gray-800 leading-relaxed font-semibold">
+//               {text}
+//             </p>
+//           )}
+
+//           {/* ---------- THUMBNAIL GRID (max 3) ---------- */}
+//           {mediaUrls.length > 0 && (
+//             <div className="flex flex-wrap gap-2 mt-3">
+//               {mediaUrls.slice(0, 3).map((url, idx) => {
+//                 let basis = "100%";
+//                 if (mediaUrls.length === 2) {
+//                   basis = "calc(50% - 4px)";
+//                 } else if (mediaUrls.length >= 3) {
+//                   basis = idx === 0 ? "100%" : "calc(50% - 4px)";
+//                 }
+
+//                 const isVideo = url.match(/\.(mp4|webm|mov|ogg)$/i);
+
+//                 return (
+//                   <div
+//                     key={idx}
+//                     className="relative cursor-pointer rounded-lg border-2 border-gray-200 overflow-hidden bg-gray-50"
+//                     style={{
+//                       flexBasis: basis,
+//                       flexGrow: 0,
+//                       minHeight: "200px",
+//                     }}
+//                     onClick={() => openLightbox(idx)}
+//                   >
+//                     <div className="w-full h-full transition-transform duration-300 hover:scale-105">
+//                       {isVideo ? (
+//                         <video
+//                           src={url}
+//                           controls={false}
+//                           className="absolute top-0 left-0 w-full h-full object-cover"
+//                         />
+//                       ) : (
+//                         <img
+//                           src={url}
+//                           alt={`media-${idx}`}
+//                           className="absolute top-0 left-0 w-full h-full object-cover"
+//                         />
+//                       )}
+//                     </div>
+
+//                     {/* +N overlay */}
+//                     {idx === 2 && mediaUrls.length > 3 && (
+//                       <div className="absolute inset-0 bg-black/50 flex items-center justify-center text-white text-lg font-bold">
+//                         +{mediaUrls.length - 3}
+//                       </div>
+//                     )}
+//                   </div>
+//                 );
+//               })}
+//             </div>
+//           )}
+//         </>
+//       )}
+
+//       {/* ---------- Footer (like / comment) ---------- */}
+//       <div className="flex items-center gap-3 mt-4">
+//         <div
+//           className="flex items-center gap-2 px-3 py-1.5 rounded-full cursor-pointer select-none relative"
+//           onClick={handleLikeToggle}
+//         >
+//           {liked ? (
+//             <AiFillLike
+//               className={`text-primary transition-transform duration-200 ${animating ? "animate-like-pop" : ""
+//                 }`}
+//               size={20}
+//             />
+//           ) : (
+//             <FiThumbsUp className="text-gray-400" size={20} />
+//           )}
+//           <span className="text-sm font-semibold text-gray-700">
+//             {likes} Like{likes !== 1 ? "s" : ""}
+//           </span>
+//         </div>
+
+//         <div
+//   className="flex items-center gap-2 px-3 py-1.5 rounded-full cursor-pointer hover:bg-primary/10 transition-colors"
+//   onClick={toggleComments}
+// >
+
+//           <FiMessageCircle className="text-gray-700" />
+//           <span className="text-gray-700 font-semibold text-sm">
+//             {commentsCountState} Comment
+//             {commentsCountState !== 1 ? "s" : ""}
+//           </span>
+//         </div>
+//       </div>
+
+//       {/* {showComments && <hr className="border-t border-gray-300 mt-4" />}
+//       {showComments && (
+//         <CommentSection
+//           postId={post._id}
+//           currentUserId={currentUserId}
+//           postAuthorId={author._id}
+//           setCommentsCount={setCommentsCountState}
+//         />
+//       )} */}
+
+//       {/* Comments Section with Auto-Open + Red Banner */}
+//       {showComments && (
+//         <div data-comments-section={post._id} className="mt-6">
+//           {/* Strong red banner when flagged comments exist */}
+//           {/* {flaggedCount > 0 && currentUserId === author._id && (
+//             <div className="bg-red-50 border-l-4 border-red-600 p-5 mb-6 rounded-lg shadow-sm animate-pulse">
+//               <div className="flex items-start gap-4">
+//                 <FiAlertTriangle className="text-red-600 text-2xl mt-1 flex-shrink-0" />
+//                 <div>
+//                   <p className="font-bold text-red-800 text-lg mb-1">
+//                     {flaggedCount} Flagged Comment{flaggedCount > 1 ? "s" : ""} – Action Required
+//                   </p>
+//                   <p className="text-red-700">
+//                     These comments were flagged by our system. Please review and hide any that violate guidelines using the menu (⋯).
+//                   </p>
+//                 </div>
+//               </div>
+//             </div>
+//           )} */}
+
+//           <hr className="border-t border-gray-300 mb-4" />
+
+//           <CommentSection
+//             postId={post._id}
+//             currentUserId={currentUserId}
+//             postAuthorId={author._id}
+//             setCommentsCount={setCommentsCountState}
+//             onFlaggedCountChange={setFlaggedCount}
+//           />
+//         </div>
+//       )}
+
+
+//       {/* ---------- LIGHTBOX (Arrows work, background click closes) ---------- */}
+//       {lightboxOpen && (
+//         <div
+//           className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
+//           onClick={closeLightbox} // ← Closes only on background
+//         >
+//           {/* Media Container — stops click from bubbling */}
+//           <div
+//             className="relative max-w-5xl w-full max-h-[90vh] flex items-center justify-center"
+//             onClick={(e) => e.stopPropagation()} // ← Prevents close on media/inside
+//           >
+//             {/* Media */}
+//             {mediaUrls[lightboxIndex].match(/\.(mp4|webm|mov|ogg)$/i) ? (
+//               <video
+//                 src={mediaUrls[lightboxIndex]}
+//                 controls
+//                 autoPlay
+//                 className="max-h-[90vh] w-auto mx-auto rounded-xl object-contain"
+//               />
+//             ) : (
+//               <img
+//                 src={mediaUrls[lightboxIndex]}
+//                 alt=""
+//                 className="max-h-[90vh] w-auto mx-auto rounded-xl object-contain"
+//               />
+//             )}
+//           </div>
+
+//           {/* Close Button */}
+//           <button
+//             className="absolute top-4 right-4 bg-black/70 text-white rounded-full p-2 z-50 hover:bg-black"
+//             onClick={closeLightbox}
+//           >
+//             <IoClose size={26} />
+//           </button>
+
+//           {/* Navigation Arrows — Outside container, always clickable */}
+//           {mediaUrls.length > 1 && (
+//             <>
+//               <button
+//                 className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/70 text-white rounded-full p-3 hover:bg-black transition-all z-50"
+//                 onClick={(e) => {
+//                   e.stopPropagation(); // ← Critical: prevent close
+//                   goPrev();
+//                 }}
+//                 style={{ left: "1rem" }}
+//               >
+//                 <ChevronLeft size={36} />
+//               </button>
+
+//               <button
+//                 className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/70 text-white rounded-full p-3 hover:bg-black transition-all z-50"
+//                 onClick={(e) => {
+//                   e.stopPropagation(); // ← Critical: prevent close
+//                   goNext();
+//                 }}
+//                 style={{ right: "1rem" }}
+//               >
+//                 <ChevronRight size={36} />
+//               </button>
+//             </>
+//           )}
+//         </div>
+//       )}
+
+//       {/* ---------- Like animation ---------- */}
+//       <style>
+//         {`
+//           @keyframes like-pop {
+//             0% { transform: scale(1); }
+//             50% { transform: scale(1.6); }
+//             100% { transform: scale(1); }
+//           }
+//           .animate-like-pop {
+//             animation: like-pop 0.3s ease-out forwards;
+//           }
+//         `}
+//       </style>
+
+//       {/* ---------- Modals ---------- */}
+//       <SuccessModal
+//         open={successModalOpen}
+//         message="Post deleted successfully!"
+//         onClose={() => setSuccessModalOpen(false)}
+//       />
+//       <ErrorModal
+//         open={errorModalOpen}
+//         message={errorMessage}
+//         onClose={() => setErrorModalOpen(false)}
+//       />
+//       <ConfirmModal
+//         open={confirmOpen}
+//         title="Delete Post?"
+//         message="This post will be permanently removed. This action cannot be undone."
+//         confirmLabel="Delete"
+//         cancelLabel="Cancel"
+//         onConfirm={handleDelete}
+//         onCancel={() => setConfirmOpen(false)}
+//       />
+
+
+//     </div>
+//   );
+// }
+
+
 import { useState, useRef, useEffect } from "react";
 import DevstaAvatar from "../dashboard/DevstaAvatar";
 import {
@@ -16,7 +766,7 @@ import {
   unlikePost,
   updatePost,
   deletePost,
-   listComments,
+  listComments,
 } from "../../api/post";
 import SuccessModal from "../SuccessModal";
 import ErrorModal from "../ErrorModal";
@@ -26,54 +776,6 @@ import { showToast } from "../../utils/toast";
 import { useLocation } from "react-router-dom";
 import { useMemo } from "react";
 import { FiAlertTriangle, FiX } from "react-icons/fi";
-
-// export default function PostCard({
-//   post,
-//   currentUserId,
-//   onDeletePost,
-//   onEditPost,
-// }) {
-//   const {
-//     author,
-//     text,
-//     mediaUrls = [],
-//     createdAt,
-//     likesCount = 0,
-//     likedByCurrentUser = false,
-//     commentsCount = 0,
-//   } = post;
-//   const { formatRole } = useRoleMap();
-
-//   const formattedTime = new Date(createdAt).toLocaleString();
-
-//   /* ---------- UI state ---------- */
-//   const [showComments, setShowComments] = useState(false);
-//   const [likes, setLikes] = useState(likesCount);
-//   const [liked, setLiked] = useState(likedByCurrentUser);
-//   const [animating, setAnimating] = useState(false);
-//   const [loadingLike, setLoadingLike] = useState(false);
-//   // const [commentsCountState, setCommentsCountState] = useState(commentsCount);
-//   const [commentsCountState, setCommentsCountState] = useState(0); // start at 0
-
-//   const [successModalOpen, setSuccessModalOpen] = useState(false);
-//   const [errorModalOpen, setErrorModalOpen] = useState(false);
-//   const [errorMessage, setErrorMessage] = useState("");
-//   const [menuOpen, setMenuOpen] = useState(false);
-
-//   /* ---------- Edit state ---------- */
-//   const [isEditing, setIsEditing] = useState(false);
-//   const [editedText, setEditedText] = useState(text);
-//   const [editedMediaFiles, setEditedMediaFiles] = useState([]);
-//   const [visibleMedia, setVisibleMedia] = useState(mediaUrls);
-//   const [savingEdit, setSavingEdit] = useState(false);
-//   const [deletedMediaUrls, setDeletedMediaUrls] = useState([]);
-//   const [confirmOpen, setConfirmOpen] = useState(false);
-
-//   const photoInputRef = useRef(null);
-
-//   /* ---------- Lightbox state ---------- */
-//   const [lightboxOpen, setLightboxOpen] = useState(false);
-//   const [lightboxIndex, setLightboxIndex] = useState(0);
 
 export default function PostCard({
   post,
@@ -123,40 +825,31 @@ export default function PostCard({
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
 
-
-  // ✅ NEW: Track if user dismissed the flagged styling
-    const [dismissedFlaggedStyle, setDismissedFlaggedStyle] = useState(false);
- const isHighlightedFromUrl = useMemo(() => {
+  const [dismissedFlaggedStyle, setDismissedFlaggedStyle] = useState(false);
+  const isHighlightedFromUrl = useMemo(() => {
     const params = new URLSearchParams(location.search);
     return params.get('post') === post._id && params.get('highlight') === 'flagged';
   }, [location, post._id]);
 
-  // Now flagged posts are highlighted EVEN without URL params
-  // ✅ Only show highlight if not dismissed
   const shouldBeHighlighted = !dismissedFlaggedStyle && (isHighlightedFromUrl || isFlaggedBySystem);
 
-
-  // Auto-open comments when coming from moderation link
-// Existing useEffect for auto-open, but make per-post
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const targetPost = params.get('post');
 
     if (targetPost === post._id && params.get("showComments") === "true") {
       setShowComments(true);
-      // Scroll to comments
       setTimeout(() => {
         document.querySelector(`[data-comments-section="${post._id}"]`)?.scrollIntoView({
           behavior: "smooth",
           block: "start",
         });
-        // NEW: Scroll to first flagged comment (after comments load)
         setTimeout(() => {
           const firstFlagged = document.querySelector(`[data-comment-id].flagged-comment`);
           if (firstFlagged) {
             firstFlagged.scrollIntoView({ behavior: 'smooth', block: 'center' });
           }
-        }, 600);  // Delay for comments to render
+        }, 600);
       }, 300);
     }
   }, [location, post._id]);
@@ -168,7 +861,6 @@ export default function PostCard({
     const previousLiked = liked;
     const previousLikes = likes;
 
-    // Optimistic update
     setLiked(willLike);
     setLikes(willLike ? likes + 1 : likes - 1);
     setAnimating(true);
@@ -182,17 +874,13 @@ export default function PostCard({
         response = await unlikePost(post._id);
       }
 
-      // If backend says "already liked", revert
       if (willLike && response.alreadyLiked) {
         setLiked(false);
         setLikes(previousLikes);
         return;
       }
-
-      // Success: keep optimistic state
     } catch (err) {
       console.error("Like/unlike failed:", err);
-      // Revert on error
       setLiked(previousLiked);
       setLikes(previousLikes);
     } finally {
@@ -202,19 +890,18 @@ export default function PostCard({
   };
 
   useEffect(() => {
-  const fetchCommentsCount = async () => {
-    try {
-      const res = await listComments(post._id, 1, 1); // fetch 1 comment, total count is in res.total
-      setCommentsCountState(res.total || 0);           // total visible comments
-    } catch (err) {
-      console.error("Failed to fetch comments count", err);
-    }
-  };
+    const fetchCommentsCount = async () => {
+      try {
+        const res = await listComments(post._id, 1, 1);
+        setCommentsCountState(res.total || 0);
+      } catch (err) {
+        console.error("Failed to fetch comments count", err);
+      }
+    };
 
-  fetchCommentsCount();
-}, [post._id]);
+    fetchCommentsCount();
+  }, [post._id]);
 
-  /* ---------- Edit handling ---------- */
   const handleFileSelect = (e) => {
     const files = Array.from(e.target.files);
     setEditedMediaFiles((prev) => [...prev, ...files]);
@@ -224,7 +911,6 @@ export default function PostCard({
   const removeMedia = (index) => {
     const item = visibleMedia[index];
 
-    // If it's an existing media URL, track it for deletion
     if (typeof item === "string") {
       setDeletedMediaUrls(prev => [...prev, item]);
     }
@@ -232,6 +918,7 @@ export default function PostCard({
     setEditedMediaFiles(prev => prev.filter((_, i) => i !== index));
     setVisibleMedia(prev => prev.filter((_, i) => i !== index));
   };
+
   const handleSaveEdit = async () => {
     if (!editedText.trim() && editedMediaFiles.length === 0 && deletedMediaUrls.length === 0) return;
 
@@ -240,18 +927,15 @@ export default function PostCard({
       const formData = new FormData();
       formData.append("text", editedText);
 
-      // Add new files
       editedMediaFiles.forEach((f) => formData.append("media", f));
 
-      // Add URLs to delete — BUT send as `removePublicIds` and extract public_id
-      // === DELETE MEDIA ===
       deletedMediaUrls.forEach((url) => {
         const publicId = (() => {
           try {
             const afterUpload = url.split('/upload/')[1];
             if (!afterUpload) return null;
             const parts = afterUpload.split('/');
-            return parts.slice(1).join('/').split('.')[0]; // skip v123, take folder/file
+            return parts.slice(1).join('/').split('.')[0];
           } catch {
             return null;
           }
@@ -265,7 +949,6 @@ export default function PostCard({
       const updatedPostRes = await updatePost(post._id, formData);
       const updatedPost = updatedPostRes?.post || updatedPostRes;
 
-      // Use updated mediaUrls from backend
       const backendMediaUrls = Array.isArray(updatedPost.mediaUrls)
         ? updatedPost.mediaUrls
         : [];
@@ -280,7 +963,7 @@ export default function PostCard({
         onEditPost({
           ...updatedPost,
           mediaUrls: backendMediaUrls,
-          text: editedText,  // ← Use your local editedText
+          text: editedText,
         });
       }
     } catch (err) {
@@ -292,25 +975,18 @@ export default function PostCard({
     }
   };
 
-
   const handleDelete = async () => {
     setConfirmOpen(false);
     try {
       await deletePost(post._id);
       if (onDeletePost) onDeletePost(post._id);
-
-      // Show success toast
       showToast("Post deleted successfully!", 3000);
     } catch (err) {
-      // Show error toast
       showToast(err?.message || "Failed to delete post.", 3000);
       console.error("Delete error:", err);
     }
   };
 
-
-
-  /* ---------- Lightbox helpers ---------- */
   const openLightbox = (idx) => {
     setLightboxIndex(idx);
     setLightboxOpen(true);
@@ -321,7 +997,6 @@ export default function PostCard({
   const goNext = () =>
     setLightboxIndex((i) => (i + 1) % mediaUrls.length);
 
-  // keyboard navigation
   useEffect(() => {
     if (!lightboxOpen) return;
     const handler = (e) => {
@@ -333,104 +1008,97 @@ export default function PostCard({
     return () => window.removeEventListener("keydown", handler);
   }, [lightboxOpen]);
 
-
   const toggleComments = async () => {
-  setShowComments(prev => !prev);
+    setShowComments(prev => !prev);
 
-  if (!showComments) { // only fetch when opening
-    try {
-      const res = await listComments(post._id, 1, 20); // fetch first 20 visible comments
-      setCommentsCountState(res.total || 0);          // update count
-    } catch (err) {
-      console.error("Failed to fetch comments:", err);
+    if (!showComments) {
+      try {
+        const res = await listComments(post._id, 1, 20);
+        setCommentsCountState(res.total || 0);
+      } catch (err) {
+        console.error("Failed to fetch comments:", err);
+      }
     }
-  }
-};
+  };
 
-
-  /* ---------- Render ---------- */
   return (
- <div 
+    <div
       className={`
-        bg-white shadow-md rounded-2xl p-5 mb-6 transition-all duration-300 hover:shadow-lg relative
+        relative bg-white dark:bg-gray-900 rounded-2xl mb-5 transition-all duration-300
         ${shouldBeHighlighted
-          ? 'border-2 border-amber-400 bg-amber-50/30 ring-1 ring-amber-300/50 shadow-amber-200/40'
-          : ''
+          ? 'border-2 border-amber-400 shadow-lg shadow-amber-100/60 ring-1 ring-amber-300/40'
+          : 'border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md'
         }
       `}
       data-post-id={post._id}
     >
-
-      {/* ✅ Flagged indicator with dismiss button */}
+      {/* Flagged badge */}
       {isFlaggedBySystem && !dismissedFlaggedStyle && (
-        <div 
+        <div
           className={`
-            absolute -top-2 -right-2 px-3 py-1.5 rounded-full text-xs font-medium shadow-md z-20 flex items-center gap-1.5
+            absolute -top-2.5 -right-2.5 px-3 py-1 rounded-full text-xs font-semibold shadow-md z-20 flex items-center gap-1.5
             ${shouldBeHighlighted
-              ? 'bg-amber-600 text-white ring-2 ring-amber-300/70' 
+              ? 'bg-amber-500 text-white ring-2 ring-amber-200'
               : 'bg-amber-100 text-amber-800 border border-amber-300'
             }
           `}
         >
-          <FiAlertTriangle size={13} />
+          <FiAlertTriangle size={12} />
           <span>{shouldBeHighlighted ? 'Review Comments' : 'Flagged'}</span>
-          
-          {/* ✅ NEW: Dismiss button */}
           <button
             onClick={() => setDismissedFlaggedStyle(true)}
-            className="ml-1 p-0 hover:opacity-80 transition-opacity"
+            className="ml-0.5 hover:opacity-70 transition-opacity"
             title="Dismiss flagged indicator"
           >
-            <FiX size={14} />
+            <FiX size={13} />
           </button>
         </div>
       )}
-  
-      {/* ---------- Header ---------- */}
-      <div className="flex items-start justify-between">
+
+      {/* ── Header ── */}
+      <div className="flex items-start justify-between px-5 pt-5 pb-4">
         <div className="flex items-start gap-3">
-          {/* Clickable Avatar */}
-          <Link to={`/dashboard/community/${author?._id}`}>
-            <DevstaAvatar user={author} size={45} className="cursor-pointer transition-opacity hover:opacity-80" />
+          <Link to={`/dashboard/community/${author?._id}`} className="flex-shrink-0">
+            <DevstaAvatar user={author} size={44} className="cursor-pointer hover:opacity-85 transition-opacity" />
           </Link>
 
           <div className="flex flex-col">
-            <div className="flex items-center gap-2">
-              {/* Clickable Name */}
+            <div className="flex items-center gap-2 flex-wrap">
               <Link
                 to={`/dashboard/community/${author?._id}`}
-                className="font-bold text-[15px] text-gray-900 hover:text-primary transition-colors duration-200"
+                className="font-bold text-[15px] text-gray-900 dark:text-white hover:text-primary transition-colors"
               >
                 {author?.name}
               </Link>
-              <span className="text-gray-500 text-[11px] font-semibold">
-                • {formattedTime}
+              <span className="text-gray-400 dark:text-gray-500 text-[11px]">
+                {formattedTime}
               </span>
             </div>
 
             {author?.primaryRole && (
-              <p className="font-semibold text-gray-400 text-[14px] capitalize">
+              <p className="text-[13px] text-primary/70 font-medium capitalize mt-0.5">
                 {formatRole(author.primaryRole)}
               </p>
             )}
           </div>
         </div>
 
-        {/* Edit/Delete Menu — Prevent Navigation */}
+        {/* Edit/Delete menu */}
         {currentUserId === author._id && (
           <div className="relative" onClick={(e) => e.stopPropagation()}>
-            <FiMoreVertical
-              className="cursor-pointer text-gray-500 hover:text-gray-700 transition-colors"
-              size={20}
+            <button
+              className="p-1.5 rounded-full text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
               onClick={(e) => {
                 e.stopPropagation();
                 setMenuOpen((v) => !v);
               }}
-            />
+            >
+              <FiMoreVertical size={18} />
+            </button>
             {menuOpen && (
-              <div className="absolute right-0 mt-2 w-32 bg-white shadow-lg rounded-lg border border-gray-200 z-20">
+              <div className="absolute right-0 mt-1.5 w-36 bg-white dark:bg-gray-800 shadow-xl rounded-xl border border-gray-100 dark:border-gray-700 z-20 overflow-hidden py-1">
                 <button
-                  className="w-full text-left px-4 py-2 hover:bg-gray-100 transition-colors"
+                  className="w-full text-left px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                   onClick={(e) => {
                     e.stopPropagation();
                     setIsEditing(true);
@@ -444,7 +1112,7 @@ export default function PostCard({
                   Edit
                 </button>
                 <button
-                  className="w-full text-left px-4 py-2 hover:bg-gray-100 text-red-500 transition-colors"
+                  className="w-full text-left px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                   onClick={(e) => {
                     e.stopPropagation();
                     setConfirmOpen(true);
@@ -453,232 +1121,172 @@ export default function PostCard({
                 >
                   Delete
                 </button>
-
               </div>
             )}
           </div>
         )}
       </div>
 
+      {/* ── Content ── */}
+      <div className="px-5">
+        {isEditing ? (
+          <div className="flex flex-col gap-3">
+            <textarea
+              className="w-full border border-gray-200 dark:border-gray-700 rounded-xl p-3 resize-none text-sm bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition"
+              rows={3}
+              value={editedText}
+              onChange={(e) => setEditedText(e.target.value)}
+            />
+            <input
+              type="file"
+              accept="image/*"
+              ref={photoInputRef}
+              className="hidden"
+              multiple
+              onChange={handleFileSelect}
+            />
 
-      {/* ---------- Content & Media ---------- */}
-      {isEditing ? (
-        /* ---------- EDIT MODE ---------- */
-        <div className="mt-3 flex flex-col gap-2">
-          <textarea
-            className="w-full border border-gray-300 rounded-lg p-2 resize-none"
-            rows={3}
-            value={editedText}
-            onChange={(e) => setEditedText(e.target.value)}
-          />
-          {/* hidden file inputs */}
-          <input
-            type="file"
-            accept="image/*"
-            ref={photoInputRef}
-            className="hidden"
-            multiple
-            onChange={handleFileSelect}
-          />
-
-          <div className="flex gap-2 mt-2">
-            <button
-              type="button"
-              onClick={() => photoInputRef.current.click()}
-              className="flex items-center gap-1 px-2 py-1 rounded-full hover:bg-primary/10"
-            >
-              <FiImage /> Add Photo
-            </button>
-
-          </div>
-
-          <div className="flex gap-2 justify-end mt-2">
-            <button
-              className="px-4 py-2 rounded-full bg-gray-300 text-gray-800 hover:bg-gray-400"
-              onClick={() => {
-                setIsEditing(false);
-                setEditedText(post.text || "");           // Reset to current
-                setEditedMediaFiles([]);
-                setVisibleMedia(post.mediaUrls || []);
-              }}
-              disabled={savingEdit}
-            >
-              Cancel
-            </button>
-            <button
-              className="px-4 py-2 rounded-full bg-primary text-white hover:bg-primary-dark"
-              onClick={handleSaveEdit}
-              disabled={savingEdit}
-            >
-              {savingEdit ? "Saving..." : "Save"}
-            </button>
-          </div>
-
-          {/* preview of current + newly added files */}
-          {visibleMedia.length > 0 && (
-            <div className="mt-3 grid grid-cols-3 gap-2">
-              {visibleMedia.map((item, i) => {
-                const isFile = item instanceof File;
-                const url = isFile ? URL.createObjectURL(item) : item;
-                const isVideo = isFile
-                  ? item.type.startsWith("video")
-                  : url.match(/\.(mp4|webm|mov|ogg)$/i);
-
-                return (
-                  <div key={i} className="relative group">
-                    <button
-                      onClick={() => removeMedia(i)}
-                      className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition z-10"
-                    >
-                      <IoClose size={14} />
-                    </button>
-                    {isVideo ? (
-                      <video
-                        src={url}
-                        controls
-                        className="w-full h-32 object-cover rounded-lg"
-                      />
-                    ) : (
-                      <img
-                        src={url}
-                        alt=""
-                        className="w-full h-32 object-cover rounded-lg"
-                      />
-                    )}
-                  </div>
-                );
-              })}
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => photoInputRef.current.click()}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-full border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition"
+              >
+                <FiImage size={14} /> Add Photo
+              </button>
             </div>
-          )}
-        </div>
-      ) : (
-        /* ---------- VIEW MODE ---------- */
-        <>
-          {text && (
-            <p className="mt-3 text-[14px] text-gray-800 leading-relaxed font-semibold">
-              {text}
-            </p>
-          )}
 
-          {/* ---------- THUMBNAIL GRID (max 3) ---------- */}
-          {mediaUrls.length > 0 && (
-            <div className="flex flex-wrap gap-2 mt-3">
-              {mediaUrls.slice(0, 3).map((url, idx) => {
-                let basis = "100%";
-                if (mediaUrls.length === 2) {
-                  basis = "calc(50% - 4px)";
-                } else if (mediaUrls.length >= 3) {
-                  basis = idx === 0 ? "100%" : "calc(50% - 4px)";
-                }
+            {visibleMedia.length > 0 && (
+              <div className="grid grid-cols-3 gap-2">
+                {visibleMedia.map((item, i) => {
+                  const isFile = item instanceof File;
+                  const url = isFile ? URL.createObjectURL(item) : item;
+                  const isVideo = isFile
+                    ? item.type.startsWith("video")
+                    : url.match(/\.(mp4|webm|mov|ogg)$/i);
 
-                const isVideo = url.match(/\.(mp4|webm|mov|ogg)$/i);
-
-                return (
-                  <div
-                    key={idx}
-                    className="relative cursor-pointer rounded-lg border-2 border-gray-200 overflow-hidden bg-gray-50"
-                    style={{
-                      flexBasis: basis,
-                      flexGrow: 0,
-                      minHeight: "200px",
-                    }}
-                    onClick={() => openLightbox(idx)}
-                  >
-                    <div className="w-full h-full transition-transform duration-300 hover:scale-105">
+                  return (
+                    <div key={i} className="relative group rounded-xl overflow-hidden">
+                      <button
+                        onClick={() => removeMedia(i)}
+                        className="absolute top-1.5 right-1.5 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition z-10 shadow"
+                      >
+                        <IoClose size={12} />
+                      </button>
                       {isVideo ? (
-                        <video
-                          src={url}
-                          controls={false}
-                          className="absolute top-0 left-0 w-full h-full object-cover"
-                        />
+                        <video src={url} controls className="w-full h-28 object-cover" />
                       ) : (
-                        <img
-                          src={url}
-                          alt={`media-${idx}`}
-                          className="absolute top-0 left-0 w-full h-full object-cover"
-                        />
+                        <img src={url} alt="" className="w-full h-28 object-cover" />
                       )}
                     </div>
+                  );
+                })}
+              </div>
+            )}
 
-                    {/* +N overlay */}
-                    {idx === 2 && mediaUrls.length > 3 && (
-                      <div className="absolute inset-0 bg-black/50 flex items-center justify-center text-white text-lg font-bold">
-                        +{mediaUrls.length - 3}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
+            <div className="flex gap-2 justify-end">
+              <button
+                className="px-4 py-2 rounded-full text-sm border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition"
+                onClick={() => {
+                  setIsEditing(false);
+                  setEditedText(post.text || "");
+                  setEditedMediaFiles([]);
+                  setVisibleMedia(post.mediaUrls || []);
+                }}
+                disabled={savingEdit}
+              >
+                Cancel
+              </button>
+              <button
+                className="px-4 py-2 rounded-full text-sm bg-primary text-white hover:bg-primary/90 transition font-medium disabled:opacity-60"
+                onClick={handleSaveEdit}
+                disabled={savingEdit}
+              >
+                {savingEdit ? "Saving…" : "Save"}
+              </button>
             </div>
-          )}
-        </>
-      )}
+          </div>
+        ) : (
+          <>
+            {text && (
+              <p className="text-[14.5px] text-gray-800 dark:text-gray-200 leading-relaxed">
+                {text}
+              </p>
+            )}
 
-      {/* ---------- Footer (like / comment) ---------- */}
-      <div className="flex items-center gap-3 mt-4">
-        <div
-          className="flex items-center gap-2 px-3 py-1.5 rounded-full cursor-pointer select-none relative"
+            {/* Media grid */}
+            {mediaUrls.length > 0 && (
+              <div className={`mt-3 grid gap-1.5 ${mediaUrls.length === 1 ? 'grid-cols-1' : mediaUrls.length === 2 ? 'grid-cols-2' : 'grid-cols-2'}`}>
+                {mediaUrls.slice(0, 3).map((url, idx) => {
+                  let colSpan = "";
+                  if (mediaUrls.length >= 3 && idx === 0) colSpan = "col-span-2";
+
+                  const isVideo = url.match(/\.(mp4|webm|mov|ogg)$/i);
+
+                  return (
+                    <div
+                      key={idx}
+                      className={`relative cursor-pointer rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800 ${colSpan}`}
+                      style={{ minHeight: idx === 0 && mediaUrls.length >= 3 ? "220px" : "160px" }}
+                      onClick={() => openLightbox(idx)}
+                    >
+                      <div className="absolute inset-0 transition-transform duration-300 hover:scale-[1.03]">
+                        {isVideo ? (
+                          <video src={url} className="w-full h-full object-cover" />
+                        ) : (
+                          <img src={url} alt={`media-${idx}`} className="w-full h-full object-cover" />
+                        )}
+                      </div>
+
+                      {idx === 2 && mediaUrls.length > 3 && (
+                        <div className="absolute inset-0 bg-black/55 flex items-center justify-center text-white text-xl font-bold rounded-xl">
+                          +{mediaUrls.length - 3}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </>
+        )}
+      </div>
+
+      {/* ── Footer ── */}
+      <div className="flex items-center gap-1 px-4 py-3 mt-2 border-t border-gray-100 dark:border-gray-800">
+        <button
+          className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 select-none
+            ${liked
+              ? 'bg-primary/10 text-primary'
+              : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-700 dark:hover:text-gray-300'
+            }`}
           onClick={handleLikeToggle}
         >
           {liked ? (
             <AiFillLike
-              className={`text-primary transition-transform duration-200 ${animating ? "animate-like-pop" : ""
-                }`}
-              size={20}
+              className={`text-primary transition-transform duration-200 ${animating ? "animate-like-pop" : ""}`}
+              size={18}
             />
           ) : (
-            <FiThumbsUp className="text-gray-400" size={20} />
+            <FiThumbsUp size={18} />
           )}
-          <span className="text-sm font-semibold text-gray-700">
-            {likes} Like{likes !== 1 ? "s" : ""}
-          </span>
-        </div>
+          <span>{likes} {likes === 1 ? "Like" : "Likes"}</span>
+        </button>
 
-        <div
-  className="flex items-center gap-2 px-3 py-1.5 rounded-full cursor-pointer hover:bg-primary/10 transition-colors"
-  onClick={toggleComments}
->
-
-          <FiMessageCircle className="text-gray-700" />
-          <span className="text-gray-700 font-semibold text-sm">
-            {commentsCountState} Comment
-            {commentsCountState !== 1 ? "s" : ""}
+        <button
+          className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
+          onClick={toggleComments}
+        >
+          <FiMessageCircle size={18} className={showComments ? "text-primary" : ""} />
+          <span className={showComments ? "text-primary" : ""}>
+            {commentsCountState} {commentsCountState === 1 ? "Comment" : "Comments"}
           </span>
-        </div>
+        </button>
       </div>
 
-      {/* {showComments && <hr className="border-t border-gray-300 mt-4" />}
+      {/* Comments */}
       {showComments && (
-        <CommentSection
-          postId={post._id}
-          currentUserId={currentUserId}
-          postAuthorId={author._id}
-          setCommentsCount={setCommentsCountState}
-        />
-      )} */}
-
-      {/* Comments Section with Auto-Open + Red Banner */}
-      {showComments && (
-        <div data-comments-section={post._id} className="mt-6">
-          {/* Strong red banner when flagged comments exist */}
-          {/* {flaggedCount > 0 && currentUserId === author._id && (
-            <div className="bg-red-50 border-l-4 border-red-600 p-5 mb-6 rounded-lg shadow-sm animate-pulse">
-              <div className="flex items-start gap-4">
-                <FiAlertTriangle className="text-red-600 text-2xl mt-1 flex-shrink-0" />
-                <div>
-                  <p className="font-bold text-red-800 text-lg mb-1">
-                    {flaggedCount} Flagged Comment{flaggedCount > 1 ? "s" : ""} – Action Required
-                  </p>
-                  <p className="text-red-700">
-                    These comments were flagged by our system. Please review and hide any that violate guidelines using the menu (⋯).
-                  </p>
-                </div>
-              </div>
-            </div>
-          )} */}
-
-          <hr className="border-t border-gray-300 mb-4" />
-
+        <div data-comments-section={post._id} className="px-5 pb-5">
           <CommentSection
             postId={post._id}
             currentUserId={currentUserId}
@@ -689,97 +1297,69 @@ export default function PostCard({
         </div>
       )}
 
-
-      {/* ---------- LIGHTBOX (Arrows work, background click closes) ---------- */}
+      {/* Lightbox */}
       {lightboxOpen && (
         <div
-          className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
-          onClick={closeLightbox} // ← Closes only on background
+          className="fixed inset-0 bg-black/85 flex items-center justify-center z-50 p-4 backdrop-blur-sm"
+          onClick={closeLightbox}
         >
-          {/* Media Container — stops click from bubbling */}
           <div
             className="relative max-w-5xl w-full max-h-[90vh] flex items-center justify-center"
-            onClick={(e) => e.stopPropagation()} // ← Prevents close on media/inside
+            onClick={(e) => e.stopPropagation()}
           >
-            {/* Media */}
             {mediaUrls[lightboxIndex].match(/\.(mp4|webm|mov|ogg)$/i) ? (
               <video
                 src={mediaUrls[lightboxIndex]}
                 controls
                 autoPlay
-                className="max-h-[90vh] w-auto mx-auto rounded-xl object-contain"
+                className="max-h-[90vh] w-auto mx-auto rounded-2xl object-contain shadow-2xl"
               />
             ) : (
               <img
                 src={mediaUrls[lightboxIndex]}
                 alt=""
-                className="max-h-[90vh] w-auto mx-auto rounded-xl object-contain"
+                className="max-h-[90vh] w-auto mx-auto rounded-2xl object-contain shadow-2xl"
               />
             )}
           </div>
 
-          {/* Close Button */}
           <button
-            className="absolute top-4 right-4 bg-black/70 text-white rounded-full p-2 z-50 hover:bg-black"
+            className="absolute top-4 right-4 bg-white/10 backdrop-blur-sm text-white rounded-full p-2.5 z-50 hover:bg-white/20 transition border border-white/20"
             onClick={closeLightbox}
           >
-            <IoClose size={26} />
+            <IoClose size={22} />
           </button>
 
-          {/* Navigation Arrows — Outside container, always clickable */}
           {mediaUrls.length > 1 && (
             <>
               <button
-                className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/70 text-white rounded-full p-3 hover:bg-black transition-all z-50"
-                onClick={(e) => {
-                  e.stopPropagation(); // ← Critical: prevent close
-                  goPrev();
-                }}
-                style={{ left: "1rem" }}
+                className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/10 backdrop-blur-sm text-white rounded-full p-3 hover:bg-white/20 transition border border-white/20 z-50"
+                onClick={(e) => { e.stopPropagation(); goPrev(); }}
               >
-                <ChevronLeft size={36} />
+                <ChevronLeft size={28} />
               </button>
-
               <button
-                className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/70 text-white rounded-full p-3 hover:bg-black transition-all z-50"
-                onClick={(e) => {
-                  e.stopPropagation(); // ← Critical: prevent close
-                  goNext();
-                }}
-                style={{ right: "1rem" }}
+                className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/10 backdrop-blur-sm text-white rounded-full p-3 hover:bg-white/20 transition border border-white/20 z-50"
+                onClick={(e) => { e.stopPropagation(); goNext(); }}
               >
-                <ChevronRight size={36} />
+                <ChevronRight size={28} />
               </button>
             </>
           )}
         </div>
       )}
 
-      {/* ---------- Like animation ---------- */}
-      <style>
-        {`
-          @keyframes like-pop {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.6); }
-            100% { transform: scale(1); }
-          }
-          .animate-like-pop {
-            animation: like-pop 0.3s ease-out forwards;
-          }
-        `}
-      </style>
+      <style>{`
+        @keyframes like-pop {
+          0%   { transform: scale(1); }
+          50%  { transform: scale(1.6); }
+          100% { transform: scale(1); }
+        }
+        .animate-like-pop { animation: like-pop 0.3s ease-out forwards; }
+      `}</style>
 
-      {/* ---------- Modals ---------- */}
-      <SuccessModal
-        open={successModalOpen}
-        message="Post deleted successfully!"
-        onClose={() => setSuccessModalOpen(false)}
-      />
-      <ErrorModal
-        open={errorModalOpen}
-        message={errorMessage}
-        onClose={() => setErrorModalOpen(false)}
-      />
+      <SuccessModal open={successModalOpen} message="Post deleted successfully!" onClose={() => setSuccessModalOpen(false)} />
+      <ErrorModal open={errorModalOpen} message={errorMessage} onClose={() => setErrorModalOpen(false)} />
       <ConfirmModal
         open={confirmOpen}
         title="Delete Post?"
@@ -789,8 +1369,6 @@ export default function PostCard({
         onConfirm={handleDelete}
         onCancel={() => setConfirmOpen(false)}
       />
-
-
     </div>
   );
 }

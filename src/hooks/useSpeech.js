@@ -1,233 +1,136 @@
-// import { useRef, useState, useCallback, useEffect } from "react";
-
-// export function useSpeech({ onTranscriptFinal } = {}) {
-//   const [isListening, setIsListening] = useState(false);
-//   const [isSpeaking, setIsSpeaking] = useState(false);
-//   const [transcript, setTranscript] = useState("");
-//   const [sttSupported, setSttSupported] = useState(true);
-
-//   const recognitionRef = useRef(null);
-//   const synthRef = useRef(window.speechSynthesis);
-//   const finalTranscriptRef = useRef("");
-
-//   useEffect(() => {
-//     const SpeechRecognition =
-//       window.SpeechRecognition || window.webkitSpeechRecognition;
-
-//     if (!SpeechRecognition) {
-//       setSttSupported(false);
-//       return;
-//     }
-
-//     const recognition = new SpeechRecognition();
-//     recognition.continuous = true;
-//     recognition.interimResults = true;
-//     recognition.lang = "en-US";
-//     recognition.maxAlternatives = 1;
-
-//     recognition.onresult = (event) => {
-//       let interim = "";
-//       let final = "";
-
-//       for (let i = event.resultIndex; i < event.results.length; i++) {
-//         const text = event.results[i][0].transcript;
-//         if (event.results[i].isFinal) {
-//           final += text;
-//         } else {
-//           interim += text;
-//         }
-//       }
-
-//       if (final) {
-//         finalTranscriptRef.current += " " + final;
-//         setTranscript(finalTranscriptRef.current.trim());
-//       } else {
-//         setTranscript((finalTranscriptRef.current + " " + interim).trim());
-//       }
-//     };
-
-//     recognition.onerror = (e) => {
-//       if (e.error !== "no-speech") {
-//         console.warn("STT error:", e.error);
-//       }
-//     };
-
-//     recognitionRef.current = recognition;
-//   }, []);
-
-//   const startListening = useCallback(() => {
-//     if (!recognitionRef.current) return;
-//     finalTranscriptRef.current = "";
-//     setTranscript("");
-//     try {
-//       recognitionRef.current.start();
-//       setIsListening(true);
-//     } catch (e) {
-//       console.warn("Recognition start failed:", e);
-//     }
-//   }, []);
-
-//   const stopListening = useCallback(() => {
-//     if (!recognitionRef.current) return;
-//     try {
-//       recognitionRef.current.stop();
-//     } catch (e) {}
-//     setIsListening(false);
-//     return finalTranscriptRef.current.trim();
-//   }, []);
-
-//   const speak = useCallback((text, { onEnd } = {}) => {
-//     if (!text) return;
-//     synthRef.current.cancel();
-
-//     const utterance = new SpeechSynthesisUtterance(text);
-//     utterance.rate = 0.92;
-//     utterance.pitch = 1.0;
-//     utterance.volume = 1.0;
-
-//     const voices = synthRef.current.getVoices();
-//     const preferred =
-//       voices.find((v) => v.name.includes("Google") && v.lang.startsWith("en-US")) ||
-//       voices.find((v) => v.lang.startsWith("en-US")) ||
-//       voices.find((v) => v.lang.startsWith("en"));
-
-//     if (preferred) utterance.voice = preferred;
-
-//     utterance.onstart = () => setIsSpeaking(true);
-//     utterance.onend = () => {
-//       setIsSpeaking(false);
-//       onEnd?.();
-//     };
-//     utterance.onerror = () => setIsSpeaking(false);
-
-//     synthRef.current.speak(utterance);
-//   }, []);
-
-//   const cancelSpeech = useCallback(() => {
-//     synthRef.current.cancel();
-//     setIsSpeaking(false);
-//   }, []);
-
-//   return {
-//     isListening,
-//     isSpeaking,
-//     transcript,
-//     setTranscript,
-//     sttSupported,
-//     startListening,
-//     stopListening,
-//     speak,
-//     cancelSpeech,
-//   };
-// }
 import { useRef, useState, useCallback, useEffect } from "react";
 
 export function useSpeech() {
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [transcript, setTranscript] = useState("");
-  const [sttMode, setSttMode] = useState("speech"); // "speech" | "typing"
+  const [sttSupported, setSttSupported] = useState(true);
+  const [sttMode, setSttMode] = useState("speech");
+  const [micError, setMicError] = useState(null);
 
   const recognitionRef = useRef(null);
   const synthRef = useRef(window.speechSynthesis);
-  const finalRef = useRef("");
-  const listeningRef = useRef(false);
+  const finalTranscriptRef = useRef("");
+  const isListeningRef = useRef(false); // ← track real state in ref
+  const restartTimerRef = useRef(null);
 
   useEffect(() => {
-    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SR) { setSttMode("typing"); return; }
+    const SpeechRecognition =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
 
-    const r = new SR();
-    r.continuous = true;
-    r.interimResults = true;
-    r.lang = "en-US";
+    if (!SpeechRecognition) {
+      setSttSupported(false);
+      setSttMode("typing");
+      return;
+    }
 
-    r.onstart = () => { setIsListening(true); };
+    const recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = "en-US";
+    recognition.maxAlternatives = 1;
 
-    r.onresult = (e) => {
-      let interim = "", final = "";
-      for (let i = e.resultIndex; i < e.results.length; i++) {
-        const t = e.results[i][0].transcript;
-        if (e.results[i].isFinal) final += t;
-        else interim += t;
+    recognition.onresult = (event) => {
+      let interim = "";
+      let final = "";
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const text = event.results[i][0].transcript;
+        if (event.results[i].isFinal) final += text;
+        else interim += text;
       }
       if (final) {
-        finalRef.current = (finalRef.current + " " + final).trim();
+        finalTranscriptRef.current += " " + final;
+        setTranscript(finalTranscriptRef.current.trim());
+      } else {
+        setTranscript((finalTranscriptRef.current + " " + interim).trim());
       }
-      setTranscript((finalRef.current + " " + interim).trim());
     };
 
-    r.onend = () => {
-      if (listeningRef.current) {
-        try { r.start(); } catch(e) {}
+    recognition.onerror = (e) => {
+      console.warn("STT error:", e.error);
+      if (e.error === "not-allowed" || e.error === "permission-denied") {
+        setSttMode("typing");
+        setMicError("not-allowed");
+        isListeningRef.current = false;
+        setIsListening(false);
+      } else if (e.error === "network") {
+        // Don't switch to typing — network errors are transient
+        // Just let onend handle the restart
+        console.warn("STT network error — will retry");
+      } else if (e.error === "no-speech") {
+        // Normal — do nothing, let it restart via onend
+      } else {
+        console.warn("STT unknown error:", e.error);
+      }
+    };
+
+    // KEY FIX: onend fires when recognition stops for ANY reason
+    // If we're still supposed to be listening, restart it
+    recognition.onend = () => {
+      if (isListeningRef.current) {
+        // We want to keep listening — restart after brief pause
+        restartTimerRef.current = setTimeout(() => {
+          if (isListeningRef.current) {
+            try {
+              recognition.start();
+            } catch (e) {
+              // Already started, ignore
+            }
+          }
+        }, 100);
       } else {
         setIsListening(false);
       }
     };
 
-    r.onerror = (e) => {
-      console.warn("STT error:", e.error);
-      if (e.error === "network") {
-        // Google STT servers unreachable — switch to typing mode
-        setSttMode("typing");
-        listeningRef.current = false;
-        setIsListening(false);
-      } else if (e.error === "not-allowed") {
-        setSttMode("typing");
-        listeningRef.current = false;
-        setIsListening(false);
-      }
-    };
+    recognitionRef.current = recognition;
 
-    recognitionRef.current = r;
+    return () => {
+      clearTimeout(restartTimerRef.current);
+      try { recognition.stop(); } catch (e) {}
+    };
   }, []);
 
   const startListening = useCallback(() => {
-    if (sttMode === "typing") {
-      // in typing mode, just signal that we're "listening" (user types)
-      finalRef.current = "";
-      setTranscript("");
-      setIsListening(true);
-      return;
-    }
-    if (listeningRef.current) return;
-    finalRef.current = "";
+    if (!recognitionRef.current || sttMode === "typing") return;
+    finalTranscriptRef.current = "";
     setTranscript("");
-    listeningRef.current = true;
-    try { recognitionRef.current?.start(); } catch(e) {}
+    setMicError(null);
+    isListeningRef.current = true;
+    setIsListening(true);
+    try {
+      recognitionRef.current.start();
+    } catch (e) {
+      console.warn("Recognition start failed:", e.message);
+      // Already running is fine
+    }
   }, [sttMode]);
 
   const stopListening = useCallback(() => {
-    listeningRef.current = false;
+    isListeningRef.current = false;
+    clearTimeout(restartTimerRef.current);
     setIsListening(false);
-    try { recognitionRef.current?.stop(); } catch(e) {}
-    return finalRef.current.trim();
-  }, []);
-
-  // For typing mode — user types directly into transcript
-  const setTypedTranscript = useCallback((text) => {
-    finalRef.current = text;
-    setTranscript(text);
+    try { recognitionRef.current?.stop(); } catch (e) {}
+    return finalTranscriptRef.current.trim();
   }, []);
 
   const speak = useCallback((text, { onEnd } = {}) => {
-    if (!text) { onEnd?.(); return; }
+    if (!text) return;
     synthRef.current.cancel();
-    const go = () => {
-      const u = new SpeechSynthesisUtterance(text);
-      u.rate = 0.9; u.pitch = 1.0; u.volume = 1.0;
-      const voices = synthRef.current.getVoices();
-      const v = voices.find(v => v.name.includes("Google") && v.lang.startsWith("en-US"))
-             || voices.find(v => v.lang.startsWith("en-US"))
-             || voices[0];
-      if (v) u.voice = v;
-      u.onstart = () => setIsSpeaking(true);
-      u.onend   = () => { setIsSpeaking(false); onEnd?.(); };
-      u.onerror = () => { setIsSpeaking(false); onEnd?.(); };
-      synthRef.current.speak(u);
-    };
-    if (synthRef.current.getVoices().length) go();
-    else synthRef.current.addEventListener("voiceschanged", go, { once: true });
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 0.92;
+    utterance.pitch = 1.0;
+    utterance.volume = 1.0;
+    const voices = synthRef.current.getVoices();
+    const preferred =
+      voices.find((v) => v.name.includes("Google") && v.lang.startsWith("en-US")) ||
+      voices.find((v) => v.lang.startsWith("en-US")) ||
+      voices.find((v) => v.lang.startsWith("en"));
+    if (preferred) utterance.voice = preferred;
+    utterance.onstart = () => setIsSpeaking(true);
+    utterance.onend = () => { setIsSpeaking(false); onEnd?.(); };
+    utterance.onerror = () => { setIsSpeaking(false); onEnd?.(); };
+    synthRef.current.speak(utterance);
   }, []);
 
   const cancelSpeech = useCallback(() => {
@@ -235,9 +138,26 @@ export function useSpeech() {
     setIsSpeaking(false);
   }, []);
 
+  const setTypedTranscript = useCallback((val) => {
+    finalTranscriptRef.current = val;
+    setTranscript(val);
+  }, []);
+
   return {
-    isListening, isSpeaking, transcript, setTranscript,
-    sttMode, setTypedTranscript,
-    startListening, stopListening, speak, cancelSpeech,
+    isListening,
+    isSpeaking,
+    transcript,
+    setTranscript: (val) => {
+      finalTranscriptRef.current = "";
+      setTranscript(val);
+    },
+    sttSupported,
+    sttMode,
+    micError,
+    startListening,
+    stopListening,
+    speak,
+    cancelSpeech,
+    setTypedTranscript,
   };
 }

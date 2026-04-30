@@ -53,39 +53,39 @@ export default function MessageBubble({ msg, currentUserId }) {
   return (
     <>
       <div
-        className={`flex items-end mb-3 ${
+        className={`flex items-end mb-4 gap-2 ${
           isSender ? "justify-end" : "justify-start"
         }`}
       >
         {!isSender && avatarUser && (
-          <DevstaAvatar user={avatarUser} size={36} className="mr-2" />
+          <DevstaAvatar user={avatarUser} size={38} className="flex-shrink-0" />
         )}
 
         <div
-          className={`flex flex-col max-w-[70%] ${
+          className={`flex flex-col max-w-[65%] ${
             isSender ? "items-end" : "items-start"
           }`}
         >
           <div
-            className={`px-4 py-2 rounded-2xl break-words ${
+            className={`px-4 py-2.5 rounded-lg break-words transition-all ${
               isSender
-                ? "bg-primary text-white rounded-br-none"
-                : "bg-gray-200 text-gray-900 dark:bg-gray-800 rounded-bl-none"
+                ? "bg-primary text-white rounded-br-sm"
+                : "bg-gray-100 text-gray-900 dark:bg-gray-700/80 dark:text-gray-50 rounded-bl-sm"
             }`}
-            style={{ fontSize: "0.94rem" }}
+            style={{ fontSize: "0.95rem", lineHeight: "1.5" }}
           >
             {/* Text (optional) */}
             {msg.text && <div>{msg.text}</div>}
 
             {/* Cloudinary media (images/videos) */}
             {media && media.url && (
-              <div className={`${msg.text ? "mt-2" : ""}`}>
+              <div className={`${msg.text ? "mt-2.5" : ""}`}>
                 {/* Images */}
                 {mediaType === "image" && (
                   <img
                     src={media.url}
                     alt={media.originalName || "image"}
-                    className="max-h-64 rounded-lg object-contain cursor-pointer"
+                    className="max-h-72 rounded-lg object-contain cursor-pointer hover:brightness-95 transition-all duration-200"
                     onClick={handleMediaClick}
                   />
                 )}
@@ -94,7 +94,7 @@ export default function MessageBubble({ msg, currentUserId }) {
                 {mediaType === "video" && (
                   <video
                     src={media.url}
-                    className="max-h-64 rounded-lg cursor-pointer"
+                    className="max-h-72 rounded-lg cursor-pointer hover:brightness-95 transition-all duration-200"
                     controls
                     onClick={handleMediaClick}
                   />
@@ -104,40 +104,39 @@ export default function MessageBubble({ msg, currentUserId }) {
           </div>
 
           {/* Time + seen/sent ticks */}
-          <span
-            className={`text-[10px] text-gray-500 mt-1 flex items-center gap-1 ${
+          <div
+            className={`text-xs text-gray-500 dark:text-gray-400 mt-1.5 flex items-center gap-1.5 px-1 ${
               isSender ? "justify-end" : ""
             }`}
           >
-            {timeStr}
+            <span>{timeStr}</span>
 
             {isSender && (
-              <span className="ml-1 text-[11px]">
-                {/* Single tick = sent, double tick = seen */}
+              <span className={`text-sm ${hasSeenByOthers ? "text-blue-500" : "text-gray-400"}`}>
                 {hasSeenByOthers ? "✓✓" : "✓"}
               </span>
             )}
-          </span>
+          </div>
         </div>
 
-        {isSender && <div className="w-[36px] h-[36px] ml-2" />}
+        {isSender && <div className="w-9 h-9 flex-shrink-0" />}
       </div>
 
       {/* Full-screen preview modal (image/video) */}
       {showPreview && media && media.url && (
         <div
-          className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center"
+          className="fixed inset-0 z-50 bg-black/85 flex items-center justify-center p-4 animate-in fade-in duration-200"
           onClick={() => setShowPreview(false)}
         >
           <div
-            className="max-w-3xl max-h-[90vh] bg-black rounded-xl p-3"
+            className="relative max-w-2xl max-h-[85vh] bg-black rounded-2xl overflow-hidden shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             {mediaType === "image" && (
               <img
                 src={media.url}
                 alt={media.originalName || "image preview"}
-                className="max-h-[80vh] max-w-full object-contain"
+                className="w-full h-full max-h-[85vh] object-contain"
               />
             )}
 
@@ -146,18 +145,17 @@ export default function MessageBubble({ msg, currentUserId }) {
                 src={media.url}
                 controls
                 autoPlay
-                className="max-h-[80vh] max-w-full"
+                className="w-full h-full max-h-[85vh] object-contain"
               />
             )}
 
-            <div className="mt-2 text-right">
-              <button
-                className="px-3 py-1 text-xs rounded-full bg-white/10 text-white border border-white/30"
-                onClick={() => setShowPreview(false)}
-              >
-                Close
-              </button>
-            </div>
+            <button
+              className="absolute top-4 right-4 w-10 h-10 rounded-full bg-black/50 hover:bg-black/70 text-white flex items-center justify-center transition-all duration-200 border border-white/20"
+              onClick={() => setShowPreview(false)}
+              title="Close"
+            >
+              ✕
+            </button>
           </div>
         </div>
       )}

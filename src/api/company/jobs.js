@@ -7,39 +7,6 @@ const getAuthHeaders = () => ({
   Authorization: `Bearer ${localStorage.getItem("companyToken")}`,
 });
 
-// CREATE JOB
-// export const createJob = async (data) => {
-//   const res = await fetch(`${BASE_URL}`, {
-//     method: "POST",
-//     headers: getAuthHeaders(),
-//     body: JSON.stringify(data),
-//   });
-
-//   const json = await res.json();
-
-//   if (!res.ok) {
-//     throw new Error(json.message || "Failed to create job");
-//   }
-
-//   return json;
-// };
-
-// GET COMPANY JOBS
-// export const getMyJobs = async () => {
-//   const res = await fetch(`${BASE_URL}/my`, {
-//     method: "GET",
-//     headers: getAuthHeaders(),
-//   });
-
-//   const json = await res.json();
-
-//   if (!res.ok) {
-//     throw new Error(json.message || "Failed to fetch jobs");
-//   }
-
-//   return json;
-// };
-
 export const getMyJobs = async ({
   page = 1,
   limit = 6,

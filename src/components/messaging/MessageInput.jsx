@@ -59,7 +59,7 @@ export default function MessageInput({ onSend, isSending }) {
   };
 
   return (
-    <div className="flex flex-col gap-2 bg-white dark:bg-[#0a0a0a] rounded-b-2xl">
+    <div className="flex flex-col bg-white dark:bg-[#0a0a0a]">
       {/* Hidden file input */}
       <input
         type="file"
@@ -67,13 +67,13 @@ export default function MessageInput({ onSend, isSending }) {
         onChange={handleFileChange}
         className="hidden"
         accept={fileAccept}
-        multiple // allow multiple images/videos
+        multiple
       />
 
-      {/* Attachment preview ABOVE input (WhatsApp style) */}
+      {/* Attachment preview */}
       {files.length > 0 && (
-        <div className="px-3 pt-2">
-          <div className="flex flex-col gap-2 bg-gray-100 dark:bg-gray-800 rounded-xl px-3 py-2">
+        <div className="px-4 py-3 border-t border-gray-200 dark:border-gray-800">
+          <div className="flex flex-col gap-2">
             {files.map((file, index) => {
               const isImage = file.type.startsWith("image/");
               const isVideo = file.type.startsWith("video/");
@@ -87,21 +87,21 @@ export default function MessageInput({ onSend, isSending }) {
               return (
                 <div
                   key={index}
-                  className="flex items-center justify-between min-w-0"
+                  className="flex items-center justify-between min-w-0 bg-gray-50 dark:bg-gray-900 rounded-lg px-3 py-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                 >
-                  <div className="flex items-center gap-3 min-w-0">
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
                     <div
-                      className={`w-8 h-8 flex items-center justify-center rounded-md text-[10px] font-bold text-white ${badgeBg}`}
+                      className={`w-8 h-8 flex items-center justify-center rounded-md text-[10px] font-bold text-white flex-shrink-0 ${badgeBg}`}
                     >
                       {badgeLabel}
                     </div>
-                    <span className="text-xs text-gray-500 truncate max-w-[220px]">
+                    <span className="text-sm text-gray-700 dark:text-gray-300 truncate">
                       {file.name}
                     </span>
                   </div>
                   <button
                     type="button"
-                    className="text-xs text-red-500"
+                    className="text-xs text-red-500 hover:text-red-600 ml-2 flex-shrink-0 transition-colors"
                     onClick={() => {
                       setFiles((prev) =>
                         prev.filter((_, fileIdx) => fileIdx !== index)
@@ -115,9 +115,9 @@ export default function MessageInput({ onSend, isSending }) {
             })}
 
             {isSending && (
-              <div className="flex items-center gap-2 text-[11px] text-gray-500 mt-1">
+              <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 mt-1">
                 <Loader2 size={14} className="animate-spin" />
-                <span>Sending media…</span>
+                <span>Sending…</span>
               </div>
             )}
           </div>
@@ -125,34 +125,36 @@ export default function MessageInput({ onSend, isSending }) {
       )}
 
       {/* Main input row */}
-      <div className="flex items-center p-3 gap-2 relative">
-        {/* Single Attach button + menu */}
-        <div className="relative">
+      <div className="flex items-end p-3.5 gap-3">
+        {/* Attach button + menu */}
+        <div className="relative flex-shrink-0">
           <button
             type="button"
-            className="p-2 rounded-full border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 transition disabled:opacity-50 disabled:cursor-not-allowed"
+            className="p-2.5 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors text-gray-700 dark:text-gray-300"
             onClick={() => setShowMenu((prev) => !prev)}
             disabled={isSending}
+            title="Attach file"
           >
-            <Paperclip size={18} />
+            <Paperclip size={20} />
           </button>
 
           {showMenu && (
-            <div className="absolute bottom-12 left-0 mb-2 w-40 rounded-xl bg-white dark:bg-gray-900 shadow-lg border border-gray-200 dark:border-gray-700 z-20">
+            <div className="absolute bottom-14 left-0 w-44 rounded-xl bg-white dark:bg-gray-900 shadow-lg border border-gray-200 dark:border-gray-700 z-20 overflow-hidden">
               <button
                 type="button"
                 onClick={() => triggerFilePicker("image/*")}
-                className="flex items-center gap-2 w-full px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-800"
+                className="flex items-center gap-3 w-full px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
               >
-                <ImageIcon size={16} />
+                <ImageIcon size={18} className="text-blue-500" />
                 <span>Images</span>
               </button>
+              <div className="border-t border-gray-200 dark:border-gray-700" />
               <button
                 type="button"
                 onClick={() => triggerFilePicker("video/*")}
-                className="flex items-center gap-2 w-full px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-800"
+                className="flex items-center gap-3 w-full px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
               >
-                <Video size={16} />
+                <Video size={18} className="text-purple-500" />
                 <span>Videos</span>
               </button>
             </div>
@@ -161,7 +163,7 @@ export default function MessageInput({ onSend, isSending }) {
 
         {/* Text input */}
         <input
-          className="flex-1 bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-full px-4 py-2 text-sm outline-none focus:ring-1 focus:ring-primary focus:border-primary"
+          className="flex-1 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2.5 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all"
           placeholder="Type a message..."
           value={text}
           onChange={(e) => setText(e.target.value)}
@@ -169,16 +171,17 @@ export default function MessageInput({ onSend, isSending }) {
           disabled={isSending}
         />
 
-        {/* Send */}
+        {/* Send button */}
         <button
-          className="ml-1 p-3 bg-primary text-white rounded-full hover:bg-primary/90 transition disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex-shrink-0 p-2.5 bg-primary text-white rounded-lg hover:bg-primary/90 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
           onClick={handleSend}
           disabled={isSending}
+          title="Send message"
         >
           {isSending ? (
-            <Loader2 size={18} className="animate-spin" />
+            <Loader2 size={20} className="animate-spin" />
           ) : (
-            <Send size={18} />
+            <Send size={20} />
           )}
         </button>
       </div>
