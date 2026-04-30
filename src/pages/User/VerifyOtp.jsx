@@ -1,130 +1,170 @@
-import { useState } from "react";
+
+import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { BACKEND_URL } from "../../../config";
-import SuccessModal from "../../components/SuccessModal";
+import { Shield, CheckCircle, ChevronLeft } from "lucide-react";
 
-export default function ResetPassword() {
+export default function VerifyOtp() {
   const navigate = useNavigate();
-
-  const storedEmail = sessionStorage.getItem("resetEmail") || "";
-  const storedOtp = sessionStorage.getItem("resetOtp") || "";
-
-  const [form, setForm] = useState({
-    email: storedEmail,
-    otp: "",
-    newPassword: "",
-    confirmPassword: "",
-  });
-
+  const [otp, setOtp] = useState(new Array(6).fill(""));
   const [msg, setMsg] = useState("");
   const [error, setError] = useState("");
-  const [successModal, setSuccessModal] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
+  const inputRefs = useRef([]);
 
-  const handleChange = (e) =>
-    setForm({ ...form, [e.target.name]: e.target.value });
+  const email = sessionStorage.getItem("resetEmail") || "";
 
-  const handleVerify = async (e) => {
-    e.preventDefault();
-    setError(""); 
-    setMsg("");
-
-    if (form.newPassword !== form.confirmPassword) {
-      setError("Passwords do not match!");
-      return;
+  useEffect(() => {
+    if (!email) {
+      navigate("/forgot-password");
     }
+  }, [email, navigate]);
+
+  const handleChange = (element, index) => {
+    if (isNaN(element.value)) return false;
+
+    setOtp([...otp.map((d, idx) => (idx === index ? element.value : d))]);
+
+    if (element.value !== "" && index < 5) {
+      inputRefs.current[index + 1].focus();
+    }
+  };
+
+  const handleKeyDown = (e, index) => {
+    if (e.key === "Backspace" && !otp[index] && index > 0) {
+      inputRefs.current[index - 1].focus();
+    }
+  };
+
+  const handleVerifyOtp = async (e) => {
+    e.preventDefault();
+    const finalOtp = otp.join("");
+    if (finalOtp.length !== 6) return;
+    
+    setError(""); 
+    setMsg(""); 
+    setLoading(true);
 
     try {
       const res = await fetch(`${BACKEND_URL}/api/users/verify-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ email, otp: finalOtp }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.msg);
-
-      setMsg(data.msg);
-      setSuccessModal(true);
+      
+      sessionStorage.setItem("resetToken", data.resetToken);
+      navigate("/reset-password");
     } catch (err) {
       setError(err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
+  const handleResendOtp = async () => {
+    setError("");
+    setMsg("");
+    setResendLoading(true);
+    
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/users/request-otp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json();
+      
+      if (!res.ok) throw new Error(data.msg);
+      
+      setMsg("New OTP sent successfully! Check your email.");
+      setOtp(new Array(6).fill("")); // Clear OTP fields
+      inputRefs.current[0]?.focus(); // Focus first input
+      
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setResendLoading(false);
+    }
+  };
+
+  if (!email) {
+    return null;
+  }
+
   return (
-    <>
-      <div className="min-h-screen flex items-center justify-center p-4 bg-gray-50">
-        <div className="w-full max-w-md bg-white border border-gray-200 rounded-xl p-6 space-y-4">
-          <h2 className="text-2xl font-bold text-gray-900">Reset Password</h2>
-          <p className="text-gray-600 text-sm">
-            Enter the OTP you received and choose a new password.
-          </p>
+    <div className="min-h-screen flex items-center justify-center bg-white font-fragment p-4">
+      <div className="w-full max-w-[440px]">
+        <div className="mb-10 text-center">
+          <div className="inline-block p-3 rounded-xl border-2 border-primary/10 mb-4">
+            <div className="w-12 h-12 bg-primary rounded-lg flex items-center justify-center">
+              <Shield className="text-white" size={24} />
+            </div>
+          </div>
+          <h1 className="text-3xl font-black text-black tracking-tight">Verify Identity</h1>
+          <p className="text-gray-500 mt-2">Enter the code sent to <span className="text-primary font-semibold">{email}</span></p>
+        </div>
 
-          <form onSubmit={handleVerify} className="space-y-3">
-            <input
-              type="email"
-              name="email"
-              value={form.email}
-              disabled
-              className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-100 text-gray-700"
-            />
+        <div className="bg-white border border-gray-200 rounded-2xl p-8 shadow-sm">
+          <form onSubmit={handleVerifyOtp} className="space-y-8">
+            <div className="flex justify-between gap-2">
+              {otp.map((data, index) => (
+                <input
+                  key={index}
+                  type="text"
+                  maxLength="1"
+                  ref={(el) => (inputRefs.current[index] = el)}
+                  value={data}
+                  onChange={(e) => handleChange(e.target, index)}
+                  onKeyDown={(e) => handleKeyDown(e, index)}
+                  className="w-12 h-14 text-center text-xl font-bold border-2 bg-white border-gray-200 rounded-xl focus:border-primary focus:ring-0 transition-all outline-none bg-gray-50 text-primary"
+                />
+              ))}
+            </div>
 
-            <input
-              type="text"
-              name="otp"
-              placeholder="Enter OTP"
-              value={form.otp}
-              onChange={handleChange}
-              required
-              className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-50 focus:border-primary focus:ring-1 focus:ring-primary transition"
-            />
-
-            <input
-              type="password"
-              name="newPassword"
-              placeholder="New Password"
-              value={form.newPassword}
-              onChange={handleChange}
-              required
-              className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-50 focus:border-primary focus:ring-1 focus:ring-primary transition"
-            />
-
-            <input
-              type="password"
-              name="confirmPassword"
-              placeholder="Confirm Password"
-              value={form.confirmPassword}
-              onChange={handleChange}
-              required
-              className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-50 focus:border-primary focus:ring-1 focus:ring-primary transition"
-            />
-
-            {msg && <p className="text-green-600">{msg}</p>}
-            {error && <p className="text-red-500">{error}</p>}
+            {msg && (
+              <div className="text-green-600 bg-green-50 p-3 rounded-lg text-sm font-medium border border-green-200 flex items-center gap-2">
+                <CheckCircle size={16}/>
+                {msg}
+              </div>
+            )}
+            {error && (
+              <div className="text-red-600 bg-red-50 p-3 rounded-lg text-sm font-medium border border-red-100">
+                {error}
+              </div>
+            )}
 
             <button
               type="submit"
-              className="w-full bg-primary text-white py-2 rounded-lg font-semibold hover:bg-primary/90 transition"
+              disabled={loading || otp.join("").length !== 6}
+              className="w-full bg-primary hover:bg-primary/90 text-white py-4 rounded-xl font-bold transition-all active:scale-[0.98] disabled:opacity-50"
             >
-              Reset Password
+              {loading ? "Verifying..." : "Verify OTP"}
             </button>
           </form>
 
-          <p className="text-sm text-gray-500 text-center">
-            Remembered your password?{" "}
-            <button
-              onClick={() => navigate("/login")}
-              className="text-primary font-semibold hover:underline"
+          <div className="mt-8 text-center space-y-4">
+            <p className="text-sm text-gray-500 font-medium">
+              Didn't receive code?{" "}
+              <button 
+                onClick={handleResendOtp} 
+                disabled={resendLoading}
+                className="text-primary hover:underline disabled:opacity-50"
+              >
+                {resendLoading ? "Sending..." : "Resend"}
+              </button>
+            </p>
+            <button 
+              onClick={() => navigate("/forgot-password")}
+              className="flex items-center justify-center gap-2 text-gray-400 hover:text-black text-xs mx-auto transition-colors"
             >
-              Return to Login
+              <ChevronLeft size={14} /> Use different email
             </button>
-          </p>
+          </div>
         </div>
       </div>
-
-      <SuccessModal
-        open={successModal}
-        message="Password reset successful! Click continue to login."
-        onClose={() => navigate("/login")}
-      />
-    </>
+    </div>
   );
 }

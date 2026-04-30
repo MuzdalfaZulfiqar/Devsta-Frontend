@@ -1,21 +1,23 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { BACKEND_URL } from "../../../config";
-import { Copy, Mail } from "lucide-react";
+import { Mail, ArrowRight, ChevronLeft } from "lucide-react";
 
 export default function ForgotPassword() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
-  const [otp, setOtp] = useState("");
   const [msg, setMsg] = useState("");
   const [error, setError] = useState("");
-  const [otpGenerated, setOtpGenerated] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [isRegistered, setIsRegistered] = useState(true);
 
   const handleRequestOTP = async (e) => {
     e.preventDefault();
     setError(""); 
-    setMsg("");
+    setMsg(""); 
+    setLoading(true);
+    setIsRegistered(true);
+    
     try {
       const res = await fetch(`${BACKEND_URL}/api/users/request-otp`, {
         method: "POST",
@@ -23,103 +25,108 @@ export default function ForgotPassword() {
         body: JSON.stringify({ email }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.msg);
-
+      
+      if (!res.ok) {
+        if (res.status === 404) {
+          setIsRegistered(false);
+          setMsg(data.msg);
+          return;
+        }
+        throw new Error(data.msg);
+      }
+      
       setMsg(data.msg);
-      setOtp(data.otp);
-      setOtpGenerated(true);
-
-      sessionStorage.setItem("resetEmail", email);
-      sessionStorage.setItem("resetOtp", data.otp);
+      setIsRegistered(true);
+      
+      if (data.isRegistered) {
+        sessionStorage.setItem("resetEmail", email);
+        setTimeout(() => navigate("/verify-otp"), 1500);
+      }
+      
     } catch (err) {
       setError(err.message);
+      setIsRegistered(false);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleNext = () => navigate("/verify-otp");
-
-  const handleCopyOtp = () => {
-    navigator.clipboard.writeText(otp);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
-  };
-
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gray-50">
-      
-      {/* Logo on top */}
-      <div className="mb-6">
-        <img src="/devsta-logo.png" alt="DevSta Logo" className="w-20 h-20 mx-auto" />
-      </div>
-
-      <div className="w-full max-w-md bg-white border border-gray-200 rounded-xl p-6 space-y-4">
-        <h2 className="text-2xl font-bold text-gray-900 text-center">Forgot Password</h2>
-        <p className="text-gray-600 text-sm text-center">
-          Enter your registered email to receive an OTP for password reset.
-        </p>
-
-        <form onSubmit={handleRequestOTP} className="space-y-3">
-          <div className="relative">
-            <input
-              type="email"
-              placeholder="Enter your email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              disabled={otpGenerated}
-              className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-50 focus:border-primary focus:ring-1 focus:ring-primary transition"
-            />
-            <Mail className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
+    <div className="min-h-screen flex items-center justify-center bg-white font-fragment p-4">
+      <div className="w-full max-w-[440px]">
+        <div className="mb-10 text-center">
+          <div className="inline-block p-3 rounded-xl border-2 border-primary/10 mb-4">
+            <div className="w-12 h-12 bg-primary rounded-lg flex items-center justify-center">
+              <Mail className="text-white" size={24} />
+            </div>
           </div>
+          <h1 className="text-3xl font-black text-black tracking-tight">Reset Password</h1>
+          <p className="text-gray-500 mt-2">Enter your email to receive a secure OTP code.</p>
+        </div>
 
-          {msg && <p className="text-green-600">{msg}</p>}
-          {error && <p className="text-red-500">{error}</p>}
+        <div className="bg-white border border-gray-200 rounded-2xl p-8 shadow-sm">
+          <form onSubmit={handleRequestOTP} className="space-y-6">
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-black uppercase tracking-wider">Work Email</label>
+              <input
+                type="email"
+                placeholder="dev@platform.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-primary focus:ring-0 transition-all outline-none text-black"
+              />
+            </div>
 
-          {otpGenerated && otp && (
-            <div className="relative flex items-center justify-between bg-gray-100 px-3 py-2 rounded-lg text-gray-700">
-              <span className="font-bold tracking-widest">{otp}</span>
-              <button
-                type="button"
-                onClick={handleCopyOtp}
-                className="text-gray-600 hover:text-primary flex items-center gap-1"
-              >
-                <Copy size={16} />
-              </button>
-              {copied && (
-                <div className="absolute -top-6 right-3 bg-primary text-white text-xs px-2 py-1 rounded">
-                  Copied
-                </div>
-              )}
+            {msg && (
+              <div className={`p-3 rounded-lg text-sm font-medium border ${
+                isRegistered 
+                  ? "text-primary bg-primary/5 border-primary/20" 
+                  : "text-amber-600 bg-amber-50 border-amber-200"
+              }`}>
+                {msg}
+              </div>
+            )}
+            {error && (
+              <div className="text-red-600 bg-red-50 p-3 rounded-lg text-sm font-medium border border-red-100">
+                {error}
+              </div>
+            )}
+
+            {/* Always show the button - don't hide it */}
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full flex items-center justify-center gap-2 bg-black hover:bg-primary text-white py-4 rounded-lg font-bold transition-all active:scale-[0.98] disabled:opacity-50"
+            >
+              {loading ? "Sending..." : "Send Reset Code"}
+              <ArrowRight size={18} />
+            </button>
+          </form>
+
+          {/* Show signup link if user is not registered */}
+          {!isRegistered && msg && (
+            <div className="mt-4 text-center pt-2 border-t border-gray-100">
+              <p className="text-sm text-gray-600">
+                Don't have an account?{" "}
+                <button
+                  onClick={() => navigate("/signup")}
+                  className="text-primary font-bold hover:underline"
+                >
+                  Sign up here
+                </button>
+              </p>
             </div>
           )}
 
-          {!otpGenerated ? (
-            <button
-              type="submit"
-              className="w-full bg-primary text-white py-2 rounded-lg font-semibold hover:bg-primary/90 transition"
-            >
-              Get OTP
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={handleNext}
-              className="w-full bg-primary text-white py-2 rounded-lg font-semibold hover:bg-primary/90 transition"
-            >
-              Next →
-            </button>
-          )}
-        </form>
-
-        <p className="text-sm text-gray-500 text-center">
-          Remembered your password?{" "}
-          <button
+          <button 
             onClick={() => navigate("/login")}
-            className="text-primary font-semibold hover:underline"
+            className="w-full mt-8 flex items-center justify-center gap-2 text-gray-500 hover:text-black font-semibold text-sm transition-colors"
           >
-            Return to Login
+            <ChevronLeft size={16} />
+            Back to login
           </button>
-        </p>
+        </div>
       </div>
     </div>
   );
