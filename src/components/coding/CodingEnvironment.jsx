@@ -4,46 +4,125 @@ import Editor from "@monaco-editor/react";
 import { Play, Terminal, FileCode, Code2 } from "lucide-react";
 import * as ResizablePanels from "react-resizable-panels";
 
+// const LANGUAGE_TEMPLATES = {
+//   javascript: `// Write your solution here
+// function solution(input) {
+//   // TODO
+//   return input;
+// }
+
+// // Test locally:
+// console.log(solution("test input"));`,
+//   python: `# Write your solution here
+// def solution(input):
+//     # TODO
+//     return input
+
+// # Test locally:
+// print(solution("test input"))`,
+//   java: `public class Solution {
+//     public static String solution(String input) {
+//         // TODO
+//         return input;
+//     }
+
+//     public static void main(String[] args) {
+//         System.out.println(solution("test input"));
+//     }
+// }`,
+//   cpp: `#include <bits/stdc++.h>
+// using namespace std;
+
+// string solution(string input) {
+//     // TODO
+//     return input;
+// }
+
+// int main() {
+//     cout << solution("test input") << endl;
+//     return 0;
+// }`,
+// };
+
 const LANGUAGE_TEMPLATES = {
-  javascript: `// Write your solution here
-function solution(input) {
-  // TODO
-  return input;
+  javascript: `// Use fs.readFileSync(0) to read from Standard Input (stdin)
+const fs = require('fs');
+
+function solve() {
+  const input = fs.readFileSync(0, 'utf8');
+  if (!input) return;
+
+  const lines = input.trim().split('\\n');
+  
+  // Example: Reading the first line
+  // const firstLine = lines[0];
+
+  // Output your answer using console.log
+  console.log("your_output_here");
 }
 
-// Test locally:
-console.log(solution("test input"));`,
-  python: `# Write your solution here
-def solution(input):
-    # TODO
-    return input
+solve();`,
 
-# Test locally:
-print(solution("test input"))`,
-  java: `public class Solution {
-    public static String solution(String input) {
-        // TODO
-        return input;
-    }
+  python: `# Use sys.stdin.read() to get all input from Judge0
+import sys
 
+def solve():
+    # Read all input lines
+    input_data = sys.stdin.read().splitlines()
+    
+    if not input_data:
+        return
+
+    # Example: Accessing the first line
+    # first_line = input_data[0]
+
+    # Print your final result to stdout
+    print("your_output_here")
+
+if __name__ == "__main__":
+    solve()`,
+
+  java: `import java.util.*;
+import java.io.*;
+
+public class Main {
     public static void main(String[] args) {
-        System.out.println(solution("test input"));
+        // Use Scanner or BufferedReader to read from stdin
+        Scanner sc = new Scanner(System.in);
+
+        while (sc.hasNextLine()) {
+            String line = sc.nextLine();
+            // Process input here
+        }
+
+        // Output result to stdout
+        System.out.println("your_output_here");
     }
 }`,
-  cpp: `#include <bits/stdc++.h>
+
+  cpp: `#include <iostream>
+#include <string>
+#include <vector>
+
 using namespace std;
 
-string solution(string input) {
-    // TODO
-    return input;
-}
-
 int main() {
-    cout << solution("test input") << endl;
-    return 0;
-}`,
-};
+    // Optimize I/O
+    ios_base::sync_with_stdio(false);
+    cin.tie(NULL);
 
+    string line;
+    // Read input until EOF
+    while (getline(cin, line)) {
+        // Process line
+    }
+
+    // Output result
+    cout << "your_output_here" << endl;
+
+    return 0;
+}`
+};
 export default function CodingEnvironment() {
   const [language, setLanguage] = useState("javascript");
   const [code, setCode] = useState(LANGUAGE_TEMPLATES.javascript);

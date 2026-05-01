@@ -62,8 +62,14 @@ export default function CommunityPage() {
   return (
     <DashboardLayout user={user}>
       <div className="flex flex-col w-full h-full">
+        <div className="flex items-center gap-2 mb-4 px-4">
+          {/* <Users size={20} className="text-primary" /> */}
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            Networking
+          </h1>
+        </div>
         {/* Tabs */}
-        <div className="flex gap-6 pt-0.5 pb-0 py-1 border-b border-primary/20">
+        <div className="flex gap-6 pt-0.5 pb-0 py-1 border-b border-primary/20 px-2">
           <Tab to="/dashboard/community" label="Explore" />
           <Tab to="/dashboard/community/feed" label="Feed" />
 

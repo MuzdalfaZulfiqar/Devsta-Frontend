@@ -65,12 +65,12 @@ export default function AllUsersWithProfile() {
     <div className="flex gap-6 w-full h-full">
       <aside className="flex flex-col gap-4 w-80 flex-shrink-0">
         <div className={`sticky top-4 ${userId ? "mb-6" : ""}`}>
-          <DeveloperFilters
+          {/* <DeveloperFilters
             filters={filters}
             setFilters={setFilters}
             clearFilters={clearFilters}
             compact={!!userId}
-          />
+          /> */}
         </div>
         {userId && (
           <div className="flex-1 overflow-y-auto pr-2">

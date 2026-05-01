@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { fetchRoles } from "../api/roles";
 
-let cachedRoles = null; // 🌟 simple global cache
+let cachedRoles = null; // simple global cache
 
 export function useRoleMap() {
   const [roleMap, setRoleMap] = useState(cachedRoles || {});

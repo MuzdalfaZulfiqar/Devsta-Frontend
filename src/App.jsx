@@ -36,7 +36,10 @@ import MyApplicationsPage from "./pages/company/MyApplicationsPage";
 import FirstStageApplicantsPage from "./pages/company/FirstStageApplicantsPage";
 import ResumePage from "./pages/User/ResumePage";
 import CodingTestPage from "./pages/User/CodingTestPage";
-import SkillsPage from "./pages/User/SkillsPage";
+import InterviewAssistant from "./pages/User/InterviewAssistant";
+import DevStaLanding from "./pages/User/DevStaLanding";
+import MonetizationPage from "./pages/User/MonetizationPage";
+import ResetPassword from "./pages/User/ResetPassword"; import SkillsPage from "./pages/User/SkillsPage";
 
 
 function App() {
@@ -47,7 +50,7 @@ function App() {
       <div className="min-h-screen">
         <Routes>
           {/* Public routes */}
-          <Route path="/" element={<Signup />} />
+          <Route path="/" element={<DevStaLanding />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/oauth-handler" element={<OAuthHandler />} />
@@ -127,6 +130,15 @@ function App() {
               </ProtectedRoute>
             }
           />
+
+          <Route
+            path="/dashboard/interview"
+            element={
+              <ProtectedRoute requireOnboarding={true}>
+                <InterviewAssistant />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/dashboard/skills"
             element={
@@ -152,6 +164,16 @@ function App() {
               </ProtectedRoute>
             }
           />
+
+          <Route
+            path="/dashboard/monetization"
+            element={
+              <ProtectedRoute requireOnboarding={true}>
+                <MonetizationPage />
+              </ProtectedRoute>
+            }
+          />
+
           {/* <Route
             path="/dashboard/coding-test"
             element={
@@ -162,30 +184,33 @@ function App() {
           /> */}
 
           <Route
-            path="/dashboard/coding-test/:jobId"
-            element={
-              <ProtectedRoute requireOnboarding={true}>
-                <CodingTestPage />
-              </ProtectedRoute>
-            }
-          />
+                      path="/dashboard/coding-test/:jobId"
+                      element={
+                        <ProtectedRoute requireOnboarding={true}>
+                          <CodingTestPage />
+                        </ProtectedRoute>
+                      }
+                    />
 
           {/* <Route path="/coding-test" element={<CodingTestPage />} /> */}
 
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/verify-otp" element={<VerifyOtp />} />
           <Route path="/skill-test" element={<SkillTest />} />
+          <Route path="/reset-password" element={<ResetPassword />} /> 
 
           {/* Admin routes */}
           <Route path="/admin/*" element={<AdminLayout />} />
 
           {/* // Company routes wrapped in CompanyAuthProvider */}
-          <Route path="/company/*" element={
-            <CompanyAuthProvider>
-              <CompanyLayout />
-            </CompanyAuthProvider>
-          } />
-
+          <Route
+            path="/company/*"
+            element={
+              <CompanyAuthProvider>
+                <CompanyLayout />
+              </CompanyAuthProvider>
+            }
+          />
 
           <Route
             path="/company/login"

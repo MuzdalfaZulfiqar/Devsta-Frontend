@@ -7,6 +7,7 @@ import SuccessModal from "../../SuccessModal";
 import ErrorModal from "../../ErrorModal";
 import { BACKEND_URL } from "../../../../config";
 import Resume from "../../profile/tabs/Resume";
+import AvatarUpload from "./AvatarUpload";
 
 /* ---------- styles & helpers ---------- */
 const selectStyles = {
@@ -776,10 +777,16 @@ export default function EditProfile({ user }) {
     <div className="flex flex-col gap-10 w-full">
       {/* GENERAL INFO */}
       <div className="flex flex-col gap-6">
+        <div className="flex flex-col items-center gap-2 pb-2 border-b border-gray-200 dark:border-gray-700">
+  <AvatarUpload user={user} />
+  <p className="text-gray-900 dark:text-white font-semibold">{user?.name}</p>
+</div>
         <div className="flex items-center justify-between">
+          
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
             General Info
           </h2>
+          
           <button
             onClick={() =>
               setEditField(editField === "general" ? null : "general")
@@ -791,6 +798,7 @@ export default function EditProfile({ user }) {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          
           {["name", "phone"].map((field) => (
             <div key={field} className={boxContainer}>
               <p className="text-gray-500 dark:text-gray-400 text-sm font-medium capitalize">
