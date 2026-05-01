@@ -39,7 +39,9 @@ import CodingTestPage from "./pages/User/CodingTestPage";
 import InterviewAssistant from "./pages/User/InterviewAssistant";
 import DevStaLanding from "./pages/User/DevStaLanding";
 import MonetizationPage from "./pages/User/MonetizationPage";
-import ResetPassword from "./pages/User/ResetPassword"; 
+import ResetPassword from "./pages/User/ResetPassword"; import SkillsPage from "./pages/User/SkillsPage";
+
+
 function App() {
   const { user, showWelcome, setShowWelcome } = useAuth();
 
@@ -137,7 +139,14 @@ function App() {
               </ProtectedRoute>
             }
           />
-
+          <Route
+            path="/dashboard/skills"
+            element={
+              <ProtectedRoute requireOnboarding={true}>
+                <SkillsPage />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/dashboard/my-applications"
             element={
@@ -175,13 +184,13 @@ function App() {
           /> */}
 
           <Route
-            path="/dashboard/coding-test/:jobId"
-            element={
-              <ProtectedRoute requireOnboarding={true}>
-                <CodingTestPage />
-              </ProtectedRoute>
-            }
-          />
+                      path="/dashboard/coding-test/:jobId"
+                      element={
+                        <ProtectedRoute requireOnboarding={true}>
+                          <CodingTestPage />
+                        </ProtectedRoute>
+                      }
+                    />
 
           {/* <Route path="/coding-test" element={<CodingTestPage />} /> */}
 
