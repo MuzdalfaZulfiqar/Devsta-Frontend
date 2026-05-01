@@ -21,7 +21,7 @@ export default function Sidebar({ isOpen, setIsOpen, onLogout, user }) {
   const menuItems = [
     { label: "Dashboard", icon: Home, href: "/dashboard" },
     { label: "Community", icon: Users, href: "/dashboard/community" },
-    { label: "Knowledge", icon: BookOpen, href: "/dashboard/knowledge" },
+    { label: "Growth", icon: BookOpen, href: "/dashboard/skills" },
     { label: "Jobs", icon: Briefcase, href: "/dashboard/jobs" },
     { label: "Monetization", icon: DollarSign, href: "/dashboard/monetization" },
     { label: "Interview Prep", icon: Code2, href: "/dashboard/interview" },
