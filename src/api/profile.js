@@ -34,3 +34,17 @@ export async function getMyProfile() {
 
   return res.json();
 }
+
+// src/api/profile.js (add to existing file)
+export const savePinnedRepos = async (repoIds, token) => {
+  const res = await fetch(`${BACKEND_URL}/api/users/pinned-repos`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ repoIds }),
+  });
+  if (!res.ok) throw new Error((await res.json()).msg);
+  return res.json();
+};

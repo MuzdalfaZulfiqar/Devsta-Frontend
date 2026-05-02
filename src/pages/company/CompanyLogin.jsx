@@ -173,9 +173,195 @@
 //     </div>
 //   );
 // }
+// 
+
+
+// working one with new UI
+
+// // src/pages/company/CompanyLogin.jsx
+// import { useState } from "react";
+// import { Mail, Lock, ArrowRight, Loader2 } from "lucide-react";
+// import { loginCompany } from "../../api/company/auth";
+// import SuccessModal from "../../components/SuccessModal";
+// import ErrorModal from "../../components/ErrorModal";
+// import { useCompanyAuth } from "../../context/CompanyAuthContext";
+// import { useNavigate } from "react-router-dom";
+
+// export default function CompanyLogin() {
+//   const { login } = useCompanyAuth();
+//   const navigate = useNavigate();
+
+//   const [form, setForm] = useState({ email: "", password: "" });
+//   const [loading, setLoading] = useState(false);
+//   const [successOpen, setSuccessOpen] = useState(false);
+//   const [errorOpen, setErrorOpen] = useState(false);
+//   const [modalMessage, setModalMessage] = useState("");
+
+//   const handleChange = (e) => {
+//     setForm({ ...form, [e.target.name]: e.target.value });
+//     setErrorOpen(false);
+//   };
+
+//   const handleSubmit = async (e) => {
+//     e.preventDefault();
+//     setLoading(true);
+//     try {
+//       const data = await loginCompany(form);
+//       login(data.token, data.company);
+//       setModalMessage("Login successful. Redirecting...");
+//       setSuccessOpen(true);
+//     } catch (err) {
+//       const errorMsg =
+//         err.response?.data?.message || err.message || "Invalid email or password";
+//       setModalMessage(errorMsg);
+//       setErrorOpen(true);
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   const inputCls =
+//     "w-full py-3 px-4 border border-gray-200 rounded-xl bg-gray-50 text-gray-900 text-sm placeholder-gray-300 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/10 focus:bg-white";
+
+//   return (
+//     <div className="min-h-screen flex font-fragment">
+//       {/* ── LEFT ── */}
+//       <div className="hidden lg:flex w-[48%] min-h-screen bg-primary flex-col justify-between px-16 py-14 relative overflow-hidden">
+//         {/* grid texture */}
+//         <div
+//           className="absolute inset-0 pointer-events-none opacity-[0.05]"
+//           style={{
+//             backgroundImage:
+//               "linear-gradient(#fff 1px,transparent 1px),linear-gradient(90deg,#fff 1px,transparent 1px)",
+//             backgroundSize: "44px 44px",
+//           }}
+//         />
+//         {/* orbs */}
+//         <div className="absolute -top-20 -left-20 w-80 h-80 rounded-full bg-white/5 pointer-events-none" />
+//         <div className="absolute -bottom-16 -right-16 w-64 h-64 rounded-full bg-black/10 pointer-events-none" />
+
+//         {/* Logo */}
+//         <div className="relative z-10 flex items-center gap-3">
+//           <div className="w-9 h-9 rounded-xl bg-white/15 border border-white/20 flex items-center justify-center text-white font-black text-base">
+//             D
+//           </div>
+//           <div>
+//             <p className="text-white font-black text-base leading-none tracking-wide">Devsta</p>
+//             <p className="text-white/45 text-[9.5px] font-bold tracking-widest uppercase mt-0.5">Recruiter Portal</p>
+//           </div>
+//         </div>
+
+//         {/* Headline */}
+//         <div className="relative z-10">
+//           <p className="text-white/50 text-[11px] font-bold tracking-[0.18em] uppercase mb-4">Welcome back</p>
+//           <h1 className="text-white font-black text-5xl leading-[1.1] mb-6">
+//             Your next<br />great hire<br />
+//             <span className="text-white/25">starts here.</span>
+//           </h1>
+//           <p className="text-white/48 text-[15px] leading-relaxed max-w-xs">
+//             Access your recruiter dashboard and connect with the engineers who build things that matter.
+//           </p>
+//         </div>
+
+//         {/* Footer */}
+//         <div className="relative z-10">
+//           <p className="text-white/30 text-xs tracking-wide">Devsta · Smart Recruitment Platform</p>
+//         </div>
+//       </div>
+
+//       {/* ── RIGHT ── */}
+//       <div className="flex-1 min-h-screen bg-white flex items-center justify-center px-10 lg:px-20">
+//         <div className="w-full max-w-sm">
+//           {/* Mobile logo */}
+//           <div className="flex lg:hidden items-center gap-2 mb-10">
+//             <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-white font-black text-sm">D</div>
+//             <span className="text-primary font-black text-base">Devsta</span>
+//           </div>
+
+//           <p className="text-primary text-[10.5px] font-bold tracking-[0.18em] uppercase mb-2.5">Recruiter access</p>
+//           <h2 className="text-gray-900 font-black text-[26px] leading-tight mb-2">Sign in to your account</h2>
+//           <p className="text-gray-400 text-sm leading-relaxed mb-8">
+//             Enter your credentials to access the recruiter dashboard.
+//           </p>
+
+//           <form onSubmit={handleSubmit} className="space-y-5">
+//             <div>
+//               <label className="block text-[10.5px] font-bold text-gray-500 uppercase tracking-[0.13em] mb-2">
+//                 Business Email
+//               </label>
+//               <div className="relative">
+//                 <Mail size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 pointer-events-none" />
+//                 <input
+//                   name="email"
+//                   type="email"
+//                   autoComplete="email"
+//                   required
+//                   value={form.email}
+//                   onChange={handleChange}
+//                   placeholder="name@company.com"
+//                   className={`${inputCls} pl-10`}
+//                 />
+//               </div>
+//             </div>
+
+//             <div>
+//               <label className="block text-[10.5px] font-bold text-gray-500 uppercase tracking-[0.13em] mb-2">
+//                 Password
+//               </label>
+//               <div className="relative">
+//                 <Lock size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 pointer-events-none" />
+//                 <input
+//                   name="password"
+//                   type="password"
+//                   autoComplete="current-password"
+//                   required
+//                   value={form.password}
+//                   onChange={handleChange}
+//                   placeholder="••••••••"
+//                   className={`${inputCls} pl-10`}
+//                 />
+//               </div>
+//             </div>
+
+//             <button
+//               type="submit"
+//               disabled={loading}
+//               className="w-full flex items-center justify-center gap-2 py-3 bg-primary hover:bg-primary/90 active:scale-[0.99] text-white text-sm font-black rounded-xl transition-all disabled:opacity-60 disabled:cursor-not-allowed shadow-sm tracking-wide"
+//             >
+//               {loading ? (
+//                 <><Loader2 size={15} className="animate-spin" /> Signing in...</>
+//               ) : (
+//                 <>Sign In <ArrowRight size={14} /></>
+//               )}
+//             </button>
+//           </form>
+
+//           <p className="text-center text-sm text-gray-400 mt-7">
+//             Don't have an account?{" "}
+//             <button
+//               onClick={() => navigate("/company/register")}
+//               className="text-primary font-bold hover:underline"
+//             >
+//               Create one
+//             </button>
+//           </p>
+//           <p className="text-center text-[11px] text-gray-300 mt-3 leading-relaxed">
+//             By signing in you agree to our{" "}
+//             <a href="#" className="underline text-gray-400 hover:text-gray-600">Terms</a> and{" "}
+//             <a href="#" className="underline text-gray-400 hover:text-gray-600">Privacy Policy</a>
+//           </p>
+//         </div>
+//       </div>
+
+//       <SuccessModal open={successOpen} message={modalMessage} onClose={() => setSuccessOpen(false)} />
+//       <ErrorModal open={errorOpen} message={modalMessage} onClose={() => setErrorOpen(false)} />
+//     </div>
+//   );
+// }
 
 
 // src/pages/company/CompanyLogin.jsx
+// ── CHANGE from original: added "Forgot password?" link below the submit button
 import { useState } from "react";
 import { Mail, Lock, ArrowRight, Loader2 } from "lucide-react";
 import { loginCompany } from "../../api/company/auth";
@@ -224,7 +410,6 @@ export default function CompanyLogin() {
     <div className="min-h-screen flex font-fragment">
       {/* ── LEFT ── */}
       <div className="hidden lg:flex w-[48%] min-h-screen bg-primary flex-col justify-between px-16 py-14 relative overflow-hidden">
-        {/* grid texture */}
         <div
           className="absolute inset-0 pointer-events-none opacity-[0.05]"
           style={{
@@ -233,11 +418,9 @@ export default function CompanyLogin() {
             backgroundSize: "44px 44px",
           }}
         />
-        {/* orbs */}
         <div className="absolute -top-20 -left-20 w-80 h-80 rounded-full bg-white/5 pointer-events-none" />
         <div className="absolute -bottom-16 -right-16 w-64 h-64 rounded-full bg-black/10 pointer-events-none" />
 
-        {/* Logo */}
         <div className="relative z-10 flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl bg-white/15 border border-white/20 flex items-center justify-center text-white font-black text-base">
             D
@@ -248,7 +431,6 @@ export default function CompanyLogin() {
           </div>
         </div>
 
-        {/* Headline */}
         <div className="relative z-10">
           <p className="text-white/50 text-[11px] font-bold tracking-[0.18em] uppercase mb-4">Welcome back</p>
           <h1 className="text-white font-black text-5xl leading-[1.1] mb-6">
@@ -260,7 +442,6 @@ export default function CompanyLogin() {
           </p>
         </div>
 
-        {/* Footer */}
         <div className="relative z-10">
           <p className="text-white/30 text-xs tracking-wide">Devsta · Smart Recruitment Platform</p>
         </div>
@@ -269,7 +450,6 @@ export default function CompanyLogin() {
       {/* ── RIGHT ── */}
       <div className="flex-1 min-h-screen bg-white flex items-center justify-center px-10 lg:px-20">
         <div className="w-full max-w-sm">
-          {/* Mobile logo */}
           <div className="flex lg:hidden items-center gap-2 mb-10">
             <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-white font-black text-sm">D</div>
             <span className="text-primary font-black text-base">Devsta</span>
@@ -302,9 +482,20 @@ export default function CompanyLogin() {
             </div>
 
             <div>
-              <label className="block text-[10.5px] font-bold text-gray-500 uppercase tracking-[0.13em] mb-2">
-                Password
-              </label>
+              {/* Label row with inline "Forgot?" link */}
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-[10.5px] font-bold text-gray-500 uppercase tracking-[0.13em]">
+                  Password
+                </label>
+                {/* ── NEW: Forgot password link ── */}
+                <button
+                  type="button"
+                  onClick={() => navigate("/company/forgot-password")}
+                  className="text-[10.5px] font-bold text-primary hover:underline uppercase tracking-[0.13em]"
+                >
+                  Forgot password?
+                </button>
+              </div>
               <div className="relative">
                 <Lock size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 pointer-events-none" />
                 <input

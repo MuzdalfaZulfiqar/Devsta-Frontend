@@ -27,7 +27,7 @@ export default function Sidebar({ isOpen, setIsOpen, onLogout, user }) {
     { label: "Interview Prep", icon: Code2, href: "/dashboard/interview" },
     { label: "Portfolio", icon: FileText, href: "/dashboard/portfolio" },
     { label: "Profile", icon: User, href: "/dashboard/profile" },
-    { label: "Settings", icon: Settings, href: "/dashboard/settings" },
+    // { label: "Settings", icon: Settings, href: "/dashboard/settings" },
   ];
 
   return (
