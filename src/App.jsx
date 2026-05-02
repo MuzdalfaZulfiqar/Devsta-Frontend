@@ -39,8 +39,9 @@ import CodingTestPage from "./pages/User/CodingTestPage";
 import InterviewAssistant from "./pages/User/InterviewAssistant";
 import DevStaLanding from "./pages/User/DevStaLanding";
 import MonetizationPage from "./pages/User/MonetizationPage";
-import ResetPassword from "./pages/User/ResetPassword"; import SkillsPage from "./pages/User/SkillsPage";
-
+import ResetPassword from "./pages/User/ResetPassword";
+import SkillsPage from "./pages/User/SkillsPage";
+import CompanyForgotPassword from "./pages/company/CompanyForgotPassword";
 
 function App() {
   const { user, showWelcome, setShowWelcome } = useAuth();
@@ -184,20 +185,20 @@ function App() {
           /> */}
 
           <Route
-                      path="/dashboard/coding-test/:jobId"
-                      element={
-                        <ProtectedRoute requireOnboarding={true}>
-                          <CodingTestPage />
-                        </ProtectedRoute>
-                      }
-                    />
+            path="/dashboard/coding-test/:jobId"
+            element={
+              <ProtectedRoute requireOnboarding={true}>
+                <CodingTestPage />
+              </ProtectedRoute>
+            }
+          />
 
           {/* <Route path="/coding-test" element={<CodingTestPage />} /> */}
 
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/verify-otp" element={<VerifyOtp />} />
           <Route path="/skill-test" element={<SkillTest />} />
-          <Route path="/reset-password" element={<ResetPassword />} /> 
+          <Route path="/reset-password" element={<ResetPassword />} />
 
           {/* Admin routes */}
           <Route path="/admin/*" element={<AdminLayout />} />
@@ -212,6 +213,10 @@ function App() {
             }
           />
 
+          <Route
+            path="/company/forgot-password"
+            element={<CompanyForgotPassword />}
+          />
           <Route
             path="/company/login"
             element={

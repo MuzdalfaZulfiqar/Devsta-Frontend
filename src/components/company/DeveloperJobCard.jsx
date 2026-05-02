@@ -8,7 +8,7 @@ import {
   MdAccessTime
 } from 'react-icons/md';
 
-export default function DeveloperJobCard({ job, onClick }) {
+export default function DeveloperJobCard({ job, onClick , matchScore = null}) {
   const {
     _id,
     title,
@@ -22,8 +22,21 @@ export default function DeveloperJobCard({ job, onClick }) {
     experienceLevel,
     totalApplicants = 0,
     remote = false,
-    hasApplied = false,
+    hasApplied = false 
   } = job;
+
+  // Helper to pick badge color based on score
+const getMatchStyle = (score) => {
+  if (score >= 70) return {
+    bg: 'bg-emerald-50', text: 'text-emerald-800', border: 'border-emerald-300', bar: 'bg-emerald-500'
+  };
+  if (score >= 40) return {
+    bg: 'bg-amber-50', text: 'text-amber-800', border: 'border-amber-300', bar: 'bg-amber-500'
+  };
+  return {
+    bg: 'bg-gray-100', text: 'text-gray-600', border: 'border-gray-300', bar: 'bg-gray-400'
+  };
+};
 
   const timeAgo = (date) => {
     const now = new Date();
@@ -98,7 +111,26 @@ export default function DeveloperJobCard({ job, onClick }) {
         </div>
       )}
 
-      {/* rest remains the same */}
+  
+  {matchScore !== null && (
+  <div className="absolute top-3 right-3 z-20 flex flex-col items-end gap-1">
+    <span className={`
+      text-xs font-semibold px-2.5 py-1 rounded-full border whitespace-nowrap
+      ${getMatchStyle(matchScore).bg}
+      ${getMatchStyle(matchScore).text}
+      ${getMatchStyle(matchScore).border}
+    `}>
+      {Math.round(matchScore)}% match
+    </span>
+    <div className="w-16 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+      <div
+        className={`h-full rounded-full ${getMatchStyle(matchScore).bar}`}
+        style={{ width: `${Math.min(100, matchScore)}%` }}
+      />
+    </div>
+  </div>
+)}
+
 
       {/* Subtle gradient overlay on hover */}
       <div className="

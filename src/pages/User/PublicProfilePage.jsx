@@ -216,6 +216,12 @@ export default function PublicProfilePage() {
         >
           Posts
         </button>
+        <button
+  className={`px-4 py-2 font-semibold ${activeTab === "projects" ? "border-b-2 border-primary text-primary" : "text-gray-600"}`}
+  onClick={() => setActiveTab("projects")}
+>
+  Github Projects
+</button>
       </div>
       {activeTab === "details" && (
         <div className="space-y-4">
@@ -359,6 +365,57 @@ export default function PublicProfilePage() {
           )}
         </div>
       )}
+      {activeTab === "projects" && (() => {
+  const allRepos = user.githubRepos || [];
+  const pinnedSet = new Set(user.pinnedRepos || []);
+  const pinned = allRepos.filter((r) => pinnedSet.has(r.id));
+
+  return (
+    <div className="space-y-3">
+      {pinned.length === 0 ? (
+        <p className="text-gray-500 text-center py-10">No projects featured yet.</p>
+      ) : (
+        pinned.map((repo) => (
+          <a
+            key={repo.id}
+            href={repo.html_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex flex-col gap-2 p-4 rounded-xl border border-gray-200 hover:border-primary/50 transition"
+            style={{ backgroundColor: "#f9fdfd" }}
+          >
+            <div className="flex items-center justify-between gap-2">
+              <span className="font-semibold text-gray-900 text-sm">{repo.name}</span>
+              <div className="flex items-center gap-2 flex-shrink-0">
+                {repo.language && (
+                  <span className="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full">
+                    {repo.language}
+                  </span>
+                )}
+                {repo.private && (
+                  <span className="text-xs px-2 py-0.5 bg-gray-100 text-gray-500 rounded-full">
+                    Private
+                  </span>
+                )}
+              </div>
+            </div>
+            {repo.description && (
+              <p className="text-sm text-gray-600 line-clamp-2">{repo.description}</p>
+            )}
+            <div className="flex items-center gap-4 text-xs text-gray-400 mt-1">
+              <span className="flex items-center gap-1">
+                <Star size={12} className="text-yellow-400" /> {repo.stargazers_count}
+              </span>
+              <span className="flex items-center gap-1">
+                <GitFork size={12} className="text-green-400" /> {repo.forks_count}
+              </span>
+            </div>
+          </a>
+        ))
+      )}
+    </div>
+  );
+})()}
     </div>
   );
 }

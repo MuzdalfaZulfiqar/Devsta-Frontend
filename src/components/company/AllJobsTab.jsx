@@ -18,6 +18,7 @@ export default function AllJobsTab({
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
 
+  const [sortBy, setSortBy] = useState("match");
   const [page, setPage] = useState(1);
   const LIMIT = 6;
 
@@ -58,11 +59,46 @@ export default function AllJobsTab({
     setPage(1);
   }, [filters]);
 
-  const filteredItems = useMemo(() => {
-    const f = cleanFilters(filters);
+  // const filteredItems = useMemo(() => {
+  //   const f = cleanFilters(filters);
 
-    return items.filter((x) => {
-      const job = x.job || {};
+
+  //   return items.filter((x) => {
+  //     const job = x.job || {};
+  //     const title = (job.title || "").toLowerCase();
+  //     const desc = (job.description || "").toLowerCase();
+  //     const loc = (job.location || "").toLowerCase();
+  //     const jobMode = (job.jobMode || "").toLowerCase();
+  //     const employmentType = (job.employmentType || "").toLowerCase();
+  //     const experienceLevel = (job.experienceLevel || "").toLowerCase();
+  //     const requiredSkills = Array.isArray(job.requiredSkills)
+  //       ? job.requiredSkills.map((s) => String(s).toLowerCase())
+  //       : [];
+
+  //     if (f.search) {
+  //       const q = String(f.search).toLowerCase();
+  //       const inSkills = requiredSkills.some((s) => s.includes(q));
+  //       const inText = title.includes(q) || desc.includes(q) || loc.includes(q);
+  //       if (!inSkills && !inText) return false;
+  //     }
+
+  //     if (f.location) {
+  //       const q = String(f.location).toLowerCase();
+  //       if (!loc.includes(q)) return false;
+  //     }
+
+  //     if (f.jobMode && jobMode !== String(f.jobMode).toLowerCase()) return false;
+  //     if (f.employmentType && employmentType !== String(f.employmentType).toLowerCase()) return false;
+  //     if (f.experienceLevel && experienceLevel !== String(f.experienceLevel).toLowerCase()) return false;
+
+  //     return true;
+  //   });
+  // }, [items, filters]);
+
+  const filteredItems = useMemo(() => {
+  const f = cleanFilters(filters);
+  const filtered = items.filter((x) => {
+    const job = x.job || {};
       const title = (job.title || "").toLowerCase();
       const desc = (job.description || "").toLowerCase();
       const loc = (job.location || "").toLowerCase();
@@ -90,8 +126,18 @@ export default function AllJobsTab({
       if (f.experienceLevel && experienceLevel !== String(f.experienceLevel).toLowerCase()) return false;
 
       return true;
-    });
-  }, [items, filters]);
+  });
+
+  // Sort
+  if (sortBy === "match") {
+    filtered.sort((a, b) => (b.score ?? 0) - (a.score ?? 0));
+  } else {
+    filtered.sort((a, b) =>
+      new Date(b.job?.createdAt ?? 0) - new Date(a.job?.createdAt ?? 0)
+    );
+  }
+  return filtered;
+}, [items, filters, sortBy]);
 
   const totalPages = Math.max(1, Math.ceil(filteredItems.length / LIMIT));
   const pagedItems = useMemo(() => {
@@ -105,9 +151,31 @@ export default function AllJobsTab({
 
       {loading && <p className="text-gray-400 text-sm">Updating results…</p>}
 
+{/* Sort controls */}
+<div className="flex items-center gap-2 text-sm">
+  <span className="text-gray-500 font-medium">Sort by:</span>
+  {[
+    { key: "match", label: "Best match" },
+    { key: "newest", label: "Newest" },
+  ].map(({ key, label }) => (
+    <button
+      key={key}
+      onClick={() => setSortBy(key)}
+      className={`px-3 py-1 rounded-full border text-xs font-medium transition-colors ${
+        sortBy === key
+          ? "bg-emerald-50 text-emerald-800 border-emerald-300"
+          : "bg-white text-gray-500 border-gray-200 hover:border-gray-400"
+      }`}
+    >
+      {label}
+    </button>
+  ))}
+</div>
       {!loading && pagedItems.length === 0 ? (
         <p className="text-gray-500 text-sm">No recommended jobs match your filters</p>
       ) : (
+
+        
         <div className="flex flex-col gap-4">
           {pagedItems.map((x) => (
             <DeveloperJobCard
@@ -117,6 +185,7 @@ export default function AllJobsTab({
                 // Override hasApplied with the live set owned by JobsPage
                 hasApplied: appliedJobIds.has(String(x.job?._id)),
               }}
+              matchScore={x.score != null ? Math.round(x.score * 100) : null} 
               onClick={() => onSelectJob(x.job._id)}
             />
           ))}

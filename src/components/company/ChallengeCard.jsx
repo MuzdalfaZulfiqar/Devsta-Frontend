@@ -10,7 +10,6 @@ export default function ChallengeCard({
   onTimeChange,
 }) {
   const canInclude = challenge.status === "accepted" || challenge.type === "manual";
-
   return (
     <div className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
       <div className="flex justify-between items-start mb-3">
