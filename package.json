@@ -16,6 +16,7 @@
     "axios": "^1.11.0",
     "date-fns": "^4.1.0",
     "framer-motion": "^12.23.12",
+    "lottie": "^0.0.1",
     "lottie-react": "^2.4.1",
     "lucide-react": "^0.542.0",
     "monaco-editor": "^0.55.1",

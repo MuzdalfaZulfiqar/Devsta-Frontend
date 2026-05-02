@@ -45,13 +45,23 @@ export async function createPost({ text, visibility = "public", mediaFiles = [] 
 /* ============================================
    FEED
 ===============================================*/
-export async function getFeed(page = 1, limit = 20) {
+// export async function getFeed(page = 1, limit = 20) {
+//   const res = await fetch(
+//     `${BACKEND_URL}/api/posts/listfeed?page=${page}&limit=${limit}`,
+//     { method: "GET", headers: getHeaders(false) }
+//   );
+
+//   if (!res.ok) throw new Error("Failed to fetch feed");
+//   return await res.json();
+// }
+
+export async function getFeed(page = 1, limit = 100) {
   const res = await fetch(
-    `${BACKEND_URL}/api/posts/listfeed?page=${page}&limit=${limit}`,
+    `${BACKEND_URL}/api/feed/personalized?page=${page}&limit=${limit}`,
     { method: "GET", headers: getHeaders(false) }
   );
 
-  if (!res.ok) throw new Error("Failed to fetch feed");
+  if (!res.ok) throw new Error("Failed to fetch personalized feed");
   return await res.json();
 }
 
