@@ -1984,77 +1984,7 @@ const FILTERS = [
           );
         })()}
 
-      {/* Score trend — only show if 2+ completed sessions with scores */}
-      {!loading &&
-        completed.filter((s) => s.score != null).length > 1 &&
-        (() => {
-          const trendData = completed
-            .filter((s) => s.score != null)
-            .slice()
-            .reverse()
-            .map((s, i) => ({
-              session: i + 1,
-              score: s.score,
-              phase: s.phase,
-            }));
-
-          return (
-            <div
-              className="rounded-2xl p-5"
-              style={{ background: "#fff", border: "1.5px solid #e5e7eb" }}
-            >
-              <div className="mb-4">
-                <p className="text-sm font-extrabold text-gray-900">
-                  Score Trend
-                </p>
-                <p className="text-[10px] text-gray-400 uppercase tracking-widest mt-0.5">
-                  Your performance across completed sessions
-                </p>
-              </div>
-              <ResponsiveContainer width="100%" height={180}>
-                <LineChart
-                  data={trendData}
-                  margin={{ top: 5, right: 10, left: -20, bottom: 5 }}
-                >
-                  <XAxis
-                    dataKey="session"
-                    tick={{ fontSize: 10, fill: "#9ca3af" }}
-                    label={{
-                      value: "Session",
-                      position: "insideBottom",
-                      offset: -2,
-                      fontSize: 10,
-                      fill: "#9ca3af",
-                    }}
-                  />
-                  <YAxis
-                    tick={{ fontSize: 10, fill: "#9ca3af" }}
-                    domain={[0, 100]}
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      background: "#1f2937",
-                      border: "1px solid #374151",
-                      borderRadius: 8,
-                      fontSize: 11,
-                      color: "#f9fafb",
-                    }}
-                    formatter={(value, name) => [`${value}/100`, "Score"]}
-                    labelFormatter={(label) => `Session ${label}`}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="score"
-                    stroke="#086972"
-                    strokeWidth={2.5}
-                    dot={{ r: 4, fill: "#086972" }}
-                    activeDot={{ r: 6 }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          );
-        })()}
+   
 
       {/* Filter tabs */}
       {sessions.length > 0 && (
