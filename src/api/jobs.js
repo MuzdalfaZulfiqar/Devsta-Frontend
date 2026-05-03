@@ -11,14 +11,14 @@ const API_BASE = BACKEND_URL;
 //   });
 //   return data; // { userId, items: [{ score, job }] }
 // }
-export async function getRecommendedJobs({ k = 40 } = {}, token) {
+export async function getRecommendedJobs({ k = 200 } = {}, token) {
   if (!token) throw new Error("Unauthorized: token missing");
 
   const { data } = await axios.get(`${API_BASE}/api/jobs/recommended?k=${k}`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
-    timeout: 15000,
+    timeout: 30000,
   });
 
   return data; // { userId, items: [{ score, job }] }
