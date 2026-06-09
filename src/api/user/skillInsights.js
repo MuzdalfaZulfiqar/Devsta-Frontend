@@ -175,6 +175,19 @@ export async function getMySkillRoadmapById(roadmapId) {
 
   return parseResponse(res);
 }
+export async function deleteMySkillRoadmap(roadmapId) {
+  const token = getToken();
+
+  const res = await fetch(
+    `${BACKEND_URL}/api/skills-insights/roadmaps/${roadmapId}`,
+    {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
+    }
+  );
+
+  return parseResponse(res);
+}
 
 export async function initMySkillRoadmapProgress(roadmapId) {
   const token = getToken();

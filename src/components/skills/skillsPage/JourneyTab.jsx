@@ -1,5 +1,5 @@
 import React from "react";
-import { BookOpen, Crown, Layers3, Plus, Target } from "lucide-react";
+import { BookOpen, Crown, Layers3, Plus, Target, Trash2 } from "lucide-react";
 import { EmptyState, MetricCard, SectionCard } from "./SkillPageLayout";
 import GraphCanvas from "./GraphCanvas";
 import {
@@ -34,7 +34,14 @@ function GraphLegend() {
   );
 }
 
-function RoadmapSelectionGrid({ roadmaps, selectedRoadmapId, progress, onSelect }) {
+function RoadmapSelectionGrid({
+  roadmaps,
+  selectedRoadmapId,
+  progress,
+  onSelect,
+  onDelete,
+  deletingRoadmapId,
+}) {
   if (!roadmaps.length) {
     return (
       <EmptyState
@@ -48,16 +55,20 @@ function RoadmapSelectionGrid({ roadmaps, selectedRoadmapId, progress, onSelect 
     <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
       {roadmaps.map((roadmap) => {
         const selected = String(roadmap._id) === String(selectedRoadmapId);
-        const completion = getRoadmapCompletion(roadmap, selected ? progress : null);
+        const completion = getRoadmapCompletion(
+          roadmap,
+          selected ? progress : null
+        );
         const status = getRoadmapStatus(roadmap, selected ? progress : null);
+        const isDeleting = String(deletingRoadmapId) === String(roadmap._id);
 
         return (
-          <button
+          <div
             key={roadmap._id}
-            type="button"
-            onClick={() => onSelect(roadmap)}
             className={`rounded-[24px] border p-5 text-left transition ${
-              selected ? "border-primary bg-primary/5" : "border-slate-200 bg-white hover:bg-slate-50"
+              selected
+                ? "border-primary bg-primary/5"
+                : "border-slate-200 bg-white hover:bg-slate-50"
             }`}
           >
             <div className="flex items-start gap-3">
@@ -69,26 +80,50 @@ function RoadmapSelectionGrid({ roadmaps, selectedRoadmapId, progress, onSelect 
                 )}`}
               />
 
-              <div className="min-w-0 flex-1">
-                <h3 className="line-clamp-2 text-base font-semibold text-slate-900">{roadmap.title}</h3>
+              <button
+                type="button"
+                onClick={() => onSelect(roadmap)}
+                className="min-w-0 flex-1 text-left"
+              >
+                <h3 className="line-clamp-2 text-base font-semibold text-slate-900">
+                  {roadmap.title}
+                </h3>
+
                 <p className="mt-1 text-sm text-slate-500">
-                  {getGoalTitleFromRoadmap(roadmap)} • {getGoalRoleFromRoadmap(roadmap)}
+                  {getGoalTitleFromRoadmap(roadmap)} •{" "}
+                  {getGoalRoleFromRoadmap(roadmap)}
                 </p>
 
                 <div className="mt-4 flex flex-wrap gap-2">
                   <span className="rounded-full bg-white px-3 py-1 text-[11px] font-semibold capitalize text-slate-500 ring-1 ring-slate-200">
                     {status === "completed" ? "Completed" : "Active"}
                   </span>
+
                   <span className="rounded-full bg-white px-3 py-1 text-[11px] font-semibold text-slate-500 ring-1 ring-slate-200">
                     {completion}% complete
                   </span>
+
                   <span className="rounded-full bg-white px-3 py-1 text-[11px] font-semibold text-slate-500 ring-1 ring-slate-200">
                     {roadmap.estimatedHours || 0} hrs
                   </span>
                 </div>
-              </div>
+              </button>
+
+              <button
+                type="button"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onDelete?.(roadmap._id);
+                }}
+                disabled={isDeleting}
+                className="shrink-0 rounded-xl p-2 text-rose-500 transition hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-50"
+                aria-label="Delete roadmap"
+                title="Delete roadmap"
+              >
+                <Trash2 size={17} />
+              </button>
             </div>
-          </button>
+          </div>
         );
       })}
     </div>
@@ -103,9 +138,11 @@ export default function JourneyTab({
   graph,
   graphGroups,
   selectedGraphNode,
+  roadmapActionLoading,
   onSelectRoadmap,
   onCreateTarget,
   onSelectGraphNode,
+  onDeleteRoadmap,
 }) {
   return (
     <div className="space-y-6">
@@ -128,23 +165,59 @@ export default function JourneyTab({
           selectedRoadmapId={selectedRoadmapId}
           progress={selectedRoadmapProgress}
           onSelect={onSelectRoadmap}
+          onDelete={onDeleteRoadmap}
+          deletingRoadmapId={
+            String(roadmapActionLoading || "").startsWith("delete-")
+              ? String(roadmapActionLoading).replace("delete-", "")
+              : ""
+          }
         />
       </SectionCard>
 
       <SectionCard
         title="Journey map"
-        subtitle={selectedRoadmap ? `Visual map for ${selectedRoadmap.title}` : "Select a roadmap to explore its skill journey."}
+        subtitle={
+          selectedRoadmap
+            ? `Visual map for ${selectedRoadmap.title}`
+            : "Select a roadmap to explore its skill journey."
+        }
         rightNode={<GraphLegend />}
       >
         {!selectedRoadmap ? (
-          <EmptyState title="No roadmap selected" subtitle="Select a roadmap above to view its graph." />
+          <EmptyState
+            title="No roadmap selected"
+            subtitle="Select a roadmap above to view its graph."
+          />
         ) : (
           <div className="space-y-6">
             <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
-              <MetricCard label="Total Nodes" value={graph?.summary?.totalNodes || 0} helper="Target, milestones, and skills" icon={Layers3} />
-              <MetricCard label="Owned" value={graph?.summary?.ownedCount || 0} helper="Skills already available" icon={Crown} />
-              <MetricCard label="Learning" value={graph?.summary?.learningCount || 0} helper="Skills currently in progress" icon={BookOpen} />
-              <MetricCard label="Gap" value={graph?.summary?.gapCount || 0} helper="Skills still missing" icon={Target} />
+              <MetricCard
+                label="Total Nodes"
+                value={graph?.summary?.totalNodes || 0}
+                helper="Target, milestones, and skills"
+                icon={Layers3}
+              />
+
+              <MetricCard
+                label="Owned"
+                value={graph?.summary?.ownedCount || 0}
+                helper="Skills already available"
+                icon={Crown}
+              />
+
+              <MetricCard
+                label="Learning"
+                value={graph?.summary?.learningCount || 0}
+                helper="Skills currently in progress"
+                icon={BookOpen}
+              />
+
+              <MetricCard
+                label="Gap"
+                value={graph?.summary?.gapCount || 0}
+                helper="Skills still missing"
+                icon={Target}
+              />
             </div>
 
             <GraphCanvas
@@ -155,12 +228,32 @@ export default function JourneyTab({
 
             <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
               {[
-                { label: "Owned skills", list: graphGroups.owned, bg: "bg-emerald-50", text: "text-emerald-800" },
-                { label: "Learning skills", list: graphGroups.learning, bg: "bg-amber-50", text: "text-amber-800" },
-                { label: "Missing skills", list: graphGroups.gap, bg: "bg-rose-50", text: "text-rose-800" },
+                {
+                  label: "Owned skills",
+                  list: graphGroups.owned,
+                  bg: "bg-emerald-50",
+                  text: "text-emerald-800",
+                },
+                {
+                  label: "Learning skills",
+                  list: graphGroups.learning,
+                  bg: "bg-amber-50",
+                  text: "text-amber-800",
+                },
+                {
+                  label: "Missing skills",
+                  list: graphGroups.gap,
+                  bg: "bg-rose-50",
+                  text: "text-rose-800",
+                },
               ].map((group) => (
-                <div key={group.label} className={`rounded-[24px] ${group.bg} p-4`}>
-                  <h3 className={`text-sm font-semibold ${group.text}`}>{group.label}</h3>
+                <div
+                  key={group.label}
+                  className={`rounded-[24px] ${group.bg} p-4`}
+                >
+                  <h3 className={`text-sm font-semibold ${group.text}`}>
+                    {group.label}
+                  </h3>
 
                   <div className="mt-4 flex flex-wrap gap-2">
                     {group.list.length ? (
@@ -175,7 +268,9 @@ export default function JourneyTab({
                         </button>
                       ))
                     ) : (
-                      <p className="text-sm text-slate-500">Nothing here yet.</p>
+                      <p className="text-sm text-slate-500">
+                        Nothing here yet.
+                      </p>
                     )}
                   </div>
                 </div>
